@@ -1,8 +1,14 @@
-# Power Query Manager 1.4.0 development preview — source/build package
+# Power Query Manager — Windows application guide
+
+This guide covers the current development-preview source, Excel behavior, local development, and packaging. The implementation includes work across the v1.3.1–v2.0.0 roadmap; some release requirements remain partial or unverified.
 
 Milestone history: [changelog](../docs/CHANGELOG.md). Release evidence and gates are maintained in `../evidence/releases/`.
 
 Windows desktop utility for adding and updating Power Query M query definitions in an Excel workbook using desktop Excel COM automation.
+
+## Portable Windows download
+
+Download the [latest repository ZIP](https://github.com/treborygan/power-query-manager/archive/refs/heads/main.zip), extract it with File Explorer, then open `power-query-manager-main\dist\PowerQueryManager\` and run `PowerQueryManager.exe`. Keep the entire `PowerQueryManager` folder together so its `_internal` runtime files remain beside the application. This is a portable folder, not an MSI or setup wizard; administrator installation is not required. Desktop Microsoft Excel is required for workbook operations. The package manual is at `dist/README.txt`.
 
 ## Current release status
 

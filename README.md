@@ -1,19 +1,64 @@
 # Power Query Manager
 
-Windows desktop application for managing Power Query definitions in Excel workbooks. The repository contains the Python/PySide6 source, specifications, tests, release evidence, and a compact one-folder Windows package.
+**A Windows desktop workbench for reviewing and managing Power Query definitions in Excel workbooks.**
 
-## Run the packaged application
+Power Query Manager combines a PySide6 interface with desktop Excel automation. The repository includes the application source, portable tests, project specifications, Windows acceptance evidence, and a ready-to-run one-folder package.
 
-On Windows, launch [`dist/PowerQueryManager/PowerQueryManager.exe`](dist/PowerQueryManager/PowerQueryManager.exe). The adjacent `PowerQueryManagerCLI.exe` supports offline profile checks and explicitly staged operations; see the packaged manual in `dist/README.txt`.
+> **Development preview.** This project is not a production-certified release. Use disposable workbook copies when evaluating Excel features, and review the open release gates before relying on them.
 
-The package is a development preview, not a production-certified release. Excel automation features require desktop Excel. Review the current limitations and release gates in [`evidence/FINAL_REPORT.md`](evidence/FINAL_REPORT.md) and [`evidence/releases/`](evidence/releases/).
+## Download and run on Windows
 
-## Source and development
+1. [Download the latest repository ZIP](https://github.com/treborygan/power-query-manager/archive/refs/heads/main.zip).
+2. In File Explorer, right-click the downloaded ZIP and choose **Extract All…**.
+3. Open the extracted `power-query-manager-main\dist\PowerQueryManager\` folder.
+4. Double-click `PowerQueryManager.exe`.
 
-- Application source and setup: [`app/README.md`](app/README.md)
-- Architecture and design: [`docs/`](docs/)
-- Profile and plan contracts: [`contracts/`](contracts/)
-- Tests: `app/tests/`
-- Build instructions: [`app/build.ps1`](app/build.ps1)
+This is a portable one-folder package, not an MSI or setup wizard. Keep the whole `PowerQueryManager` folder together, including `_internal`; do not move the EXE on its own. No administrator installation is required. Desktop Microsoft Excel is needed for workbook features.
 
-This repository does not configure GitHub Actions. Use disposable workbooks for Excel acceptance and consult [`docs/QA_WINDOWS_MATRIX.md`](docs/QA_WINDOWS_MATRIX.md) before evaluating Excel-specific behavior.
+The same folder contains `PowerQueryManagerCLI.exe` for offline profile checks and explicitly staged command-line operations. See the [packaged user manual](dist/README.txt) for usage details.
+
+Refresh is an explicit action because workbook queries may contact their configured data sources.
+
+## What it can do
+
+- Import standalone `.m` and `.pq` query files, preserving the source text until a user edits it.
+- Review ordering, names, paths, enabled state, and replace-or-skip choices before applying changes.
+- Inspect workbook queries and load destinations, compare M code, and export query definitions.
+- Save and validate versioned profiles; review conservative source mapping and multi-workbook deployment plans.
+- Use capability-probed Excel load modes and explicit selected/all refresh workflows where the installed Office build supports them.
+- Keep workbook changes staged, create verified backups, and verify saved query state before commit.
+
+The M tokenizer is intentionally conservative and does not parse or evaluate the full M language. Unsupported or ambiguous Excel states are reported as unknown or disabled instead of being guessed.
+
+## Project status
+
+The implementation spans the approved v1.3.1, v1.4.0, v1.5.0, and v2.0.0 roadmap, with some release requirements still partial or unverified. The Windows evidence records the Office builds and disposable-workbook cases that were actually exercised.
+
+- [Final implementation report](evidence/FINAL_REPORT.md)
+- [Release evidence by milestone](evidence/releases/)
+- [Windows/Excel acceptance matrix](docs/QA_WINDOWS_MATRIX.md)
+- [Excel COM observations and limitations](docs/EXCEL_COM_SPIKES.md)
+
+## Documentation
+
+Start with the [documentation index](docs/README.md) for user guidance, architecture, security policy, Excel acceptance, and release operations. The [application guide](app/README.md) covers requirements, behavior, development setup, and packaging.
+
+| Area | Reference |
+| --- | --- |
+| User and developer guide | [`app/README.md`](app/README.md) |
+| Architecture and design | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+| Security and failure behavior | [`docs/SECURITY_AND_FAILURE_POLICY.md`](docs/SECURITY_AND_FAILURE_POLICY.md) |
+| Windows Excel acceptance | [`docs/QA_WINDOWS_MATRIX.md`](docs/QA_WINDOWS_MATRIX.md) |
+| Release status and evidence | [`evidence/FINAL_REPORT.md`](evidence/FINAL_REPORT.md) |
+
+## Source tree
+
+- `app/src/` — application and dependency-free core
+- `app/tests/` — portable tests and fake Excel adapter coverage
+- `contracts/` — versioned profile and deployment-plan schemas
+- `docs/` — architecture, requirements, security, and acceptance guidance
+- `evidence/` — measured baseline, milestone reports, and release gates
+- `examples/` — demonstration profiles, plans, and query sources
+- `dist/` — compact Windows GUI/CLI package, manual, and SHA-256 manifest
+
+For development and packaging instructions, follow [`app/README.md`](app/README.md) and [`app/build.ps1`](app/build.ps1). This repository does not configure GitHub Actions.
