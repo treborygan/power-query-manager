@@ -15,6 +15,8 @@ Power Query Manager combines a PySide6 interface with desktop Excel automation. 
 
 This is a portable one-folder package, not an MSI or setup wizard. Keep the whole `PowerQueryManager` folder together, including `_internal`; do not move the EXE on its own. No administrator installation is required. Desktop Microsoft Excel is needed for workbook features.
 
+**If startup reports `No module named 'shiboken6.Shiboken'`:** the runtime file `dist\PowerQueryManager\_internal\shiboken6\Shiboken.pyd` is missing from the extracted application. Re-extract the complete ZIP and launch the EXE from that folder; do not download or copy the EXE by itself.
+
 The same folder contains `PowerQueryManagerCLI.exe` for offline profile checks and explicitly staged command-line operations. See the [packaged user manual](dist/README.txt) for usage details.
 
 Refresh is an explicit action because workbook queries may contact their configured data sources.

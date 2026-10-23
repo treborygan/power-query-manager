@@ -13,6 +13,8 @@ REQUIRED_FILES = {
     "SHA256SUMS",
     "PowerQueryManager/PowerQueryManager.exe",
     "PowerQueryManager/PowerQueryManagerCLI.exe",
+    "PowerQueryManager/_internal/shiboken6/Shiboken.pyd",
+    "PowerQueryManager/_internal/shiboken6/shiboken6.abi3.dll",
 }
 UNUSED_QT_RUNTIME_FILES = {
     "qt6opengl.dll",

@@ -18,6 +18,8 @@ def make_package(root):
         "PowerQueryManager/PowerQueryManager.exe",
         "PowerQueryManager/PowerQueryManagerCLI.exe",
         "PowerQueryManager/_internal/runtime.bin",
+        "PowerQueryManager/_internal/shiboken6/Shiboken.pyd",
+        "PowerQueryManager/_internal/shiboken6/shiboken6.abi3.dll",
     ):
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -33,7 +35,14 @@ def make_package(root):
 def test_release_package_verifier_accepts_exact_manifest(tmp_path):
     make_package(tmp_path)
     count, _size = verify_package(tmp_path)
-    assert count == 5
+    assert count == 7
+
+
+def test_release_package_verifier_rejects_missing_shiboken_module(tmp_path):
+    make_package(tmp_path)
+    (tmp_path / "PowerQueryManager" / "_internal" / "shiboken6" / "Shiboken.pyd").unlink()
+    with pytest.raises(ValueError, match="Required release files are missing:.*Shiboken.pyd"):
+        verify_package(tmp_path)
 
 
 @pytest.mark.parametrize("change", ["tamper", "extra", "cache", "optional_qt", "optional_network"])
