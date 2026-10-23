@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "run_id": "demo-dry-run-001",
+  "workbook_path": "C:/Disposable/Demo.xlsx",
+  "original_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "dry_run": true,
+  "refresh": "none",
+  "backup_required": true,
+  "items": [
+    {
+      "id": "query-row-001",
+      "query_name": "DemoQuery",
+      "formula_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "action": "create",
+      "order": 0,
+      "load": {
+        "mode": "definition_only"
+      },
+      "warnings": []
+    }
+  ]
+}

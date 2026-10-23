@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/power-query-manager/schemas/plan/v1",
+  "title": "Power Query Manager immutable execution plan v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "workbook_path",
+    "original_sha256",
+    "dry_run",
+    "items"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workbook_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "original_sha256": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{64}$"
+    },
+    "dry_run": {
+      "type": "boolean"
+    },
+    "refresh": {
+      "enum": [
+        "none",
+        "selected",
+        "all"
+      ]
+    },
+    "backup_required": {
+      "type": "boolean"
+    },
+    "output_path": {
+      "type": "string"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "query_name",
+          "formula_sha256",
+          "action",
+          "order",
+          "load"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "query_name": {
+            "type": "string"
+          },
+          "formula_sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          },
+          "action": {
+            "enum": [
+              "create",
+              "replace",
+              "skip",
+              "inspect",
+              "export"
+            ]
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "load": {
+            "$ref": "#/$defs/load"
+          },
+          "expected_existing_sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "load": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "definition_only",
+            "connection_only",
+            "new_sheet",
+            "existing_sheet",
+            "data_model",
+            "preserve_existing"
+          ]
+        },
+        "sheet_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 31
+        },
+        "cell": {
+          "type": "string",
+          "pattern": "^\\$?[A-Za-z]{1,3}\\$?[1-9][0-9]{0,6}$"
+        },
+        "table_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "existing_sheet"
+              }
+            },
+            "required": [
+              "mode"
+            ]
+          },
+          "then": {
+            "required": [
+              "sheet_name",
+              "cell"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "new_sheet"
+              }
+            },
+            "required": [
+              "mode"
+            ]
+          },
+          "then": {
+            "not": {
+              "required": [
+                "cell"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "enum": [
+                  "definition_only",
+                  "connection_only",
+                  "data_model",
+                  "preserve_existing"
+                ]
+              }
+            },
+            "required": [
+              "mode"
+            ]
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "sheet_name"
+                  ]
+                },
+                {
+                  "required": [
+                    "cell"
+                  ]
+                },
+                {
+                  "required": [
+                    "table_name"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

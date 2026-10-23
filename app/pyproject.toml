@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools==75.8.0", "wheel==0.45.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "power-query-manager"
+version = "1.4.0.dev0"
+description = "Windows desktop manager for Excel Power Query definitions from .m and .pq files."
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "PySide6==6.8.3",
+  "pywin32==310; platform_system == 'Windows'",
+]
+
+[project.scripts]
+power-query-manager = "pq_installer.main:main"
+power-query-manager-cli = "pq_installer.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

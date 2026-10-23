@@ -1,0 +1,19 @@
+# Design/implementation decision ledger
+
+| Date (UTC) | ID | Issue | Options | Decision & reason | Agent | Evidence |
+|---|---|---|---|---|---|---|
+| 2026-10-21 | D001 | Safe default staged output location for synced workbooks | Same-folder staging; local copy; Save As | Use same-directory staging so atomic replacement remains on the target volume and backup/stage access is explicit. Do not silently relocate synchronized workbooks; OneDrive/SharePoint conflict semantics remain an unverified gate. | Orchestrator | `core/excel_transaction.py`; W198; W201 |
+| 2026-10-22 | D002 | Excel COM injection boundary | Per-service factories; shared application adapter; full workbook transaction adapter | Add `ExcelApplicationAdapter` for shared application creation and COM-init policy across inspector/import/refresh/probe; retain `excel_factory` compatibility. Keep workbook transactions in their existing services for now and explicitly leave full transaction adapter extraction open rather than implying it is complete. | Orchestrator | `core/excel_adapter.py`; `tests/test_excel_adapter.py`; W36 |
+
+## 2026-10-21 implementation decisions
+
+- Execution is sequential: the supplied workspace is an extracted source ZIP without Git metadata or worktree support; no nominal parallel agents were created.
+- Frozen profile/plan v1 schemas and architecture were retained. The source is still a development preview across v1.3.1–v2.0.0; no release gate is declared complete.
+- Replacement with inaccessible prior Formula is blocked; never delete/recreate as fallback.
+- Apply edits to a same-directory staged copy and commit with Windows `ReplaceFileW` after Save/Close, staged read-only verification, backup verification, and final active-user/hash checks. This avoids creating a selected path that disappeared before commit and preserves target metadata/streams; remaining native partial-failure and filesystem-policy cases still require matrix validation.
+- Definition-only remains distinct from any workbook connection/load. The old enum name `QUERY_ONLY` is a compatibility alias only.
+- Excel load modes and refresh remain unavailable until real host spikes prove them.
+- Query package manifest v2 adds dependency status and cycle metadata; v1 archives remain importable and receive conservative dependency metadata in memory. Source order stays user-controlled, and dependency edges never trigger automatic reordering.
+
+| 2026-10-23 | D003 | Existing-target workbook publication and history restore | `os.replace`; native existing-target replacement; in-place mutation | On Windows, staged workbook publication and history restore use `ReplaceFileW`, which requires an existing destination, preserves target metadata/streams, and keeps a rollback name through hash verification. History restore and its verification rollback share this helper. Never recreate a selected workbook path that disappeared after review. Portable non-Windows fallback remains simulation/development only. | Orchestrator | `core/excel_transaction.py`; `core/history.py`; W198-W203 |
+| 2026-10-23 | D004 | Missing noninteractive approval diagnostics | Generic input error; unsupported operation; dedicated category | Treat absent approval as its own fail-closed `approval_required` category with actionable confirmation guidance. Preserve explicit wrong-phrase declines as a separate outcome. This keeps user-facing output and persisted redacted diagnostics aligned without logging submitted phrases or formula content. | Orchestrator | `core/error_log.py`; `cli.py`; W256 |

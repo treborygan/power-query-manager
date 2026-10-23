@@ -1,0 +1,19 @@
+{
+  "handoff_title": "Power Query Manager Codex implementation handoff",
+  "created_date": "2026-10-21",
+  "source_archive": "Power_Query_Installer_1.3.0_Source_Build.zip",
+  "source_subdir": "app",
+  "baseline_files": 22,
+  "baseline_tests": "18 passed on non-Windows host with pytest; Windows COM not run",
+  "implementation_status": "not implemented; specifications and baseline only",
+  "planned_releases": [
+    "1.3.1",
+    "1.4.0",
+    "1.5.0",
+    "2.0.0"
+  ],
+  "orchestration": "one orchestrator and up to three specialist agents; serial execution allowed",
+  "no_github_actions": true,
+  "verified_runtime_windows_exe": false,
+  "start": "CODEX_KICKOFF_PROMPT.md"
+}

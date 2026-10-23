@@ -1,0 +1,157 @@
+{
+  "description": "Release gates are checklists, not evidence. All mandatory gates must be confirmed by actual tests.",
+  "releases": [
+    {
+      "version": "1.3.1",
+      "features": [
+        "T131-01",
+        "T131-02",
+        "T131-03",
+        "T131-04",
+        "T131-05",
+        "T131-06",
+        "T131-07",
+        "T131-08",
+        "T131-09"
+      ],
+      "mandatory_acceptance": [
+        "LEG-01",
+        "LEG-02",
+        "LEG-03",
+        "LEG-04",
+        "LEG-05",
+        "S-01",
+        "S-02",
+        "S-03",
+        "S-04",
+        "S-05",
+        "S-06",
+        "S-07"
+      ],
+      "windows_cases": [
+        "W01",
+        "W02",
+        "W03",
+        "W04",
+        "W05",
+        "W06",
+        "W19",
+        "W20"
+      ]
+    },
+    {
+      "version": "1.4.0",
+      "features": [
+        "T140-01",
+        "T140-02",
+        "T140-03",
+        "T140-04",
+        "T140-05",
+        "T140-06",
+        "T140-07",
+        "T140-08"
+      ],
+      "mandatory_acceptance": [
+        "M-01",
+        "M-02",
+        "M-03",
+        "M-04",
+        "M-05",
+        "M-06",
+        "M-07"
+      ],
+      "windows_cases": [
+        "W07",
+        "W08",
+        "W09",
+        "W19",
+        "W20"
+      ]
+    },
+    {
+      "version": "1.5.0",
+      "features": [
+        "T150-01",
+        "T150-02",
+        "T150-03",
+        "T150-04",
+        "T150-05",
+        "T150-06",
+        "T150-07",
+        "T150-08"
+      ],
+      "mandatory_acceptance": [
+        "L-01",
+        "L-02",
+        "L-03",
+        "L-04",
+        "L-05",
+        "L-06",
+        "L-07",
+        "L-08",
+        "L-09"
+      ],
+      "windows_cases": [
+        "W10",
+        "W11",
+        "W12",
+        "W13",
+        "W14",
+        "W15",
+        "W19",
+        "W20"
+      ]
+    },
+    {
+      "version": "2.0.0",
+      "features": [
+        "T200-01",
+        "T200-02",
+        "T200-03",
+        "T200-04",
+        "T200-05",
+        "T200-06",
+        "T200-07",
+        "T200-08"
+      ],
+      "mandatory_acceptance": [
+        "A-01",
+        "A-02",
+        "A-03",
+        "A-04",
+        "A-05",
+        "A-06",
+        "A-07"
+      ],
+      "windows_cases": [
+        "W16",
+        "W17",
+        "W18",
+        "W19",
+        "W20"
+      ]
+    }
+  ],
+  "per_feature_statuses": [
+    "NOT_STARTED",
+    "IMPLEMENTED_UNVERIFIED",
+    "PASS_UNIT",
+    "PASS_WINDOWS_EXCEL",
+    "PASS_EXE_SMOKE",
+    "FAIL",
+    "BLOCKED",
+    "DEFERRED"
+  ],
+  "release_statuses": [
+    "PASS",
+    "FAIL",
+    "BLOCKED",
+    "UNVERIFIED"
+  ],
+  "rules": [
+    "PASS Windows cases require real Excel tests on disposable workbooks",
+    "PASS executable startup requires actual packaged EXE run",
+    "Do not use mocked tests for a Windows COM/Excel gate",
+    "No GitHub Actions"
+  ]
+}

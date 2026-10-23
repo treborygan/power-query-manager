@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "profile_name": "Safe demonstration profile — replace workbook path before use",
+  "description": "Example only; no real workbook or credentials included.",
+  "workbook": {
+    "path": "C:/REPLACE_WITH_DISPOSABLE_WORKBOOK.xlsx"
+  },
+  "options": {
+    "existing_query_policy": "review_each",
+    "backup": true,
+    "dry_run": true,
+    "refresh": "none",
+    "import_order": "filename_prefix",
+    "staged_output": true
+  },
+  "queries": [
+    {
+      "id": "demo-parameter",
+      "source_path": "../sources/01_ParamRoot.pq",
+      "query_name": "ParamRoot",
+      "enabled": true,
+      "order": 1,
+      "load": {
+        "mode": "definition_only"
+      }
+    },
+    {
+      "id": "demo-helper",
+      "source_path": "../sources/02_QueryHelper.m",
+      "query_name": "QueryHelper",
+      "enabled": true,
+      "order": 2,
+      "load": {
+        "mode": "definition_only"
+      }
+    },
+    {
+      "id": "demo-report",
+      "source_path": "../sources/03_Report.pq",
+      "query_name": "Report",
+      "enabled": true,
+      "order": 3,
+      "depends_on": [
+        "QueryHelper"
+      ],
+      "load": {
+        "mode": "new_sheet",
+        "sheet_name": "Report Output"
+      }
+    }
+  ]
+}

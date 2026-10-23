@@ -1,0 +1,1 @@
+verify_handoff.py --allow-modified-app: FAIL (9,376 checks) because the build-created app/.venv and pytest/Python cache files exist in the source tree. Gate references and all 22 baseline files passed with modified-app hash bypass enabled. Package dist itself is separately verified: 227 SHA256SUMS entries, 0 mismatches.
