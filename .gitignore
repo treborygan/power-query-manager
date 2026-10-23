@@ -5,7 +5,8 @@ __pycache__/
 **/__pycache__/
 .pytest_cache/
 **/.pytest_cache/
-*.py[cod]
+*.pyc
+*.pyo
 
 # Local build/package outputs; the curated root dist/ release is retained
 app/build/
