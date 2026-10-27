@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QAbstractItemView, QCheckBox, QComboBox, QDialog, QFileDialog, QGridLayout,
     QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QMessageBox, QPlainTextEdit,
     QProgressBar, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout,
+    QFrame, QHeaderView,
 )
 
 from pq_installer.core.reverse_dependencies import (
@@ -19,6 +20,7 @@ from pq_installer.core.reverse_dependencies import (
     scan_dependency_map, scan_reverse_dependencies,
 )
 from pq_installer.ui.file_dependency_graph_dialog import FileDependencyGraphDialog
+from pq_installer.ui import apply_vector_theme
 
 
 _FILE_FILTER = "Office files (*.xlsx *.xlsm *.accdb *.mdb *.xlsb *.xls)"
@@ -99,8 +101,8 @@ class DependencyFinderDialog(QDialog):
     def __init__(self, parent=None, *, scan_runner=None, map_runner=None):
         super().__init__(parent)
         self.setWindowTitle("Dependency Finder — incoming references")
-        self.resize(1050, 740)
-        self.setMinimumSize(690, 540)
+        self.resize(1180, 800)
+        self.setMinimumSize(760, 560)
         self.scan_runner = scan_runner
         self.map_runner = map_runner
         self.latest_report = None
@@ -111,12 +113,22 @@ class DependencyFinderDialog(QDialog):
         self._inventory_worker = None
         self._inventory_running = False
         self._build_ui()
+        apply_vector_theme(self, getattr(parent, "dark_theme_enabled", True))
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
-        intro = QLabel("Find which Excel or Access files depend on your selected file(s). "
-                       "Only definitions and connection metadata are inspected; nothing is refreshed or changed.")
+        layout.setContentsMargins(22, 16, 22, 18)
+        layout.setSpacing(12)
+        eyebrow = QLabel("DEPENDENCY INTELLIGENCE    /    READ-ONLY")
+        eyebrow.setObjectName("vectorEyebrow")
+        layout.addWidget(eyebrow)
+        title = QLabel("TRACE FILE RELATIONSHIPS")
+        title.setObjectName("vectorHero")
+        layout.addWidget(title)
+        intro = QLabel("Map which Excel and Access files reference a target, or inspect the entire file-to-file network. "
+                       "Only definitions and connection metadata are read; nothing is refreshed or changed.")
         intro.setWordWrap(True)
+        intro.setObjectName("secondaryText")
         layout.addWidget(intro)
 
         mode_row = QHBoxLayout()
@@ -136,20 +148,29 @@ class DependencyFinderDialog(QDialog):
         mode_row.addWidget(self.scan_depth_combo, 2)
         layout.addLayout(mode_row)
 
-        selection = QGridLayout()
-        selection.addWidget(QLabel("1. Select files to inspect (possible consumers)"), 0, 0)
-        selection.addWidget(QLabel("2. Select dependency targets (e.g. Warehouse.accdb)"), 0, 1)
+        selection_row = QHBoxLayout()
+        selection_row.setSpacing(12)
+        consumer_panel = QFrame()
+        consumer_panel.setObjectName("vectorListPanel")
+        consumer_layout = QVBoxLayout(consumer_panel)
+        consumer_layout.setContentsMargins(14, 14, 14, 14)
+        consumer_layout.setSpacing(10)
+        consumer_heading = QLabel("01  /  FILES TO INSPECT")
+        consumer_heading.setObjectName("vectorEyebrow")
+        consumer_layout.addWidget(consumer_heading)
+        self.consumer_count_label = QLabel("Possible dependency consumers")
+        self.consumer_count_label.setObjectName("vectorHint")
+        consumer_layout.addWidget(self.consumer_count_label)
         self.consumer_list = QListWidget()
         self.consumer_list.setAccessibleName("Files to inspect for incoming dependency references")
         self.consumer_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.consumer_list.itemSelectionChanged.connect(self._update_enabled)
-        self.target_list = QListWidget()
-        self.target_list.setAccessibleName("Files whose dependents you want to find")
-        self.target_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.target_list.itemSelectionChanged.connect(self._update_enabled)
-        selection.addWidget(self.consumer_list, 1, 0)
-        selection.addWidget(self.target_list, 1, 1)
-        source_actions = QHBoxLayout()
+        self.consumer_list.setMinimumHeight(150)
+        consumer_layout.addWidget(self.consumer_list, 1)
+
+        source_actions = QGridLayout()
+        source_actions.setHorizontalSpacing(6)
+        source_actions.setVerticalSpacing(6)
         self.add_files_button = QPushButton("Add files…")
         self.add_files_button.clicked.connect(self._browse_scan_files)
         self.add_folder_button = QPushButton("Add folder…")
@@ -158,20 +179,48 @@ class DependencyFinderDialog(QDialog):
         self.recursive_check.setChecked(True)
         self.select_all_button = QPushButton("Select all")
         self.select_all_button.clicked.connect(self.consumer_list.selectAll)
-        for widget in (self.add_files_button, self.add_folder_button, self.recursive_check, self.select_all_button):
-            source_actions.addWidget(widget)
-        selection.addLayout(source_actions, 2, 0)
-        target_actions = QHBoxLayout()
+        for index, widget in enumerate((self.add_files_button, self.add_folder_button,
+                                         self.recursive_check, self.select_all_button)):
+            source_actions.addWidget(widget, index // 2, index % 2)
+        source_actions.setColumnStretch(0, 1)
+        source_actions.setColumnStretch(1, 1)
+        consumer_layout.addLayout(source_actions)
+        selection_row.addWidget(consumer_panel, 1)
+
+        target_panel = QFrame()
+        target_panel.setObjectName("vectorListPanel")
+        target_layout = QVBoxLayout(target_panel)
+        target_layout.setContentsMargins(14, 14, 14, 14)
+        target_layout.setSpacing(10)
+        target_heading = QLabel("02  /  DEPENDENCY TARGETS")
+        target_heading.setObjectName("vectorEyebrow")
+        target_layout.addWidget(target_heading)
+        self.target_count_label = QLabel("Which files should be traced?")
+        self.target_count_label.setObjectName("vectorHint")
+        target_layout.addWidget(self.target_count_label)
+        self.target_list = QListWidget()
+        self.target_list.setAccessibleName("Files whose dependents you want to find")
+        self.target_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.target_list.itemSelectionChanged.connect(self._update_enabled)
+        self.target_list.setMinimumHeight(150)
+        target_layout.addWidget(self.target_list, 1)
+        target_actions = QGridLayout()
+        target_actions.setHorizontalSpacing(6)
+        target_actions.setVerticalSpacing(6)
         self.add_targets_button = QPushButton("Add target file(s)…")
         self.add_targets_button.clicked.connect(self._browse_targets)
         self.from_consumers_button = QPushButton("Use selected files as targets")
         self.from_consumers_button.clicked.connect(self._copy_selected_targets)
         self.remove_targets_button = QPushButton("Remove selected targets")
         self.remove_targets_button.clicked.connect(self._remove_targets)
-        for widget in (self.add_targets_button, self.from_consumers_button, self.remove_targets_button):
-            target_actions.addWidget(widget)
-        selection.addLayout(target_actions, 2, 1)
-        layout.addLayout(selection, 3)
+        for index, widget in enumerate((self.add_targets_button, self.from_consumers_button,
+                                         self.remove_targets_button)):
+            target_actions.addWidget(widget, index // 2, index % 2)
+        target_actions.setColumnStretch(0, 1)
+        target_actions.setColumnStretch(1, 1)
+        target_layout.addLayout(target_actions)
+        selection_row.addWidget(target_panel, 1)
+        layout.addLayout(selection_row, 2)
 
         run_row = QHBoxLayout()
         self.progress_bar = QProgressBar()
@@ -179,6 +228,7 @@ class DependencyFinderDialog(QDialog):
         self.progress_label = QLabel("Ready. Choose targets and files to inspect.")
         self.progress_label.setWordWrap(True)
         self.run_button = QPushButton("Run read-only dependency scan")
+        self.run_button.setObjectName("vectorPrimary")
         self.run_button.clicked.connect(self._start_scan)
         self.cancel_button = QPushButton("Cancel scan")
         self.cancel_button.clicked.connect(self._cancel_scan)
@@ -208,7 +258,9 @@ class DependencyFinderDialog(QDialog):
             map_filter_row.addWidget(widget)
         layout.addLayout(map_filter_row)
 
-        layout.addWidget(QLabel("3. Incoming dependencies (one row per source/query and target)"))
+        result_heading = QLabel("03  /  DETECTED RELATIONSHIPS")
+        result_heading.setObjectName("vectorEyebrow")
+        layout.addWidget(result_heading)
         self.results_table = QTableWidget(0, 5)
         self.results_table.setAccessibleName("Reverse dependency results")
         self.results_table.setHorizontalHeaderLabels((
@@ -216,12 +268,22 @@ class DependencyFinderDialog(QDialog):
         ))
         self.results_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.results_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.results_table.horizontalHeader().setStretchLastSection(True)
+        self.results_table.setAlternatingRowColors(True)
+        self.results_table.verticalHeader().setVisible(False)
+        self.results_table.setMinimumHeight(185)
+        header = self.results_table.horizontalHeader()
+        header.setMinimumSectionSize(100)
+        header.setSectionResizeMode(QHeaderView.Interactive)
+        for column, width in enumerate((175, 225, 155, 195, 150)):
+            self.results_table.setColumnWidth(column, width)
+        header.setStretchLastSection(True)
         layout.addWidget(self.results_table, 3)
-        layout.addWidget(QLabel("Coverage and limitations (check this before concluding a target has no dependents)"))
+        warning_heading = QLabel("COVERAGE  /  LIMITATIONS & WARNINGS")
+        warning_heading.setObjectName("vectorEyebrow")
+        layout.addWidget(warning_heading)
         self.coverage_text = QPlainTextEdit()
         self.coverage_text.setReadOnly(True)
-        self.coverage_text.setMaximumHeight(110)
+        self.coverage_text.setMaximumHeight(115)
         self.coverage_text.setAccessibleName("Dependency scanner coverage and warnings")
         layout.addWidget(self.coverage_text)
         export_row = QHBoxLayout()
@@ -343,6 +405,8 @@ class DependencyFinderDialog(QDialog):
         self.map_filter_combo.setEnabled(is_map and not busy)
         self.direction_combo.setEnabled(is_map and not busy)
         self.graph_button.setEnabled(is_map and not busy)
+        self.consumer_count_label.setText(f"{self.consumer_list.count()} candidate file(s)  ·  {len(self.consumer_list.selectedItems())} selected")
+        self.target_count_label.setText(f"{self.target_list.count()} selected target(s)" if not mapping else "General map indexes every inspected file")
         self.export_json_button.setEnabled(self.latest_report is not None and not busy)
         self.export_csv_button.setEnabled(self.latest_report is not None and not busy)
 
