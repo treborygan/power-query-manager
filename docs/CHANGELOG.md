@@ -2,6 +2,14 @@
 
 This changelog records implementation milestones for the successor to Power Query Installer 1.3.0. It does not itself certify a release. See each [release evidence file](../evidence/releases/) for commands, observed results, limitations, and gate status.
 
+## 2026-10-27 — Vector desktop redesign (feature branch, NOT RELEASED)
+
+- Applied the selected Vector concept to the existing PySide6 desktop UI with a graphite canvas, acid-lime primary actions, teal focus markers, compact sidebar, status metrics based on the original query model, and a Ctrl+K action palette that triggers the existing buttons.
+- Reorganized workbook/source/import areas without replacing query models, source/target selectors, undo/redo, import safeguards, inspectors or history. Existing query-table and dialog action names remain available.
+- Redesigned Dependency Finder with scrollable laptop-height layout, file and target panels, mode/depth controls, clearer results and coverage area, and original JSON/CSV/cancel behavior.
+- Restyled both file and query dependency graphs. The file map adds zoom, pan, node selection and repeated-arrow visual deduplication, without altering the underlying graph/report. Accessibility text indexes remain.
+- Updated source-side UI assertions for layout and behavior; **the modified Qt source has not been executed in this chat environment** because PySide6 and a Windows host are unavailable. Build, Windows test suite, GUI visual checks and packaged verification remain **PENDING** on the new branch; no release/binary claim is made.
+
 ## 2026-10-27 — portable Linux regression repair (Windows gates unchanged)
 
 - Cleared the 11 previously recorded Linux failures without removing or skipping any failing assertions. COM Running Object Table tests can use fake COM on non-Windows hosts; the Windows security-zone preflight now has an injectable stream reader so inspector/import rejection paths are tested offline.
