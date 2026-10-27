@@ -70,6 +70,32 @@ def test_general_map_graph_has_accessible_visual_and_summary(tmp_path):
     dialog.close()
 
 
+def test_vector_graph_node_selection_and_zoom_keep_accessible_edge_index(tmp_path):
+    from PySide6.QtWidgets import QGraphicsItem
+    app = QApplication.instance() or QApplication([])
+    consumer = tmp_path / "Report.xlsx"
+    target = tmp_path / "Warehouse.accdb"
+    report = DependencyMapReport((str(consumer), str(target)),
+        (str(consumer), str(target)), (
+            DependencyHit(str(target), str(consumer), "Power Query", "Source",
+                          "exact_path", target.name),
+        ), (), (), "quick")
+    dialog = FileDependencyGraphDialog(report)
+    nodes = [item for item in dialog.graph_view.scene().items()
+             if item.data(0) == str(consumer)]
+    assert len(nodes) == 1
+    assert nodes[0].flags() & QGraphicsItem.ItemIsSelectable
+    nodes[0].setSelected(True)
+    app.processEvents()
+    assert "Report.xlsx" in dialog.selection_status.text()
+    assert "depends on" in dialog.summary.toPlainText()
+    dialog.graph_view.scale(1.2, 1.2)
+    assert dialog.graph_view.transform().m11() > 1
+    dialog._reset_zoom()
+    assert abs(dialog.graph_view.transform().m11() - 1) < 0.01
+    dialog.close()
+
+
 def test_general_map_csv_summary_considers_outgoing_links_and_unresolved(tmp_path, monkeypatch):
     app = QApplication.instance() or QApplication([])
     warehouse = tmp_path / "Warehouse.accdb"
