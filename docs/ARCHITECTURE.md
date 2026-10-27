@@ -58,6 +58,20 @@ First prototype against throwaway workbooks and capture `Application.Version`, `
 
 ## M dependency analyzer
 
+The **cross-file Dependency Finder** is independent of the query-to-query
+import-order graph described below. `core/reverse_dependencies.py` discovers
+files and reads Excel OOXML/embedded Power Query definitions as ZIP/XML;
+`core/access_dependency_reader.py` uses DAO on a local disposable copy for
+`.accdb`/`.mdb` linked-table and saved-query metadata. Only immutable path and
+reference result dataclasses cross the UI boundary. The
+`ui/dependency_finder_dialog.py` worker runs scanning in its own QThread and
+supports cancellation between files. Folder inventory also runs in a separate
+cancellable QThread to avoid freezing the GUI on mapped drives; the CLI
+shares the exact scanner.
+Source M/SQL and full connection strings are not copied into report records.
+This scanner never enters the Excel COM import/deployment pipeline.
+
+
 M is a complete language: avoid naive regex substitution or false certainty. Implement conservative lexical scanning with strings (escaped double quotes), `//` and `/* */` comments, nested comments where applicable, quoted identifiers `#"..."`, records, `let` locals, and case-sensitive names consistent with M. Match only known external query names in expression contexts. Expose dependencies with confidence and blockers for unresolved/ambiguous references; do not reorder automatically without consent. Detect cycles in confident graph and stable topological sorts preserving user's tie order.
 
 ## Portability/performance

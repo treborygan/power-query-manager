@@ -62,6 +62,18 @@ These are independent of internal implementation. Orchestrator links actual auto
 | A-06 | Local history redacts credentials/formula bodies by default, has version identifiers and user-adjustable retention/deletion. |
 | A-07 | Portable Windows distribution startup/import/refresh on supported desktop Excel verified; installer does not require admin for normal operation. |
 
+## Reverse Dependency Finder (post-v2 enhancement)
+
+| ID | Acceptance condition | Current gate |
+| --- | --- | --- |
+| DF-01 | Inventory Excel/Access consumers from selected files or folders, with optional recursion and multi-target selection; exclude each target from self-references. | PASS (portable unit/UI) |
+| DF-02 | Detect references through real embedded Power Query M, workbook links and connection definitions; classify exact paths vs basename and tentative literals. | PASS (synthetic ZIP fixture); real Windows workbook UNVERIFIED |
+| DF-03 | Inspect real `.accdb`/`.mdb` linked tables and saved queries on a local temporary copy; no original lock-file/writeback. | PASS (fake DAO); real Windows ACE/DAO UNVERIFIED |
+| DF-04 | No external data refresh, Excel process, VBA execution, Access query execution or modification to original file hashes. | PASS (static code/portable synthetic fixture); Windows integration UNVERIFIED |
+| DF-05 | Unsupported/unreadable/dynamic sources, absent DAO and canceled scans are visible; zero hits are never equated with proven independence. | PASS (portable unit); Windows matrix UNVERIFIED |
+| DF-06 | GUI worker remains responsive/cancellable; JSON and CSV preserve dependency matches and coverage issues; CLI exit 5 represents partial coverage. | PASS (portable UI/CLI); packaged Windows executable UNVERIFIED |
+| DF-07 | Verify Windows mapped-drive/UNC, OneDrive hydration, genuine `.xlsm`/`.xlsx` DataMashup and Access `.mdb`/`.accdb` smoke cases with original SHA-256 before/after. | UNVERIFIED — Windows smoke required |
+
 ## Scenarios to add (unit + Excel where possible)
 
 - name clashes case-insensitive, trailing whitespace, Unicode, `#"quoted"` M identifiers, sheet 31-char / punctuation, existing table display name; duplicate imports from two ZIPs

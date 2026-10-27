@@ -1068,3 +1068,20 @@
 - The rebuilt packaged keyboard smoke did not complete reliably: one run found two matching title elements; the next observed focus leave the manager during Tab traversal. A one-off window inventory observed one visible main window. This remains inconclusive, not a pass, and is deferred while core import workflows remain the priority.
 - After adding the current-package Excel import result to the manual, final docs-only package refresh and verification passed: 116 files / 76,241,206 bytes. `dist/SHA256SUMS` SHA-256 `A543D52F5855F2DD8BBB83DF5B94598825561792849FFDC5F9630B3CF907E2FB`; GUI SHA-256 `EB53833FC96CBE8FBE3AD40280F6569799D1D4D5FAB223C8713CF67DD509A93C`; CLI SHA-256 `A631F4256483B10EA921CBBD463A28C88318C1C7E7361AC7AD17E6BFA9255C4E`. Only pre-existing Excel PID 36464 remained active.
 - Core workflow confirmation on the W302 package: `python -B tools/run_packaged_gui_import_smoke.py --exe dist/PowerQueryManager/PowerQueryManager.exe` passed on Windows 10 build 26300 / desktop Excel 16.0 build 20430.0, non-elevated. The disposable `.xlsx` received the exact formula; timestamped backup hash matched the original workbook; read-only reopen passed; manager exited 0; only PID 36464 remained. This does not cover load modes other than definition-only or broader Office builds.
+
+## 2026-10-27 — Dependency Finder implementation evidence
+
+- New source-only reverse dependency engine, Access-copy DAO metadata reader,
+  PySide6 dialog/worker and CLI; no SharePoint-specific API. Source code is on
+  a feature branch and has not been packaged or Windows-validated.
+- Focused pytest on synthetic files/fake DAO and existing dependency/CLI
+  regressions: **74 passed**, including literal precision, missing DAO,
+  empty scan scope, COM apartment/cleanup, CSV coverage/injection protection,
+  async mapped-folder inventory and XML budget handling.
+- Linux baseline prior to feature changes: **475 passed, 11 skipped, 11 failed**
+  due to existing Windows/path/package assumptions. Do not interpret those
+  failures as passing or silently skip them in a Windows release gate.
+- Full Linux regression after this feature: **498 passed, 11 skipped, 11 failed**;
+  the failing test names were identical to the pre-change baseline.
+- Windows `DAO.DBEngine`, real Access files, original before/after hashes,
+  Excel DataMashup and packaged GUI/CLI: **NOT VERIFIED**.

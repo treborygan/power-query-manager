@@ -18,6 +18,39 @@ Record UTC timestamp, OS/build, Python version, PySide6 version, pywin32 version
 
 ## Execution checklist
 
+### DF — reverse Dependency Finder (2026-10-27; NOT VERIFIED)
+
+Use **only disposable** sample Excel and Access files and an isolated test
+folder. Do not use work or personal database contents. This is a new source
+feature; the checked-in packaged binary has not been rebuilt.
+
+1. Create `Warehouse.accdb`, `Stock.mdb`, `Report.xlsx` and `Queries.xlsm`;
+   use actual DAO linked tables / saved Access queries pointing to
+   `Warehouse.accdb`, and Excel Power Query `Access.Database(File.Contents(...))`
+   and a regular Excel external connection to the disposable target.
+2. Record SHA-256, timestamp and any `.laccdb`/`.ldb` files before the scan.
+   Use the GUI's **Dependency Finder…** to scan the folder recursively and
+   choose multiple targets. Repeat with explicit multiple-file selection.
+3. Confirm incoming rows correctly identify Excel query/connection names and
+   Access linked-table/query names. Filename-only and unresolvable dynamic
+   expressions must not appear as confidently exact dependencies.
+4. Run `power-query-manager-cli dependency-scan --target PATH --folder DIR --recursive`
+   on the same fixtures and compare its JSON results against the GUI export.
+5. Confirm **every original input hash and timestamp is unchanged**, and no
+   Access lock file was created beside any original. Check temp cleanup,
+   no Excel process launched, no macros/queries executed and no data refreshed.
+6. Repeat against a mapped network drive, a UNC alias, a cloud-synced test
+   placeholder, an unavailable/incompatible DAO engine, an encrypted Access
+   file, malformed `.xlsx`, `.xls`/`.xlsb`, cancel after progress, and a
+   filename collision in a different folder. Verify coverage warnings.
+7. Build the Windows onedir package, test both GUI and packaged CLI under a
+   normal non-admin token, and record release/version/provider bitness.
+
+Acceptance: **UNVERIFIED** until actual Windows/Access/Excel host results and
+unchanged-file hashes are recorded. Synthetic portable tests alone are not a
+substitute.
+
+
 ### W73 — 2026-10-22 — packaged GUI all-skip no-op
 
 - Command: `python -B tools/run_packaged_gui_import_smoke.py --skip-existing` using the current one-folder package.

@@ -22,6 +22,23 @@ Before a staged import opens Excel, the manager reads the workbook DataMashup pe
 
 ## Functions
 
+### Dependency Finder (new source feature; Windows verification outstanding)
+
+Choose **Dependency Finder…** to find *incoming* dependencies: for example,
+"Which `.xlsx`, `.xlsm`, `.accdb` or `.mdb` files reference `Warehouse.accdb`?"
+Inventory a mapped/local folder recursively or add individual files, select
+which candidate files to inspect, then select one or more targets. It scans
+embedded Excel Power Query and workbook link metadata without starting Excel,
+and Access table/query link definitions from an isolated temporary database
+copy using a compatible Windows DAO engine. View filename-only/possible
+matches, incomplete coverage and export to a new JSON/CSV report. No source
+data is refreshed or modified. The existing packaged EXE has not been rebuilt
+or smoke-tested for this feature.
+
+CLI: `power-query-manager-cli dependency-scan --target "C:\Data\Warehouse.accdb" --folder "C:\Reports" --recursive`.
+See [usage, detection scope and acceptance gates](../docs/DEPENDENCY_FINDER.md).
+
+
 - Import `.m` and `.pq` source files together, by multi-select or from the selected folder.
 - Duplicate source paths are ignored when files are added, including duplicates within the same multi-file batch; the first selected row is kept.
 - Edit each row's enabled state, numeric order, query name, source path, and load mode. Use **Browse selected path** to change a source file.

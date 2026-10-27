@@ -2,6 +2,15 @@
 
 Each milestone produces runnable code, tests, updated help, working local build step(s), an evidence artifact, a release gate decision, and a changelog. Release gates must **never** be inferred from implemented code alone. Time estimates intentionally omitted; measure and log progress by tasks/tests, not invented delivery dates.
 
+## Post-v2 source enhancement — reverse Dependency Finder (2026-10-27)
+
+- [x] Offline filesystem discovery and selectable consumer/target file sets.
+- [x] Synthetic OOXML/Power Query and Access DAO metadata scanner, guarded matching and explicit coverage statuses.
+- [x] GUI worker with cancel, reports and CLI entrypoint; portable unit coverage.
+- [x] Independent cancellable GUI folder inventory, CSV injection protection, bounded cumulative ZIP metadata and pre-cleanup DAO proxy release.
+- [ ] Validate actual `.accdb`/`.mdb` DAO reading and sample `.xlsx`/`.xlsm` DataMashup on Windows, with original hashes and no side effects.
+- [ ] Verify mapped/UNC paths, synced placeholders, performance and packaged onedir GUI/CLI before claiming supported Windows release.
+
 ## v1.3.1 — safety, repeatability, packaging
 
 **Objective:** preserve legacy functional behavior while making workbook editing defensible.

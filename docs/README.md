@@ -10,6 +10,7 @@ This index groups the project documentation by task. For the application overvie
 - [Feature traceability](FEATURE_TRACEABILITY.md) — map requirements to implementation and evidence.
 - [Changelog](CHANGELOG.md) — recorded implementation changes.
 - [Open design decisions](OPEN_DESIGN_DECISIONS.md) — decisions that remain open or need future review.
+- [Dependency Finder](DEPENDENCY_FINDER.md) — reverse incoming references across Excel/Access files, folder selection, CLI, confidence and coverage limits.
 
 ## Work safely with Excel
 

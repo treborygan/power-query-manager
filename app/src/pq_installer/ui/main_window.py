@@ -38,6 +38,7 @@ from pq_installer.ui.refresh_worker import RefreshWorker
 from pq_installer.ui.history_worker import SnapshotRestoreWorker, SnapshotCompareWorker
 from pq_installer.ui.history_comparison_dialog import HistoryComparisonDialog
 from pq_installer.ui.dependency_graph_dialog import DependencyGraphDialog
+from pq_installer.ui.dependency_finder_dialog import DependencyFinderDialog
 from pq_installer.ui.package_update_dialog import QueryPackageUpdateDialog
 from pq_installer.ui.profile_mappings_dialog import ProfileMappingsDialog
 from pq_installer.ui.recovery_worker import StagedRecoveryWorker
@@ -196,6 +197,17 @@ class MainWindow(QMainWindow):
         recovery_note.setWordWrap(True);recovery_note.setMinimumWidth(0);recovery_note.setObjectName('secondaryText')
         wb_layout.addWidget(recovery_note,4,1,1,2)
         layout.addWidget(workbook_box)
+
+        finder_row = QHBoxLayout()
+        self.dependency_finder_button = QPushButton('Dependency Finder…')
+        self.dependency_finder_button.setAccessibleName('Find files that depend on selected Excel or Access databases and workbooks')
+        self.dependency_finder_button.clicked.connect(self._open_dependency_finder)
+        finder_row.addWidget(self.dependency_finder_button)
+        finder_note = QLabel('Find incoming references to .xlsx, .xlsm, .accdb or .mdb files in local/mapped folders (read-only).')
+        finder_note.setObjectName('secondaryText')
+        finder_note.setWordWrap(True)
+        finder_row.addWidget(finder_note, 1)
+        layout.addLayout(finder_row)
 
         query_box = QGroupBox('2  Sources and query settings')
         q_layout = QVBoxLayout(query_box)
@@ -370,6 +382,12 @@ class MainWindow(QMainWindow):
     def _browse_workbook(self):
         path,_=QFileDialog.getOpenFileName(self,'Select Excel workbook','','Excel Workbooks (*.xlsx *.xlsm)')
         if path: self.workbook_edit.setText(path); self.open_btn.setEnabled(True)
+
+    def _open_dependency_finder(self):
+        if self._operation_busy:
+            return
+        dialog = DependencyFinderDialog(self)
+        dialog.exec()
     def _add_files(self):
         paths,_=QFileDialog.getOpenFileNames(self,'Select Power Query files','','Power Query sources (*.m *.pq)')
         if paths: self._merge_sources(discover_query_files(paths))

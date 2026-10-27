@@ -2,6 +2,15 @@
 
 This changelog records implementation milestones for the successor to Power Query Installer 1.3.0. It does not itself certify a release. See each [release evidence file](../evidence/releases/) for commands, observed results, limitations, and gate status. The recovered workspace has no Git metadata, so commit hashes are unavailable.
 
+## 2026-10-27 — Dependency Finder (post-v2 source enhancement; gate **UNVERIFIED**)
+
+- Added a read-only *reverse* dependency scan for incoming references to multiple selected targets across `.xlsx`, `.xlsm`, `.accdb` and `.mdb` consumer files.
+- Added separate GUI folder/multi-file selection, worker progress/cancellation, confidence/coverage displays, JSON/CSV export, and `dependency-scan` CLI command.
+- Access metadata is inspected by DAO on disposable local database copies. No SharePoint-specific integration; `.xls`/`.xlsb` remain explicitly unsupported.
+- Portable tests pass; real Access Engine, Excel DataMashup, mapped Windows folders and packaged binaries still require smoke verification.
+- Review hardening: moved folder inventory off the GUI thread, added zero-match CSV summaries and spreadsheet-formula escaping, made M query-name attribution token-aware, released DAO proxies before temp cleanup, and capped cumulative ZIP/XML metadata reads.
+
+
 ## v2.0.0 — advanced tooling (partial implementation; gate **UNVERIFIED**)
 
 - Added multi-workbook dry-run/deployment with per-workbook results, deployment bundles, source-path and M-literal mapping previews, supported parameter editing, query packages, local history, and an optional CLI.
