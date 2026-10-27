@@ -1,4 +1,7 @@
 """General file-to-file dependency index and streaming Excel inspection."""
+import base64
+import io
+import struct
 import zipfile
 
 from pq_installer.core.reverse_dependencies import (
@@ -89,6 +92,33 @@ def test_general_map_retains_external_file_dependencies_as_unresolved(tmp_path):
     assert [(ref.consumer_path, ref.reference_filename) for ref in report.unresolved] == [
         (str(consumer), "Warehouse.accdb")
     ]
+
+
+def test_general_map_detects_genuine_office_utf16_data_mashup(tmp_path):
+    target = tmp_path / "Warehouse.accdb"
+    target.write_bytes(b"disposable")
+    consumer = tmp_path / "Queries.xlsm"
+    formula = f'shared AccessSource = Access.Database(File.Contents("{target}"), [CreateNavigationProperties=false]);'
+    mashup = io.BytesIO()
+    with zipfile.ZipFile(mashup, "w") as package:
+        package.writestr("Formulas/Section1.m", formula)
+    fields = (mashup.getvalue(), b"", b"", b"\x00")
+    payload = struct.pack("<I", 0) + b"".join(
+        struct.pack("<I", len(part)) + part for part in fields
+    )
+    xml = ('<?xml version="1.0" encoding="utf-16"?>'
+           '<DataMashup xmlns="http://schemas.microsoft.com/DataMashup">'
+           + base64.b64encode(payload).decode("ascii") + "</DataMashup>")
+    with zipfile.ZipFile(consumer, "w") as workbook:
+        workbook.writestr("customXml/item1.xml", xml.encode("utf-16"))
+
+    report = scan_dependency_map([target, consumer], depth="quick", access_reader=lambda _: ())
+
+    assert [(edge.consumer_path, edge.target_path, edge.source_kind, edge.source_name)
+            for edge in report.edges] == [
+        (str(consumer), str(target), "Power Query", "AccessSource")
+    ]
+    assert not report.issues
 
 
 def test_general_map_finds_multiple_files_mentioned_in_one_saved_query(tmp_path):

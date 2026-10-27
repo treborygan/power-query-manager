@@ -291,7 +291,12 @@ def _excel_references(path, *, depth="deep", on_reference=None):
                 metadata_bytes_read += info.file_size
                 if lowered.startswith("customxml/"):
                     data = workbook.read(info)
-                    if b"DataMashup" not in data:
+                    # Excel writes customXml/item*.xml as UTF-16LE on current
+                    # Office builds. Search both the UTF-8-compatible ASCII
+                    # spelling and UTF-16 before parsing the package part.
+                    if (b"DataMashup" not in data
+                            and "DataMashup".encode("utf-16le") not in data
+                            and "DataMashup".encode("utf-16be") not in data):
                         continue
                     try:
                         for script_name, text in _mashup_scripts(data):

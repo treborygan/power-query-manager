@@ -1280,3 +1280,22 @@ For each row record `PASS/FAIL/BLOCKED/UNVERIFIED`, test ID, timestamp, Office/W
 
 - The source model now filters duplicate paths in the same add batch, retaining the first selected row. Focused Qt model suite: **41 passed**; the rebuilt package manifest verifies.
 - Packaged keyboard traversal could not be accepted in this run: one attempt reported ambiguous matching window titles and another reported focus leaving the manager. A separate inventory observed one visible main window. Treat keyboard traversal as **UNVERIFIED** pending a reliable run. The current package separately passed the primary disposable definition-only GUI import on Excel 16.0 build 20430.0; other load modes/builds remain unverified.
+
+## W294 — Dependency Finder Windows acceptance harness (2026-10-27)
+
+- Added `tools/run_dependency_windows_acceptance.py`. It requires Excel and
+  `DAO.DBEngine.160` by default, creates disposable linked-table/saved-query
+  `.accdb`/`.mdb` fixtures plus genuine Excel Mashup, external-link and large
+  formula workbooks, and checks expected edges, ambiguous/unresolved names,
+  Quick/Deep parity, CLI multi-target scans, GUI filters/graph/JSON/CSV,
+  progress/cancellation, file SHA-256/mtime, Access locks, temp cleanup and
+  owned Excel process cleanup. Optional existing mapped, UNC and synchronized
+  roots use `--mapped-root`, `--unc-root`, and `--sync-root`; it does not create
+  shares, map drives, or change sync settings. See the script help for fixture
+  retention and JSON report options.
+- Exact source commit at the start of the diagnostic run: `7c9d94b5f3d7502b0204de7873042604fb36ee24`; the run included then-uncommitted harness and UTF-16 Mashup fix changes, so this SHA is a base revision, not a clean tested revision. Final clean commit SHA is recorded in evidence/STATUS.md after commit.
+- Windows build command `app/build.ps1`: **537 passed in 39.46 s**; GUI and CLI rebuilt with PyInstaller 6.13.0 / Python 3.11.9. Package staging/verification: **116 files / 76,310,327 bytes**. Packaged CLI help exposed `dependency-scan`, `dependency-map`, Quick and Deep. The package contains the regression fix for UTF-16LE/BE Office customXml Mashup markers.
+- Diagnostic command: `python tools/run_dependency_windows_acceptance.py --dao-progid DAO.DBEngine.120 --report %TEMP%\\pqm-dependency-harness-final.json`. This explicit DAO 12.0 compatibility run is diagnostic only. Required `DAO.DBEngine.160` is not registered on this host; only DAO 12.0 was available. The harness's default ACE 16.0 acceptance gate therefore remains **FAIL / OPEN**.
+- Excel 16.0 build 20430.0 created real Power Query Mashup and external workbook references. Four top-level Access databases and four Excel workbooks plus two duplicate-basename Access fixtures were scanned. Both modes found the eight expected source-target pairs (12 dependency records), plus one ambiguity issue and two unresolved references (duplicate `Ambiguous.accdb` and out-of-scope `OutsideScope.xlsx`). Multi-target CLI matched six relationships. Quick: 6.43 s, peak process-tree working set 189,259,776 bytes. Deep: 3.63 s, 186,060,800 bytes. The large workbook contained 31,200 external-link formula cells. Both modes found the external workbook edge through Excel's external-link relationship metadata; neither emitted formula-reference edges, and there were no mode-exclusive edges in this fixture.
+- GUI acceptance checks passed in this diagnostic: incoming/outgoing/both row counts, 12-edge visual graph, JSON and CSV exports (12 edges each), progress observation and cancellation after one inspected source. Source hashes and timestamps were unchanged; no Access lock files remained; DAO temp directories were cleaned; no Excel PIDs remained; fixture tree was removed. However, Excel's fixture-owned process did not exit after `Quit()` and required forced termination after 21.33 s, so the cleanup acceptance gate correctly reports **FAIL**, despite returning to the original process set.
+- Mapped SMB, UNC and synchronized folder repetitions were **NOT RUN** because no roots were supplied. Overall packaged-app acceptance remains **FAIL / OPEN** until DAO 16.0 and natural Excel process cleanup pass and the three nonlocal location types are exercised.
