@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 
 from pq_installer.core.dependencies import analyze_query_references, find_dependency_cycles
 from pq_installer.core.query_loader import read_m_code
+from pq_installer.ui import apply_vector_theme
 
 
 @dataclass(frozen=True)
@@ -104,9 +105,18 @@ class DependencyGraphDialog(QDialog):
     def __init__(self, sources, parent=None):
         super().__init__(parent)
         self.setWindowTitle('Query dependencies')
-        self.resize(900, 620)
+        self.resize(1050, 700)
+        self._vector_dark = getattr(parent, "dark_theme_enabled", True)
         self.analysis = analyze_dependency_graph(sources)
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 16, 20, 18)
+        layout.setSpacing(10)
+        eyebrow = QLabel("DEPENDENCY INTELLIGENCE    /    QUERY NETWORK")
+        eyebrow.setObjectName("vectorEyebrow")
+        layout.addWidget(eyebrow)
+        title = QLabel("QUERY DEPENDENCY GRAPH")
+        title.setObjectName("vectorHero")
+        layout.addWidget(title)
         note = QLabel('Arrows point from a query to a detected dependency. This bounded M scanner is advisory, not a full language parser. Ambiguous references are shown without guessed arrows; import order is unchanged.')
         note.setWordWrap(True)
         layout.addWidget(note)
@@ -127,6 +137,7 @@ class DependencyGraphDialog(QDialog):
         buttons.rejected.connect(self.reject)
         buttons.accepted.connect(self.accept)
         layout.addWidget(buttons)
+        apply_vector_theme(self, self._vector_dark)
 
     def _summary_text(self):
         lines = []
@@ -142,8 +153,10 @@ class DependencyGraphDialog(QDialog):
 
     def _build_scene(self):
         scene = QGraphicsScene(self)
+        scene.setBackgroundBrush(QBrush(QColor("#0c171a" if self._vector_dark else "#eef5f1")))
         if not self.analysis.nodes:
-            scene.addText('Add query sources to see detected dependencies.')
+            placeholder = scene.addText('Add query sources to see detected dependencies.')
+            placeholder.setDefaultTextColor(QColor("#e9f5f1" if self._vector_dark else "#193037"))
             scene.setSceneRect(0, 0, 420, 120)
             return scene
 
@@ -194,7 +207,7 @@ class DependencyGraphDialog(QDialog):
             middle = (start[0] + end[0]) / 2
             path.cubicTo(middle, start[1], middle, end[1], *end)
             line = QGraphicsPathItem(path)
-            line.setPen(QPen(QColor('#59758f'), 2))
+            line.setPen(QPen(QColor('#81e4d3' if self._vector_dark else '#12645b'), 2))
             line.setZValue(0)
             scene.addItem(line)
             direction = QGraphicsPathItem()
@@ -204,30 +217,33 @@ class DependencyGraphDialog(QDialog):
             arrow_path.lineTo(end[0] - 10, end[1] + 5)
             arrow_path.closeSubpath()
             direction.setPath(arrow_path)
-            direction.setBrush(QBrush(QColor('#59758f')))
-            direction.setPen(QPen(QColor('#59758f')))
+            direction.setBrush(QBrush(QColor('#81e4d3' if self._vector_dark else '#12645b')))
+            direction.setPen(QPen(QColor('#81e4d3' if self._vector_dark else '#12645b')))
             scene.addItem(direction)
 
         for name, node in nodes.items():
             x, y = positions[name]
-            if not node.enabled:
-                fill = QColor('#e8edf2')
-            elif node.ambiguous:
-                fill = QColor('#fff0ca')
-            elif name in cycle_nodes:
-                fill = QColor('#fde2e1')
+            if self._vector_dark:
+                fill = QColor('#263037' if not node.enabled else
+                              '#413822' if node.ambiguous else
+                              '#412d35' if name in cycle_nodes else '#193036')
+                outline = QColor('#576971')
             else:
-                fill = QColor('#e5f1ff')
-            card = scene.addRect(x, y, width, height, QPen(QColor('#73869a'), 1.3), QBrush(fill))
+                fill = QColor('#e8edf2' if not node.enabled else
+                              '#fff0ca' if node.ambiguous else
+                              '#fde2e1' if name in cycle_nodes else '#e5f1ff')
+                outline = QColor('#73869a')
+            card = scene.addRect(x, y, width, height, QPen(outline, 1.3), QBrush(fill))
             card.setToolTip(f'{name}\n{node.status}')
             card.setZValue(1)
             title = scene.addText(name, QFont('', 10, QFont.Weight.Bold))
+            title.setDefaultTextColor(QColor('#f0f9f8' if self._vector_dark else '#152931'))
             title.setPos(x + 9, y + 5)
             title.setToolTip(f'{name}\n{node.status}')
             status = scene.addText(node.status, QFont('', 8))
             status.setTextWidth(width - 16)
             status.setPos(x + 8, y + 31)
-            status.setDefaultTextColor(QColor('#30465b'))
+            status.setDefaultTextColor(QColor('#b3c8c9' if self._vector_dark else '#30465b'))
             status.setToolTip(node.status)
         cols = max(columns, default=0) + 1
         rows = max((len(names) for names in columns.values()), default=1)
