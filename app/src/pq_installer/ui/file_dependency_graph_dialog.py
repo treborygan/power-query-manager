@@ -187,7 +187,9 @@ class FileDependencyGraphDialog(QDialog):
             control = ((start[0] + end[0]) / 2 + bend, (start[1] + end[1]) / 2 - bend)
             shape.quadTo(*control, *end)
             exact = edge.confidence == "exact_path"
-            link_color = QColor("#c8f477" if exact else "#ffc88b")
+            dark = colors["window"] == "#080e12"
+            link_color = QColor(("#c8f477" if exact else "#ffc88b") if dark
+                                else ("#386c20" if exact else "#9c4e13"))
             pen = QPen(link_color, 2.2)
             if not exact:
                 pen.setStyle(Qt.DashLine)
