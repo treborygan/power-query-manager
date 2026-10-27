@@ -64,18 +64,21 @@ These are independent of internal implementation. Orchestrator links actual auto
 
 ## Reverse Dependency Finder (post-v2 enhancement)
 
+**Merge-scoped decision (2026-10-27): ACCEPTED WITH TWO WAIVERS**, not universal Windows release certification. The owner waived ACE DAO 16.0 and mapped SMB/UNC **without passing them**; see W297 in `QA_WINDOWS_MATRIX.md` and D008 in `evidence/DECISIONS.md`. All PASS statements below are limited to the specified host and evidence. Whole-product release criteria are separate.
+
 | ID | Acceptance condition | Current gate |
 | --- | --- | --- |
-| DF-01 | Inventory Excel/Access consumers from selected files or folders, with optional recursion and multi-target selection; exclude each target from self-references. | PASS (portable unit/UI) |
-| DF-02 | Detect references through real embedded Power Query M, workbook links and connection definitions; classify exact paths vs basename and tentative literals. | PASS (synthetic ZIP fixture); real Windows workbook UNVERIFIED |
-| DF-03 | Inspect real `.accdb`/`.mdb` linked tables and saved queries on a local temporary copy; no original lock-file/writeback. | PASS (fake DAO); real Windows ACE/DAO UNVERIFIED |
-| DF-04 | No external data refresh, Excel process, VBA execution, Access query execution or modification to original file hashes. | PASS (static code/portable synthetic fixture); Windows integration UNVERIFIED |
-| DF-05 | Unsupported/unreadable/dynamic sources, absent DAO and canceled scans are visible; zero hits are never equated with proven independence. | PASS (portable unit); Windows matrix UNVERIFIED |
-| DF-06 | GUI worker remains responsive/cancellable; JSON and CSV preserve dependency matches and coverage issues; CLI exit 5 represents partial coverage. | PASS (portable UI/CLI); packaged Windows executable UNVERIFIED |
-| DF-07 | Verify Windows mapped-drive/UNC, OneDrive hydration, genuine `.xlsm`/`.xlsx` DataMashup and Access `.mdb`/`.accdb` smoke cases with original SHA-256 before/after. | UNVERIFIED — Windows smoke required |
-| DF-08 | General Map scans all selected consumer files once, including files that depend on one another, and retains a full incoming/outgoing index without repeatedly reading inputs when the UI filter changes. | PASS (portable unit/UI); Windows integration UNVERIFIED |
-| DF-09 | Quick excludes worksheet formulas/defined names; Deep includes them. Non-custom Excel XML is stream-parsed in bounded chunks; completed nodes and matched formula strings are discarded rather than buffered across the workbook. | PASS (portable synthetic ZIP / stream tests); real Excel package UNVERIFIED |
-| DF-10 | Filename collisions with no exact path produce ambiguous/unresolved reports rather than guessed graph edges; the full JSON/CSV export preserves them; an accessible visual graph displays the advisory relationships. | PASS (portable unit/UI); packaged GUI UNVERIFIED |
+| DF-01 | Inventory Excel/Access consumers from selected files or folders, with optional recursion and multi-target selection; exclude each target from self-references. | PASS (portable and Windows diagnostic on local/OneDrive) |
+| DF-02 | Detect references through real embedded Power Query M, workbook links and connection definitions; classify exact paths vs basename and tentative literals. | PASS (real Windows Excel Mashup/external-links fixture; local/OneDrive) |
+| DF-03 | Inspect real `.accdb`/`.mdb` linked tables and saved queries on a local temporary copy; no original lock-file/writeback. | PASS on Windows DAO 12.0; **ACE DAO 16.0 WAIVED / NOT VERIFIED** |
+| DF-04 | No external data refresh, Excel process, VBA execution, Access query execution or modification to original file hashes. | PASS on tested static read-only scans (unchanged hash/mtime, clean Excel/Access temp state); other hosts not verified |
+| DF-05 | Unsupported/unreadable/dynamic sources, absent DAO and canceled scans are visible; zero hits are never equated with proven independence. | PASS (portable and live fixture ambiguity/unresolved/cancellation) |
+| DF-06 | GUI worker remains responsive/cancellable; JSON and CSV preserve dependency matches and coverage issues; CLI exit 5 represents partial coverage. | PASS (Windows in-process GUI checks and packaged CLI; packaged GUI end-to-end scan not separately automated) |
+| DF-07 | Verify Windows mapped-drive/UNC, OneDrive hydration, genuine `.xlsm`/`.xlsx` DataMashup and Access `.mdb`/`.accdb` smoke cases with original SHA-256 before/after. | PASS (local + OneDrive, genuine Excel, DAO 12.0, original integrity); **mapped SMB/UNC and ACE DAO 16.0 WAIVED / NOT VERIFIED** |
+| DF-08 | General Map scans all selected consumer files once, including files that depend on one another, and retains a full incoming/outgoing index without repeatedly reading inputs when the UI filter changes. | PASS (portable and Windows in-process GUI filter/map checks) |
+| DF-09 | Quick excludes worksheet formulas/defined names; Deep includes them. Non-custom Excel XML is stream-parsed in bounded chunks; completed nodes and matched formula strings are discarded rather than buffered across the workbook. | PASS (synthetic coverage tests and 31,200-formula Windows Quick/Deep benchmark); fixture produced no Deep-only edges |
+| DF-10 | Filename collisions with no exact path produce ambiguous/unresolved reports rather than guessed graph edges; the full JSON/CSV export preserves them; an accessible visual graph displays the advisory relationships. | PASS (Windows local fixture + in-process GUI graph/exports) |
+
 
 ## Scenarios to add (unit + Excel where possible)
 
@@ -94,3 +97,4 @@ These are independent of internal implementation. Orchestrator links actual auto
 - **BLOCKED**: reason + steps to resolve and expected command.
 - **UNVERIFIED**: code present, no live evidence, must not be advertised as supported production functionality.
 - **FAIL**: reproducible defect + issue owner.
+- **WAIVED / NOT VERIFIED**: a named check has not passed, but the owner explicitly accepts that gap for a narrowly scoped feature merge; record environment, risk and future verification. A waiver is never PASS or full-release certification.
