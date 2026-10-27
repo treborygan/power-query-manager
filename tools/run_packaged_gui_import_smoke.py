@@ -150,7 +150,7 @@ def _exercise_packaged_modal_accessibility(window) -> None:
     if not source_rows:
         raise AssertionError('Packaged source row GuiSmoke is not available for inspector selection.')
     source_rows[0].select()
-    _send_qt_click(window.child_window(title='Inspect / compare selected', control_type='Button'), window.handle)
+    window.child_window(title='Inspect / compare selected', control_type='Button').invoke()
     inspector = _wait_child(window, 'Query inspector — GuiSmoke')
     _assert_named_controls(inspector, [
         ('Search M expressions and diff', 'Edit'),
@@ -614,7 +614,7 @@ def main() -> int:
                     scrollbars[-1].iface_range_value.SetValue(
                         scrollbars[-1].iface_range_value.CurrentMaximum)
                     time.sleep(0.3)
-                _send_qt_click(window.child_window(title='Load import profile', control_type='Button'), window.handle)
+                window.child_window(title='Load import profile', control_type='Button').invoke()
                 picker = _wait_child(window, 'Load import profile')
                 filename = picker.child_window(auto_id='1148', control_type='ComboBox').child_window(control_type='Edit')
                 filename.set_edit_text(str(profile_path))
@@ -623,7 +623,9 @@ def main() -> int:
                 profile_loaded.child_window(title='OK', control_type='Button').invoke()
             else:
                 window.descendants(control_type='Edit')[0].set_edit_text(str(workbook))
-                _send_qt_click(window.child_window(title='Add files', control_type='Button'), window.handle)
+                # Invoke the accessible action even when the scrollable Vector
+                # workspace initially positions it outside the visible viewport.
+                window.child_window(title='Add files', control_type='Button').invoke()
                 picker = _wait_child(window, 'Select Power Query files')
                 filename = picker.child_window(auto_id='1148', control_type='ComboBox').child_window(control_type='Edit')
                 filename.set_edit_text(str(source))
@@ -1019,9 +1021,21 @@ def main() -> int:
                 import gc
                 gc.collect()
                 from pq_installer.core.excel_lifetime import quit_owned_excel
-                needed_termination = quit_owned_excel(verify_excel)
-                verify_excel = None
+                apartment_released = False
+                def release_verify_apartment():
+                    nonlocal verify_excel, apartment_released
+                    verify_excel = None
+                    gc.collect()
+                    pythoncom.CoUninitialize()
+                    apartment_released = True
+                try:
+                    needed_termination = quit_owned_excel(verify_excel, after_quit=release_verify_apartment)
+                finally:
+                    if apartment_released:
+                        pythoncom.CoInitialize()
                 print(f'INFO: verification Excel PID {verify_pid} cleanup termination={needed_termination}; process set={sorted(_excel_pids())}.')
+                if needed_termination:
+                    raise RuntimeError('Read-only verification Excel required forced termination.')
             backups = workbook.parent.glob(f'{workbook.stem}_backup_*{workbook.suffix}')
             if args.skip_existing:
                 if _sha256(workbook) != original_hash:

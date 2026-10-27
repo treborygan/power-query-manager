@@ -1,5 +1,14 @@
 # Windows Excel acceptance: manual + script-assisted test matrix
 
+## Vector feature candidate — Windows verification, 2026-10-27
+
+- Tested application source commit: `d72c25440231def2c4bd91234523da72064d1456`; Windows build 26300, Python 3.11.9, PySide6 6.8.3, PyInstaller 6.13.0, Excel 16.0 build 20430.0. The later smoke-harness adjustments only change test driving, not the packaged application.
+- `app/build.ps1`: **540 passed**, then both onedir executables built. The isolated staged release verified **116 files / 76,326,415 bytes**. GUI SHA-256 `08DE89817BB721D4B72EE8D5FF70DA2EF9B9D82D746D5157E7E6193F0CC25106`; CLI SHA-256 `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`. Packaged CLI `--help` exited successfully.
+- UI tests: **90 passed** with each of `QT_SCALE_FACTOR=1.25` and `1.5` using Qt offscreen. The laptop layout assertion checks 960×600 and 1366×768 without horizontal workspace scrolling. This is not OS-level DPI or physical-display verification. Packaged UI Automation traversed 43 controls by Tab, including workbook, table, backup and import; actual GUI launch, main workspace, command palette, empty inspector and Finder were visually observed. The original concept board was unavailable for side-by-side comparison.
+- Local disposable Excel/Access scanner harness with `DAO.DBEngine.120`: **PASS** at the tested application commit. Ten fixtures retained hashes and timestamps; no Access locks or temp directories remained; Excel exited naturally; Quick/Deep, filter counts, 12 graph edges, CSV/JSON exports, progress and cancellation were checked. The in-process Finder checks do not prove every packaged GUI interaction.
+- Packaged GUI definition-only create and existing-query replacement succeeded with exact formula readback and matching pre-import backups; the manager-owned Excel processes exited without forced termination. The separate read-only verification process required forced cleanup in the first runs. After the harness was corrected to release its COM reference and apartment before waiting, repeated create/history and replacement runs exited both manager-owned and verification Excel processes naturally. Inspector, query-graph, mapping and snapshot-comparison dialog accessible names were checked.
+- **Open gates:** full live workflow and visual coverage (including populated graphs, all dialogs, DPI and resolutions), and review against the actual Vector board. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**, not passed. Do not merge based on these partial results alone.
+
 **Never use production workbooks.** Create disposable `.xlsx` and `.xlsm` with desktop Excel; include M sources in `examples/sources/`. Source packages must contain no company data.
 
 ## Test host capture

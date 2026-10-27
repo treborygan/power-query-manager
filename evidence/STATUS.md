@@ -1,6 +1,6 @@
 ## 2026-10-27 — Vector Windows validation in progress
 
-- Initial Windows build stopped at its test gate: 537 passed, 3 failed (inspector test expected the old default palette, Finder test used an invalid Qt method, and workspace horizontal overflow at laptop width). The implementation and tests were corrected without removing the overflow or theme assertions; full rebuild and acceptance remain in progress.
+- Initial Windows build stopped at its test gate: 537 passed, 3 failed (inspector test expected the old default palette, Finder test used an invalid Qt method, and workspace horizontal overflow at laptop width). The implementation and tests were corrected without removing the overflow or theme assertions. The rebuilt application at `d72c25440231def2c4bd91234523da72064d1456` passed 540 tests and package verification; live acceptance remains in progress. See the Vector entry in `docs/QA_WINDOWS_MATRIX.md` for results and open gates.
 - The 90 UI tests passed separately with `QT_SCALE_FACTOR=1.25` and `1.5` using the offscreen platform. This is simulated Qt scaling, not OS-level display scaling or physical-display acceptance.
 
 ## W292 — 2026-10-23 — current-package multi-workbook dry run
