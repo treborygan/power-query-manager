@@ -135,8 +135,17 @@ class MainWindow(QMainWindow):
         apply_vector_theme(self, dark)
 
     def _scroll_to_vector(self, section):
-        """Sidebar is an anchor navigator, not a replacement for existing widgets."""
+        """Sidebar navigates to the original widgets and highlights the active area."""
         self.workspace_scroll.ensureWidgetVisible(section, 16, 24)
+        area = {
+            self.vector_workbook_panel: "Workspace and workbook",
+            self.vector_sources_panel: "Query sources",
+            self.vector_options_panel: "Import settings",
+        }.get(section)
+        for name, button in self.vector_nav_buttons.items():
+            button.setObjectName("vectorNavActive" if name == area else "vectorNav")
+            button.style().unpolish(button)
+            button.style().polish(button)
 
     def _update_vector_metrics(self, *_):
         """Derive dashboard metrics from the existing query model, never a duplicate."""
@@ -273,12 +282,14 @@ class MainWindow(QMainWindow):
             ("◷", "Operation history", self._open_history),
             ("⚙", "Import settings", lambda: self._scroll_to_vector(self.vector_options_panel)),
         )
+        self.vector_nav_buttons = {}
         for index, (glyph, name, callback) in enumerate(navigation):
             nav_button = QPushButton(glyph)
             nav_button.setObjectName("vectorNavActive" if index == 0 else "vectorNav")
             nav_button.setAccessibleName(name)
             nav_button.setToolTip(name)
             nav_button.clicked.connect(callback)
+            self.vector_nav_buttons[name] = nav_button
             side.addWidget(nav_button)
         side.addStretch()
         help_link = QPushButton("?")
