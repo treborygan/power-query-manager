@@ -150,15 +150,14 @@ General Map CSV summaries distinguish `links_found` from `no_links` based
 on both incoming and outgoing edges; dependency rows contain each consumer
 and referenced target path.
 
-## Verification state
+## Verification state and explicit Windows waivers (2026-10-27)
 
-Portable pytest tests cover synthetic Office ZIP/Mashup metadata, dependency
-matching, Access DAO fakes and isolated-copy behavior, GUI selection/worker
-and CLI report behavior. **Windows Access Engine inspection against real
-disposable `.accdb` and `.mdb` files, genuine Excel Power Query package
-compatibility, mapped-drive behavior and the packaged executable remain
-UNVERIFIED** until a Windows smoke matrix is recorded. The repository's
-existing `dist/` package has not been rebuilt for this source change.
+The owner authorized **feature-branch integration with two outstanding checks waived**, not a claim that they passed. The Windows suite reported 537 passing tests. A clean-revision Windows harness run on `a13ff507e76e4cca80fd204c69781a033ffbed39` used real disposable DAO 12.0 `.accdb`/`.mdb` fixtures and Excel Mashup/external-workbook links, verified 12 dependency records, tested local and OneDrive-synchronized Quick/Deep scans, in-process GUI filtering/graph/JSON/CSV/progress/cancellation, and packaged CLI behavior. Source hashes, sizes and timestamps stayed unchanged; Access lock/temp files did not remain; fixture-owned Excel exited naturally in 3.23 s. Both modes found the same edges on the 31,200-external-formula-cell fixture. These results do not imply exhaustive dependency detection.
 
-See [acceptance criteria](ACCEPTANCE_CRITERIA.md) and
-[security policy](SECURITY_AND_FAILURE_POLICY.md).
+**Not validated (waived for PR #1 merge only):**
+- **ACE DAO 16.0:** `DAO.DBEngine.160` was not registered on the host; the ACE 16 preflight correctly stopped without fixtures. DAO 12.0 compatibility is supporting evidence **only**, not proof for DAO 16.0.
+- **Mapped SMB and UNC:** there were no connected test shares/mappings. OneDrive synchronized-folder success is not network share compatibility evidence.
+
+The packaged GUI launched and showed the new controls; the detailed GUI filter/graph/export interactions were exercised via the dialog on the Windows host, rather than as a complete packaged-GUI user-journey automation. Other Windows/Office versions, giant real corporate workbooks, and the broader product release matrix retain their own limitations. Do not present the two waived environments as verified or use a zero-match result as proof that a file can safely be retired.
+
+See [acceptance criteria](ACCEPTANCE_CRITERIA.md), [Windows evidence and W297 waiver](QA_WINDOWS_MATRIX.md) and [security policy](SECURITY_AND_FAILURE_POLICY.md).
