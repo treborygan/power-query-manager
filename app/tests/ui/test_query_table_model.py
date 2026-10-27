@@ -334,6 +334,13 @@ def test_vector_workspace_preserves_commands_and_live_query_metrics(tmp_path):
     assert window.recover_stage_btn.accessibleName() == "Recover a verified staged workbook copy"
     assert window.undo_button.accessibleName() == "Undo last table edit"
     assert window.redo_button.accessibleName() == "Redo last table edit"
+    labels = [label for label, _button in window._vector_command_entries()]
+    assert len(labels) >= 25
+    assert "Open Dependency Finder" in labels
+    assert "Review and import queries" in labels
+    assert "Inspect / compare selected" in labels
+    assert "Compare package versions" in labels
+    assert window.vector_command_button.accessibleName() == "Open command palette"
     path = tmp_path / "vector-test.pq"
     path.write_text("1", encoding="utf-8")
     window._merge_sources([QuerySource(path, "Vector")])
