@@ -20,6 +20,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import statistics
 import subprocess
 import sys
 import tempfile
@@ -167,6 +168,9 @@ def _excel_fixture(folder: Path, *, large_rows: int):
     owned_pid = None
     fixture_result = None
     cleanup_started = None
+    cleanup_errors = []
+    forced_termination = False
+    quit_timeout_seconds = 60
     try:
         excel = win32com.client.DispatchEx("Excel.Application")
         excel.Visible = False
@@ -231,23 +235,42 @@ def _excel_fixture(folder: Path, *, large_rows: int):
         if workbook is not None:
             try:
                 workbook.Close(False)
-            except Exception:
-                pass
+            except Exception as exc:
+                cleanup_errors.append(f"active workbook close: {type(exc).__name__}: {exc}")
         workbook = None
         if "sheet" in locals():
             sheet = None
         if excel is not None:
             try:
+                # Close any workbook Excel still reports open before Quit. The
+                # COM enumerator and workbook proxies are released in this STA.
+                books = excel.Workbooks
+                for index in range(books.Count, 0, -1):
+                    book = books.Item(index)
+                    try:
+                        book.Close(False)
+                    except Exception as exc:
+                        cleanup_errors.append(f"workbook collection close: {type(exc).__name__}: {exc}")
+                    book = None
+                books = None
+            except Exception as exc:
+                cleanup_errors.append(f"workbook enumeration: {type(exc).__name__}: {exc}")
+            # Quit is independent of collection inspection and must always run.
+            try:
                 excel.Quit()
-            except Exception:
-                pass
+            except Exception as exc:
+                cleanup_errors.append(f"Excel.Quit: {type(exc).__name__}: {exc}")
         excel = None
+        # Release pywin32 COM wrappers and collect them before uninitializing
+        # the apartment. Releasing proxies after CoUninitialize can keep the
+        # DispatchEx-owned Excel server alive until external termination.
+        import gc
+        gc.collect()
+        gc.collect()
         pythoncom.CoUninitialize()
         if owned_pid is not None:
-            import gc
-            gc.collect()
             cleanup_started = time.monotonic()
-            deadline = cleanup_started + 20
+            deadline = cleanup_started + quit_timeout_seconds
             while owned_pid in _excel_pids() and time.monotonic() < deadline:
                 time.sleep(0.1)
             if owned_pid in _excel_pids():
@@ -263,14 +286,18 @@ def _excel_fixture(folder: Path, *, large_rows: int):
                     time.sleep(0.1)
                 if owned_pid in _excel_pids():
                     raise RuntimeError(f"Owned Excel PID {owned_pid} resisted Quit() and cleanup.")
+                forced_termination = True
                 if fixture_result is not None:
                     fixture_result["excel_forced_termination"] = True
                     fixture_result["excel_force_cleanup_exit_code"] = forced.returncode
             if fixture_result is not None:
+                fixture_result["excel_cleanup_errors"] = cleanup_errors
+                fixture_result["excel_forced_termination"] = forced_termination
+                fixture_result["excel_quit_timeout_seconds"] = quit_timeout_seconds
                 fixture_result["excel_quit_to_process_exit_seconds"] = time.monotonic() - cleanup_started
 
 
-def _create_fixtures(folder: Path, *, large_rows: int, dao_progid: str):
+def _create_dao_fixtures(folder: Path, dao_progid: str):
     import pythoncom
     import win32com.client
 
@@ -308,7 +335,33 @@ def _create_fixtures(folder: Path, *, large_rows: int, dao_progid: str):
                     query_name="StockSavedQuery")
     finally:
         engine = None
+        # DAO objects created by the helper calls can participate in pywin32
+        # reference cycles. Collect them while the DAO COM apartment is still
+        # initialized, before creating the separate Excel automation instance.
+        import gc
+        gc.collect()
+        gc.collect()
         pythoncom.CoUninitialize()
+
+
+def _create_fixtures(folder: Path, *, large_rows: int, dao_progid: str):
+    # DAO COM proxy state can keep a later Excel DispatchEx server alive when
+    # both automation stacks share one Python process. Build the real Access
+    # fixtures in a short-lived worker process, then create Excel fixtures in
+    # the parent process with a clean COM lifetime.
+    worker = (
+        "import sys; from pathlib import Path; "
+        "import tools.run_dependency_windows_acceptance as harness; "
+        "harness._create_dao_fixtures(Path(sys.argv[1]), sys.argv[2])"
+    )
+    process = subprocess.run([sys.executable, "-c", worker, str(folder), dao_progid],
+                             cwd=ROOT, capture_output=True, text=True,
+                             encoding="utf-8", errors="replace")
+    if process.returncode:
+        raise RuntimeError(
+            f"DAO fixture worker failed with exit {process.returncode}: "
+            f"{process.stderr.strip() or process.stdout.strip()}"
+        )
     excel = _excel_fixture(folder, large_rows=large_rows)
     return excel
 
@@ -503,7 +556,7 @@ def _gui_cancel_progress(files):
 
 
 def _run_location(label: str, fixture_source: Path, root: Path, cli_exe: Path,
-                  *, keep: bool, large_rows: int):
+                  *, keep: bool, large_rows: int, performance_repeats: int):
     run_dir = root / f"pqm-dependency-acceptance-{uuid.uuid4().hex}"
     shutil.copytree(fixture_source, run_dir)
     files = sorted(path for path in run_dir.rglob("*")
@@ -514,14 +567,35 @@ def _run_location(label: str, fixture_source: Path, root: Path, cli_exe: Path,
     excel_before = _excel_pids()
     modes = {}
     cli_reports = {}
-    for depth in ("quick", "deep"):
-        report, metrics = _scan_cli(cli_exe, files, depth)
-        cli_reports[depth] = report
-        graph = _assert_expected(report, files)
-        modes[depth] = {**metrics, **graph, "issue_count": len(report["issues"]),
-                        "unresolved_count": len(report["unresolved"])}
-        if report["depth"] != depth:
-            raise AssertionError(f"CLI returned depth {report['depth']!r} for requested {depth!r}.")
+    measurements = {"quick": [], "deep": []}
+    for _ in range(performance_repeats):
+        for depth in ("quick", "deep"):
+            report, metrics = _scan_cli(cli_exe, files, depth)
+            graph = _assert_expected(report, files)
+            if report["depth"] != depth:
+                raise AssertionError(f"CLI returned depth {report['depth']!r} for requested {depth!r}.")
+            report_edges = {(edge["consumer_path"], edge["target_path"], edge["source_kind"], edge["source_name"])
+                            for edge in report["edges"]}
+            if measurements[depth] and report_edges != measurements[depth][0]["edge_ids"]:
+                raise AssertionError(f"{depth.title()} scan results changed between performance repetitions.")
+            measurements[depth].append({**metrics, "graph": graph, "edge_ids": report_edges,
+                                        "issue_count": len(report["issues"]),
+                                        "unresolved_count": len(report["unresolved"])})
+            cli_reports[depth] = report
+    for depth, runs in measurements.items():
+        elapsed = [run["elapsed_seconds"] for run in runs]
+        peak = [run["peak_working_set_bytes"] for run in runs]
+        modes[depth] = {**runs[-1]["graph"], "elapsed_seconds": statistics.median(elapsed),
+                        "peak_working_set_bytes": max(peak), "issue_count": runs[-1]["issue_count"],
+                        "unresolved_count": runs[-1]["unresolved_count"],
+                        "performance_runs": [{"elapsed_seconds": run["elapsed_seconds"],
+                                              "peak_working_set_bytes": run["peak_working_set_bytes"]}
+                                             for run in runs],
+                        "performance_summary": {"repetitions": len(runs),
+                                                "median_elapsed_seconds": statistics.median(elapsed),
+                                                "min_elapsed_seconds": min(elapsed),
+                                                "max_elapsed_seconds": max(elapsed),
+                                                "max_peak_working_set_bytes": max(peak)}}
     reverse_command = [str(cli_exe), "dependency-scan", "--target",
                        str(run_dir / "Warehouse.accdb"), "--target", str(run_dir / "Stock.mdb"),
                        "--folder", str(run_dir), "--recursive", "--depth", "deep"]
@@ -613,6 +687,8 @@ def main():
                         help="DAO COM provider used to create fixtures (default requires ACE DAO 16.0).")
     parser.add_argument("--large-rows", type=int, default=1200,
                         help="Rows of 26 external-link formulas used for the Quick/Deep performance comparison.")
+    parser.add_argument("--performance-repeats", type=int, default=3,
+                        help="Repeat each packaged Quick/Deep scan this many times (default: 3).")
     parser.add_argument("--keep-fixtures", action="store_true", help="Keep disposable input folders for inspection.")
     args = parser.parse_args()
     if os.name != "nt":
@@ -621,11 +697,13 @@ def main():
         parser.error(f"Packaged CLI not found: {args.cli_exe}")
     if args.large_rows < 1 or args.large_rows > 20000:
         parser.error("--large-rows must be in 1..20000.")
+    if args.performance_repeats < 1 or args.performance_repeats > 10:
+        parser.error("--performance-repeats must be in 1..10.")
 
-    import pythoncom
-    pythoncom.CoInitialize()
+    # Process inventory uses tasklist and does not call COM. Avoid opening and
+    # closing an STA in the parent before DispatchEx; on this host that altered
+    # Excel's later automation-server shutdown behavior.
     baseline_excel = _excel_pids()
-    pythoncom.CoUninitialize()
     temp_root = Path(tempfile.mkdtemp(prefix="pqm-dependency-acceptance-"))
     fixture_root = temp_root / "seed"
     output = {"schema_version": 1, "status": "FAIL", "source_commit": None,
@@ -658,7 +736,8 @@ def main():
                 source = fixture_root
                 local_root = root
             output["locations"].append(_run_location(label, source, local_root, args.cli_exe,
-                                                       keep=args.keep_fixtures, large_rows=args.large_rows))
+                                                       keep=args.keep_fixtures, large_rows=args.large_rows,
+                                                       performance_repeats=args.performance_repeats))
         output["status"] = ("FAIL" if output["fixture_creation"].get("excel_forced_termination")
                             or any(not row.get("excel_pids_unchanged", False) for row in output["locations"])
                             else "PASS")
