@@ -275,15 +275,18 @@ def test_manager_has_undo_redo_actions_and_buttons(tmp_path):
 
 
 def test_light_dark_theme_toggle_applies_readable_theme_styles():
-    window=MainWindow()
-    light=window.styleSheet()
-    assert 'background: #f4f7fb' in light
-    window.theme_toggle.setChecked(True)
-    dark=window.styleSheet()
-    assert window.dark_theme_enabled and 'background: #1c232b' in dark
-    assert 'QLabel#secondaryText { color: #c2ccd8; }' in dark
+    window = MainWindow()
+    assert window.theme_toggle.isChecked() and window.dark_theme_enabled
+    assert "background-color: #080e12" in window.styleSheet()
+    assert "QLabel#secondaryText" in window.styleSheet()
+    assert "color: #adbec3" in window.styleSheet()
     window.theme_toggle.setChecked(False)
-    assert not window.dark_theme_enabled and 'background: #f4f7fb' in window.styleSheet()
+    assert not window.dark_theme_enabled
+    assert "background-color: #f1f6f5" in window.styleSheet()
+    assert "color: #193037" in window.styleSheet()
+    window.theme_toggle.setChecked(True)
+    assert window.dark_theme_enabled
+    assert "QPushButton#primary" in window.styleSheet()
     window.close()
 
 
@@ -294,7 +297,8 @@ def test_manager_initial_size_and_accessible_names_fit_laptop_layout(tmp_path):
     window=MainWindow()
     workbook=tmp_path/'target.xlsx';workbook.write_bytes(b'disposable')
     window.workbook_edit.setText(str(workbook))
-    assert isinstance(window.centralWidget(),QScrollArea)
+    assert isinstance(window.workspace_scroll,QScrollArea)
+    assert window.centralWidget().objectName() == "vectorCanvas"
     assert window.workbook_edit.accessibleName()=='Target workbook path'
     assert window.table.accessibleName()=='Query source settings table'
     assert window.search_edit.accessibleName()=='Filter query source rows'
@@ -303,8 +307,8 @@ def test_manager_initial_size_and_accessible_names_fit_laptop_layout(tmp_path):
         assert window.width()<=1366 and window.height()<=768
         assert window.minimumWidth()<=window.width() and window.minimumHeight()<=window.height()
         assert window.table.height()>=140
-        assert window.centralWidget().horizontalScrollBar().maximum()==0
-    assert window.centralWidget().verticalScrollBar().maximum()>0
+        assert window.workspace_scroll.horizontalScrollBar().maximum()==0
+    assert window.workspace_scroll.verticalScrollBar().maximum()>0
     window.workbook_edit.setFocus();QTest.keyClick(window.workbook_edit,Qt.Key_Tab);app.processEvents()
     assert window.focusWidget().text()=='Browse…'
     expected=('Open selected workbook in Excel','Inspect selected workbook queries read-only','Probe Excel load capabilities')
@@ -315,6 +319,33 @@ def test_manager_initial_size_and_accessible_names_fit_laptop_layout(tmp_path):
     assert window.log.accessibleName()=='Operation log output'
     assert window.log.objectName()=='operationLogOutput'
     assert window.log.accessibleDescription()=='Live read-only progress and result details for the current operation.'
+    window.close()
+
+
+
+def test_vector_workspace_preserves_commands_and_live_query_metrics(tmp_path):
+    from PySide6.QtWidgets import QScrollArea
+    window = MainWindow()
+    assert isinstance(window.workspace_scroll, QScrollArea)
+    assert window.vector_kpis["Sources"].text() == "00"
+    assert window.vector_kpis["Enabled"].text() == "00"
+    assert window.install_btn.accessibleName() == "Review and import selected queries"
+    assert window.dependency_finder_button.text() == "Dependency Finder…"
+    assert window.recover_stage_btn.accessibleName() == "Recover a verified staged workbook copy"
+    assert window.undo_button.accessibleName() == "Undo last table edit"
+    assert window.redo_button.accessibleName() == "Redo last table edit"
+    path = tmp_path / "vector-test.pq"
+    path.write_text("1", encoding="utf-8")
+    window._merge_sources([QuerySource(path, "Vector")])
+    assert window.vector_kpis["Sources"].text() == "01"
+    assert window.vector_kpis["Enabled"].text() == "01"
+    window._set_selected_enabled(False)  # no selected rows: no state mutation
+    window.query_model.setData(window.query_model.index(0, QueryTableModel.ENABLED), Qt.Unchecked, Qt.CheckStateRole)
+    assert window.vector_kpis["Enabled"].text() == "00"
+    window.dry_run_check.setChecked(True)
+    assert window.vector_kpis["Mode"].text() == "PLAN"
+    window.query_model.clear()
+    assert window.vector_kpis["Sources"].text() == "00"
     window.close()
 
 
