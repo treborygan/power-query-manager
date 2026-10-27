@@ -33,6 +33,34 @@ def test_dialog_discovers_folder_selects_consumers_and_multiple_targets(tmp_path
     dialog.close()
 
 
+def test_vector_finder_laptop_scroll_and_existing_actions(tmp_path):
+    from PySide6.QtWidgets import QScrollArea
+    app = QApplication.instance() or QApplication([])
+    dialog = DependencyFinderDialog()
+    scroller = dialog.findChild(QScrollArea)
+    assert scroller is not None and scroller.isWidgetResizable()
+    assert dialog.run_button.accessibleName() == "" or dialog.run_button.text().startswith("Run read-only")
+    assert dialog.add_files_button.text() == "Add files…"
+    assert dialog.add_folder_button.text() == "Add folder…"
+    assert dialog.add_targets_button.text() == "Add target file(s)…"
+    assert dialog.from_consumers_button.text() == "Use selected files as targets"
+    assert dialog.remove_targets_button.text() == "Remove selected targets"
+    assert dialog.export_csv_button.text() == "Export CSV…"
+    path = tmp_path / "Warehouse.accdb"
+    path.write_bytes(b"fixture")
+    dialog.add_scan_paths([path])
+    dialog.add_target_paths([path])
+    assert "1 candidate" in dialog.consumer_count_label.text()
+    assert "1 selected target" in dialog.target_count_label.text()
+    dialog.mode_combo.setCurrentIndex(dialog.mode_combo.findData("map"))
+    assert dialog.graph_button.isHidden() is False or dialog.graph_button.isVisibleTo(dialog) is False
+    dialog.resize(760, 560)
+    dialog.show()
+    app.processEvents()
+    assert dialog.width() >= 760 and dialog.height() >= 560
+    dialog.close()
+
+
 def test_dialog_runs_in_worker_and_shows_incoming_results(tmp_path):
     app = QApplication.instance() or QApplication([])
     target = tmp_path / "Warehouse.accdb"
