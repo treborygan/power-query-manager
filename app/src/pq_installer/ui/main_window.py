@@ -137,11 +137,13 @@ class MainWindow(QMainWindow):
     def _scroll_to_vector(self, section):
         """Sidebar navigates to the original widgets and highlights the active area."""
         self.workspace_scroll.ensureWidgetVisible(section, 16, 24)
-        area = {
-            self.vector_workbook_panel: "Workspace and workbook",
-            self.vector_sources_panel: "Query sources",
-            self.vector_options_panel: "Import settings",
-        }.get(section)
+        area = None
+        if section is self.vector_workbook_panel:
+            area = "Workspace and workbook"
+        elif section is self.vector_sources_panel:
+            area = "Query sources"
+        elif section is self.vector_options_panel:
+            area = "Import settings"
         for name, button in self.vector_nav_buttons.items():
             button.setObjectName("vectorNavActive" if name == area else "vectorNav")
             button.style().unpolish(button)
