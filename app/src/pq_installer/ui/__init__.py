@@ -33,12 +33,14 @@ def vector_colors(dark=True):
 
 
 _VECTOR_QSS = Template(r"""
-QMainWindow, QDialog, QWidget {
-    background-color: $window;
-    color: $text;
-    font-family: "Segoe UI", "Inter", sans-serif;
+QMainWindow, QDialog, QWidget#vectorCanvas, QWidget#vectorRoot {
+    background-color: $window; color: $text;
+}
+QWidget {
+    color: $text; font-family: "Segoe UI", "Inter", sans-serif;
     font-size: 10pt;
 }
+QLabel, QCheckBox { background: transparent; }
 QMainWindow::separator { background: $soft_border; width: 3px; height: 3px; }
 QWidget#vectorCanvas, QScrollArea#vectorScroll, QWidget#vectorRoot {
     background: $window;
@@ -98,6 +100,13 @@ QPushButton#primary, QPushButton#vectorPrimary {
 }
 QPushButton#primary:hover, QPushButton#vectorPrimary:hover {
     background-color: $accent_hover; border-color: $accent_hover;
+}
+QPushButton#vectorFinderButton {
+    background-color: $surface_alt; color: $accent;
+    border: 1px solid $border; font-weight: 800;
+}
+QPushButton#vectorFinderButton:hover {
+    background-color: $hover; border-color: $accent;
 }
 QPushButton#vectorNav {
     background-color: transparent; color: $muted;
