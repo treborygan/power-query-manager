@@ -5,6 +5,7 @@ This changelog records implementation milestones for the successor to Power Quer
 ## 2026-10-27 — Vector desktop redesign (feature branch, NOT RELEASED)
 
 - Reflowed workspace actions and metrics for narrow windows; corrected a Finder Qt API test and retained inspector theme-toggle coverage for the Vector dark and light palettes.
+- Increased contrast of unchecked checkbox outlines in both themes after inspecting the live light interface.
 
 - Applied the selected Vector concept to the existing PySide6 desktop UI with a graphite canvas, acid-lime primary actions, teal focus markers, compact sidebar, status metrics based on the original query model, and a Ctrl+K action palette that triggers the existing buttons.
 - Reorganized workbook/source/import areas without replacing query models, source/target selectors, undo/redo, import safeguards, inspectors or history. Existing query-table and dialog action names remain available.

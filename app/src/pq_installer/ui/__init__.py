@@ -139,6 +139,9 @@ QComboBox QAbstractItemView {
 }
 QCheckBox { spacing: 8px; color: $text; }
 QCheckBox::indicator { width: 16px; height: 16px; }
+QCheckBox::indicator:unchecked {
+    background: $surface; border: 1px solid $muted; border-radius: 3px;
+}
 QHeaderView::section {
     background-color: $surface_alt; color: $muted;
     padding: 9px 7px; border: 0px; border-bottom: 1px solid $border;
