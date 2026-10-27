@@ -39,7 +39,7 @@ def test_vector_finder_laptop_scroll_and_existing_actions(tmp_path):
     dialog = DependencyFinderDialog()
     scroller = dialog.findChild(QScrollArea)
     assert scroller is not None and scroller.isWidgetResizable()
-    assert dialog.run_button.accessibleName() == "" or dialog.run_button.text().startswith("Run read-only")
+    assert dialog.run_button.accessibleName() == "Run read-only dependency scan"
     assert dialog.add_files_button.text() == "Add files…"
     assert dialog.add_folder_button.text() == "Add folder…"
     assert dialog.add_targets_button.text() == "Add target file(s)…"
@@ -53,7 +53,7 @@ def test_vector_finder_laptop_scroll_and_existing_actions(tmp_path):
     assert "1 candidate" in dialog.consumer_count_label.text()
     assert "1 selected target" in dialog.target_count_label.text()
     dialog.mode_combo.setCurrentIndex(dialog.mode_combo.findData("map"))
-    assert dialog.graph_button.isHidden() is False or dialog.graph_button.isVisibleTo(dialog) is False
+    assert dialog.graph_button.isEnabled() is False  # no completed map report yet
     dialog.resize(760, 560)
     dialog.show()
     app.processEvents()
