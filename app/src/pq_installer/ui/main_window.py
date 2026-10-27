@@ -146,9 +146,17 @@ class MainWindow(QMainWindow):
         enabled = sum(bool(self.query_model.source_at(i).enabled) for i in range(count))
         self.vector_kpis["Sources"].setText(f"{count:02d}")
         self.vector_kpis["Enabled"].setText(f"{enabled:02d}")
-        selected = Path(self.workbook_edit.text()).is_file()
-        self.vector_kpis["Workbook"].setText("01" if selected else "00")
+        self.vector_kpis["Workbook"].setText("01" if getattr(self, "_vector_workbook_exists", False) else "00")
         self.vector_kpis["Mode"].setText("PLAN" if self.dry_run_check.isChecked() else "STAGED")
+
+    def _vector_workbook_changed(self, text):
+        """Use the existing workbook preflight once, not on each query-row repaint."""
+        available = Path(text).is_file()
+        self._vector_workbook_exists = available
+        self.open_btn.setEnabled(available)
+        self.inspect_btn.setEnabled(available)
+        self._refresh_recovery_state()
+        self._update_vector_metrics()
 
     def _vector_command_entries(self):
         """Expose existing actions through a keyboard palette, preserving button enablement."""
@@ -367,8 +375,8 @@ class MainWindow(QMainWindow):
         self.inspect_btn = QPushButton('Inspect queries');self.inspect_btn.setAccessibleName('Inspect selected workbook queries read-only'); self.inspect_btn.setEnabled(False); self.inspect_btn.clicked.connect(self._inspect_workbook)
         self.probe_btn=QPushButton('Probe Excel capabilities');self.probe_btn.setAccessibleName('Probe Excel load capabilities');self.probe_btn.clicked.connect(self._probe_excel)
         self.capability_label=QLabel('Extra load modes stay disabled until an Excel capability probe passes.')
-        self.workbook_edit.textChanged.connect(lambda text: (self.open_btn.setEnabled(Path(text).is_file()),self.inspect_btn.setEnabled(Path(text).is_file()),self._refresh_recovery_state()))
-        self.workbook_edit.textChanged.connect(self._update_vector_metrics)
+        self._vector_workbook_exists = False
+        self.workbook_edit.textChanged.connect(self._vector_workbook_changed)
         wb_layout.addWidget(QLabel('Target workbook'),0,0);wb_layout.addWidget(self.workbook_edit,0,1,1,2)
         workbook_actions=QGridLayout()
         for index, button in enumerate((browse_wb, self.open_btn, self.inspect_btn, self.probe_btn)):
