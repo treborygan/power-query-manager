@@ -214,12 +214,12 @@ class MainWindow(QMainWindow):
         def filter_commands(query=""):
             matches.clear()
             needle = query.casefold().strip()
-            for label, button in entries:
+            for index, (label, button) in enumerate(entries):
                 if needle not in label.casefold():
                     continue
                 from PySide6.QtWidgets import QListWidgetItem
                 item = QListWidgetItem(label)
-                item.setData(Qt.UserRole, button)
+                item.setData(Qt.UserRole, index)
                 if not button.isEnabled():
                     item.setFlags(item.flags() & ~Qt.ItemIsEnabled)
                 matches.addItem(item)
@@ -230,8 +230,11 @@ class MainWindow(QMainWindow):
             item = matches.currentItem()
             if item is None:
                 return
-            button = item.data(Qt.UserRole)
-            if button is not None and button.isEnabled():
+            index = item.data(Qt.UserRole)
+            if index is None:
+                return
+            button = entries[int(index)][1]
+            if button.isEnabled():
                 palette.accept()
                 button.click()
 
