@@ -21,6 +21,32 @@ _MAX_GRAPH_NODES = 80  # the complete index always remains in the report/CSV/JSO
 class _VectorGraphView(QGraphicsView):
     """User-controlled zoom; hand-drag pan remains available in QGraphicsView."""
 
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down,
+                           Qt.Key_Home, Qt.Key_End, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space):
+            nodes = sorted((item for item in self.scene().items()
+                            if item.data(0) and item.flags() & QGraphicsItem.ItemIsSelectable),
+                           key=lambda item: (item.pos().y(), item.pos().x()))
+            if nodes:
+                selected = self.scene().selectedItems()
+                current = nodes.index(selected[0]) if selected and selected[0] in nodes else -1
+                if event.key() == Qt.Key_Home:
+                    index = 0
+                elif event.key() == Qt.Key_End:
+                    index = len(nodes) - 1
+                elif event.key() in (Qt.Key_Left, Qt.Key_Up):
+                    index = max(0, current - 1) if current >= 0 else 0
+                elif event.key() in (Qt.Key_Right, Qt.Key_Down):
+                    index = min(len(nodes) - 1, current + 1)
+                else:
+                    index = max(0, current)
+                self.scene().clearSelection()
+                nodes[index].setSelected(True)
+                self.ensureVisible(nodes[index])
+                event.accept()
+                return
+        super().keyPressEvent(event)
+
     def wheelEvent(self, event):
         step = event.angleDelta().y()
         if not step:
@@ -90,6 +116,9 @@ class FileDependencyGraphDialog(QDialog):
 
         self.graph_view = _VectorGraphView(self._scene(), self)
         self.graph_view.setAccessibleName("Visual file dependency diagram")
+        self.graph_view.setAccessibleDescription(
+            "Use arrow keys to select files, Home or End to jump, and Tab to leave the diagram."
+        )
         self.graph_view.setRenderHint(QPainter.Antialiasing)
         self.graph_view.setRenderHint(QPainter.TextAntialiasing)
         self.graph_view.setDragMode(QGraphicsView.ScrollHandDrag)

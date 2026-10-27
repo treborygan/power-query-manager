@@ -78,6 +78,8 @@ def test_general_map_graph_has_accessible_visual_and_summary(tmp_path):
 
 
 def test_vector_graph_node_selection_and_zoom_keep_accessible_edge_index(tmp_path):
+    from PySide6.QtCore import Qt
+    from PySide6.QtTest import QTest
     from PySide6.QtWidgets import QGraphicsItem
     app = QApplication.instance() or QApplication([])
     consumer = tmp_path / "Report.xlsx"
@@ -88,10 +90,20 @@ def test_vector_graph_node_selection_and_zoom_keep_accessible_edge_index(tmp_pat
                           "exact_path", target.name),
         ), (), (), "quick")
     dialog = FileDependencyGraphDialog(report)
+    dialog.show()
+    app.processEvents()
+    dialog.graph_view.setFocus()
+    QTest.keyClick(dialog.graph_view, Qt.Key_Home)
+    assert len(dialog.graph_view.scene().selectedItems()) == 1
+    first = dialog.graph_view.scene().selectedItems()[0]
+    QTest.keyClick(dialog.graph_view, Qt.Key_Right)
+    assert len(dialog.graph_view.scene().selectedItems()) == 1
+    assert dialog.graph_view.scene().selectedItems()[0] is not first
     nodes = [item for item in dialog.graph_view.scene().items()
              if item.data(0) == str(consumer)]
     assert len(nodes) == 1
     assert nodes[0].flags() & QGraphicsItem.ItemIsSelectable
+    dialog.graph_view.scene().clearSelection()
     nodes[0].setSelected(True)
     app.processEvents()
     assert "Report.xlsx" in dialog.selection_status.text()

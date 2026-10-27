@@ -26,6 +26,7 @@ The Vector design refreshes the **existing desktop PySide6 UI** with a graphite/
 
 Dependency Finder uses separate files-to-inspect and targets panels, a scrollable laptop-sized layout, filter/graph controls, progress/cancel, coverage warning area and unchanged JSON/CSV exports. Both file and query dependency graphs use readable dark nodes, contrasting edges and accessible text summaries. The file graph also supports wheel zoom, pan, fit-to-view, reset and selection, while its render deduplicates repeated arrows without changing the full report.
 Finder stacks its mode selectors and file panels so the workspace fits narrow windows; result tables retain their own scrolling when columns need more room. The file graph also wraps its status and places zoom controls below its heading for laptop widths.
+When the file graph has focus, use the arrow keys to select files and Home or End to jump to the first or last file; Tab moves to the next control.
 
 The workspace arranges its action controls and status cards in narrower rows so the original controls remain reachable on laptop-sized windows without horizontal workspace scrolling. Vertical scrolling is used to reach the full workflow.
 Unchecked checkbox outlines use the theme's contrasting muted color, including in light mode.
