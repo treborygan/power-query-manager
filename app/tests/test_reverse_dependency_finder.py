@@ -120,6 +120,21 @@ def test_multiple_targets_match_access_records_and_exclude_self(tmp_path):
     assert {hit.consumer_path for hit in result.hits} == {str(consumer)}
 
 
+def test_reverse_scan_does_not_guess_between_same_name_targets(tmp_path):
+    a = tmp_path / "a" / "Warehouse.accdb"
+    b = tmp_path / "b" / "Warehouse.accdb"
+    a.parent.mkdir(); b.parent.mkdir()
+    a.write_bytes(b"fixture"); b.write_bytes(b"fixture")
+    consumer = tmp_path / "Report.mdb"
+    consumer.write_bytes(b"fixture")
+    result = scan_reverse_dependencies([a, b], [consumer],
+        access_reader=lambda _: (DependencyReference("Access linked table", "Stock",
+                                                   "DATABASE=Warehouse.accdb;", True),))
+
+    assert not result.hits
+    assert any(issue.status == "ambiguous_reference" for issue in result.issues)
+
+
 def test_m_dynamic_path_is_reported_as_incomplete_not_as_a_confirmed_match(tmp_path):
     target = tmp_path / "Warehouse.accdb"
     consumer = tmp_path / "Dynamic.xlsx"

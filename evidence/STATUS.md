@@ -1085,3 +1085,33 @@
   the failing test names were identical to the pre-change baseline.
 - Windows `DAO.DBEngine`, real Access files, original before/after hashes,
   Excel DataMashup and packaged GUI/CLI: **NOT VERIFIED**.
+
+## 2026-10-27 — General Dependency Map and bounded-stream scan evidence
+
+- Added general file-to-file dependency indexing across selected Excel and
+  Access files, an outgoing/incoming GUI filter backed by one in-memory index,
+  a visual advisory graph, and the `dependency-map` CLI. Find Dependents
+  remains available. Quick and Deep modes control worksheet-formula coverage.
+- Office XML metadata now uses incremental parsing with completed-node
+  removal, and matches/unresolved filename hints are deduplicated as each
+  reference arrives. A failing-first 60,000-formula stress test initially
+  peaked at 9,899,400 traced bytes; the incremental-index fix passed the
+  6 MiB peak threshold on that same synthetic sample. This does **not** claim
+  a strict peak-RAM bound for every file or actual Excel workbook.
+- The map CSV summary checks both incoming and outgoing links; a failing-first
+  UI regression caught its earlier misleading `no_matches` label for a
+  file with only outgoing links. Diagram arrowheads are also covered by a
+  portable GUI regression.
+- A fresh read-only reviewer found reverse duplicate-basename false positives
+  and lost second filenames inside a single formula/Access query; three
+  failing-first regressions reproduced them. Extraction now checks every
+  safe file mention and resolves exact-path priority or emits ambiguity.
+  A fourth failing-first regression excluded raw saved-SQL text from the
+  unresolved-filename export.
+- Final focused dependency/CLI/UI regression: **39 passed**. Full Linux
+  offscreen suite: **514 passed, 11 skipped, 11 failed**. The 11 failing names
+  are identical to the pre-feature Linux baseline and concern Windows/host
+  path/stream or existing release-package assumptions; they are still failures,
+  not skipped or claimed passed. Real Windows mapped folders,
+  genuine Excel DataMashup, DAO Access Engine, performance on large workbooks,
+  and the rebuilt packaged GUI/CLI are still **NOT VERIFIED**.

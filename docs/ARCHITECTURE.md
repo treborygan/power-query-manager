@@ -67,7 +67,14 @@ reference result dataclasses cross the UI boundary. The
 `ui/dependency_finder_dialog.py` worker runs scanning in its own QThread and
 supports cancellation between files. Folder inventory also runs in a separate
 cancellable QThread to avoid freezing the GUI on mapped drives; the CLI
-shares the exact scanner.
+shares the exact scanner. `DependencyMapReport` preserves a compact immutable
+file-level edge/unresolved-reference index for repeated UI incoming/outgoing
+filters. `filter_dependency_map()` never reads input files; General Map still
+scans **every** selected file, including those which are also dependencies.
+`_stream_xml_references()` reads non-custom Excel XML in bounded chunks and
+unlinks parsed subtrees; it emits formula/link references immediately to the
+matcher without retaining whole worksheet XML or a full formula inventory.
+Only bounded embedded DataMashup custom XML is buffered for decoding.
 Source M/SQL and full connection strings are not copied into report records.
 This scanner never enters the Excel COM import/deployment pipeline.
 

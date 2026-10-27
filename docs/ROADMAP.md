@@ -8,6 +8,8 @@ Each milestone produces runnable code, tests, updated help, working local build 
 - [x] Synthetic OOXML/Power Query and Access DAO metadata scanner, guarded matching and explicit coverage statuses.
 - [x] GUI worker with cancel, reports and CLI entrypoint; portable unit coverage.
 - [x] Independent cancellable GUI folder inventory, CSV injection protection, bounded cumulative ZIP metadata and pre-cleanup DAO proxy release.
+- [x] General file-level dependency index with incoming/outgoing filters, ambiguity reporting, unresolved external filename hints, advisory visual graph and CLI mapping command.
+- [x] Incremental ZIP/XML worksheet/formula/connection parsing with per-reference matching, Quick/Deep modes and bounded DataMashup decoding.
 - [ ] Validate actual `.accdb`/`.mdb` DAO reading and sample `.xlsx`/`.xlsm` DataMashup on Windows, with original hashes and no side effects.
 - [ ] Verify mapped/UNC paths, synced placeholders, performance and packaged onedir GUI/CLI before claiming supported Windows release.
 

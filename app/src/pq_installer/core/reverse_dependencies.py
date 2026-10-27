@@ -68,6 +68,25 @@ class DependencyReport:
     cancelled: bool = False
 
 
+@dataclass(frozen=True)
+class UnresolvedReference:
+    consumer_path: str
+    source_kind: str
+    source_name: str
+    reference_filename: str  # safe basename only; never raw SQL/connection text
+
+
+@dataclass(frozen=True)
+class DependencyMapReport:
+    files: tuple[str, ...]
+    inspected: tuple[str, ...]
+    edges: tuple[DependencyHit, ...]
+    unresolved: tuple[UnresolvedReference, ...]
+    issues: tuple[ScanIssue, ...]
+    depth: str
+    cancelled: bool = False
+
+
 def discover_scan_files(inputs, *, recursive=True, cancelled=None):
     """Inventory supported and known-unsupported Office files; skip lock files."""
     discovered = {}
@@ -100,6 +119,70 @@ def _parse_xml(data):
     if b"<!DOCTYPE" in data.upper() or b"<!ENTITY" in data.upper():
         raise ValueError("Prohibited XML declaration in workbook.")
     return ElementTree.fromstring(data)
+
+
+class _GuardedXmlStream:
+    """Bounded incremental reader that rejects entity/DTD declarations.
+
+    ElementTree does not need a whole-sheet DOM to find `<f>` elements. The
+    32-byte look-behind detects declarations split across ZIP read chunks.
+    """
+
+    def __init__(self, stream, maximum):
+        self._stream = stream
+        self._maximum = maximum
+        self._read = 0
+        self._previous = b""
+
+    def read(self, count=-1):
+        chunk = self._stream.read(min(65536, count) if count is not None and count > 0 else 65536)
+        self._read += len(chunk)
+        if self._read > self._maximum:
+            raise ValueError("XML metadata exceeds the streaming size budget.")
+        probe = self._previous + chunk
+        if (b"<!DOCTYPE" in probe.upper() or b"<!ENTITY" in probe.upper()
+                or b"\x00" in probe):
+            raise ValueError("Unsupported XML declaration or encoding.")
+        self._previous = probe[-32:]
+        return chunk
+
+
+def _stream_xml_references(workbook, info, path, kind):
+    """Stream Excel connections/links/defined names/formulas with subtree cleanup."""
+    connection_name = "Excel connection"
+    parents = []
+    with workbook.open(info) as source:
+        stream = _GuardedXmlStream(source, _MAX_TOTAL_METADATA_BYTES)
+        for event, element in ElementTree.iterparse(stream, events=("start", "end")):
+            local = _local_name(element.tag)
+            if event == "start":
+                parents.append(element)
+                if kind == "connections":
+                    if local == "connection":
+                        connection_name = element.attrib.get("name", "Excel connection")
+                    for key in ("connection", "sourceFile", "url"):
+                        if key in element.attrib:
+                            yield DependencyReference(
+                                "Excel connection", connection_name, element.attrib[key], True
+                            )
+                elif kind == "links" and local == "Relationship":
+                    if element.attrib.get("TargetMode", "").casefold() == "external":
+                        yield DependencyReference(
+                            "Excel external link", info.filename, element.attrib.get("Target", ""), True
+                        )
+            else:
+                if kind == "names" and local == "definedName" and element.text:
+                    yield DependencyReference(
+                        "Excel defined name", element.attrib.get("name", "Defined name"), element.text
+                    )
+                elif kind == "formulas" and local == "f" and element.text:
+                    yield DependencyReference("Excel formula", info.filename, element.text)
+                parents.pop()
+                if parents:
+                    # Clearing alone leaves millions of empty `row` objects
+                    # attached to sheetData; unlink completed nodes as well.
+                    parents[-1].remove(element)
+                element.clear()
 
 
 def _mashup_scripts(data):
@@ -177,8 +260,11 @@ def _m_references(text):
     return refs, dynamic
 
 
-def _excel_references(path):
+def _excel_references(path, *, depth="deep", on_reference=None):
+    if depth not in {"quick", "deep"}:
+        raise ValueError("Scan depth must be quick or deep.")
     refs = []
+    emit = on_reference or refs.append
     issues = []
     try:
         with zipfile.ZipFile(path) as workbook:
@@ -191,53 +277,40 @@ def _excel_references(path):
                 if not (
                     lowered == "xl/connections.xml"
                     or (lowered.startswith("xl/externallinks/_rels/") and lowered.endswith(".rels"))
-                    or lowered == "xl/workbook.xml"
-                    or (lowered.startswith("xl/worksheets/") and lowered.endswith(".xml"))
+                    or (depth == "deep" and lowered == "xl/workbook.xml")
+                    or (depth == "deep" and lowered.startswith("xl/worksheets/") and lowered.endswith(".xml"))
                     or (lowered.startswith("customxml/") and lowered.endswith(".xml"))
                 ):
                     continue
-                if info.file_size > _MAX_XML_SIZE:
+                if lowered.startswith("customxml/") and info.file_size > _MAX_XML_SIZE:
                     issues.append(ScanIssue(str(path), "unreadable", "Workbook metadata part exceeds scan size limit."))
                     continue
                 if metadata_bytes_read + info.file_size > _MAX_TOTAL_METADATA_BYTES:
                     issues.append(ScanIssue(str(path), "unreadable", "Workbook metadata scan budget exceeded; remaining parts were not inspected."))
                     break
                 metadata_bytes_read += info.file_size
-                data = workbook.read(info)
                 if lowered.startswith("customxml/"):
+                    data = workbook.read(info)
                     if b"DataMashup" not in data:
                         continue
                     try:
                         for script_name, text in _mashup_scripts(data):
                             found, dynamic = _m_references(text)
-                            refs.extend(found)
+                            for reference in found:
+                                emit(reference)
                             if dynamic:
                                 issues.append(ScanIssue(str(path), "dynamic_reference", "Power Query has a dynamic source expression that cannot be resolved statically."))
                     except (ValueError, zipfile.BadZipFile, UnicodeError, ElementTree.ParseError) as exc:
                         issues.append(ScanIssue(str(path), "unreadable", "An embedded Power Query definition could not be decoded."))
                     continue
-                root = _parse_xml(data)
-                if lowered == "xl/connections.xml":
-                    for connection in root.iter():
-                        if _local_name(connection.tag) != "connection":
-                            continue
-                        connection_name = connection.attrib.get("name", "Excel connection")
-                        for part in connection.iter():
-                            for key in ("connection", "sourceFile", "url"):
-                                if key in part.attrib:
-                                    refs.append(DependencyReference("Excel connection", connection_name, part.attrib[key], True))
-                elif lowered.startswith("xl/externallinks/"):
-                    for relation in root.iter():
-                        if _local_name(relation.tag) == "Relationship" and relation.attrib.get("TargetMode", "").casefold() == "external":
-                            refs.append(DependencyReference("Excel external link", name, relation.attrib.get("Target", ""), True))
-                elif lowered == "xl/workbook.xml":
-                    for item in root.iter():
-                        if _local_name(item.tag) == "definedName" and item.text:
-                            refs.append(DependencyReference("Excel defined name", item.attrib.get("name", "Defined name"), item.text))
-                else:
-                    for formula in root.iter():
-                        if _local_name(formula.tag) == "f" and formula.text:
-                            refs.append(DependencyReference("Excel formula", name, formula.text))
+                kind = ("connections" if lowered == "xl/connections.xml" else
+                        "links" if lowered.startswith("xl/externallinks/") else
+                        "names" if lowered == "xl/workbook.xml" else "formulas")
+                try:
+                    for reference in _stream_xml_references(workbook, info, path, kind):
+                        emit(reference)
+                except (OSError, ValueError, ElementTree.ParseError, zipfile.BadZipFile):
+                    issues.append(ScanIssue(str(path), "unreadable", "A workbook XML metadata part could not be inspected safely."))
     except (zipfile.BadZipFile, OSError, ValueError, ElementTree.ParseError) as exc:
         issues.append(ScanIssue(str(path), "unreadable", "Workbook ZIP/XML metadata could not be inspected."))
     return tuple(refs), tuple(issues)
@@ -284,7 +357,13 @@ def _match_reference(reference, target):
     return None
 
 
-def scan_reverse_dependencies(targets, consumers, *, access_reader=None, progress=None, cancelled=None):
+def _explicit_reference_paths(reference):
+    """Normalized candidate paths, independent of direct/literal confidence."""
+    return {_normalize_path(candidate) for candidate in _possible_paths(reference.raw)}
+
+
+def scan_reverse_dependencies(targets, consumers, *, access_reader=None, progress=None, cancelled=None,
+                              depth="deep"):
     """Find files which reference selected targets, with explicit coverage gaps.
 
     Never open the target for analysis. On Windows Access metadata is read
@@ -301,8 +380,9 @@ def scan_reverse_dependencies(targets, consumers, *, access_reader=None, progres
     target_keys = {str(path).casefold() for path in chosen}
     candidates = [p for p in requested if str(p).casefold() not in target_keys]
     inspected = []
-    hits = []
+    hits = {}
     issues = []
+    ambiguous_sources = set()
     if not candidates:
         issues.append(ScanIssue("", "no_consumers", "No candidate files remain after excluding the target files; nothing was inspected."))
     reader = access_reader or read_access_references
@@ -314,9 +394,33 @@ def scan_reverse_dependencies(targets, consumers, *, access_reader=None, progres
         inspected.append(str(path))
         suffix = path.suffix.casefold()
         references = ()
+        def collect_reference(reference):
+            exact_paths = _explicit_reference_paths(reference)
+            matches_by_name = {}
+            for target in chosen:
+                match = _match_reference(reference, target)
+                if match:
+                    matches_by_name.setdefault(target.name.casefold(), []).append((target, match))
+            for filename, possible in matches_by_name.items():
+                exact = [(target, match) for target, match in possible
+                         if _normalize_path(str(target)) in exact_paths]
+                if exact:
+                    possible = exact
+                elif len(possible) > 1:
+                    key = (str(path), reference.source_kind, reference.source_name, filename)
+                    if key not in ambiguous_sources:
+                        ambiguous_sources.add(key)
+                        issues.append(ScanIssue(str(path), "ambiguous_reference",
+                            "Multiple targets share a referenced basename; no dependency was guessed."))
+                    continue
+                for target, match in possible:
+                    key = (str(target), str(path), reference.source_kind, reference.source_name)
+                    if key not in hits or (hits[key].confidence != "exact_path" and match == "exact_path"):
+                        hits[key] = DependencyHit(str(target), str(path), reference.source_kind,
+                            reference.source_name, match, target.name)
         try:
             if suffix in {".xlsx", ".xlsm"}:
-                references, problems = _excel_references(path)
+                references, problems = _excel_references(path, depth=depth, on_reference=collect_reference)
                 issues.extend(problems)
             elif suffix in {".accdb", ".mdb"}:
                 references = reader(path)
@@ -327,20 +431,131 @@ def scan_reverse_dependencies(targets, consumers, *, access_reader=None, progres
         except Exception:
             issues.append(ScanIssue(str(path), "unreadable", "This source could not be inspected; it may be locked, encrypted, damaged, or inaccessible."))
         for reference in references:
-            for target in chosen:
-                match = _match_reference(reference, target)
-                if match:
-                    hits.append(DependencyHit(str(target), str(path), reference.source_kind,
-                        reference.source_name, match, target.name))
+            collect_reference(reference)
         if progress:
             progress(index, len(candidates), str(path))
-    # Exact-path evidence takes priority over basename-only evidence for the
-    # same query/connection and target; repeated metadata parts are deduped.
-    chosen_hits = {}
-    for row in hits:
-        key = (row.target_path, row.consumer_path, row.source_kind, row.source_name)
-        if key not in chosen_hits or (chosen_hits[key].confidence != "exact_path" and row.confidence == "exact_path"):
-            chosen_hits[key] = row
     return DependencyReport(
-        tuple(map(str, chosen)), tuple(inspected), tuple(chosen_hits.values()), tuple(issues), is_cancelled
+        tuple(map(str, chosen)), tuple(inspected), tuple(hits.values()), tuple(issues), is_cancelled
     )
+
+
+def _safe_reference_filename(candidate):
+    """Accept a single filename/path; do not allow SQL/M or secret attributes."""
+    if not candidate:
+        return None
+    clean = candidate.strip().strip('"\'')
+    if clean.casefold().startswith("file:"):
+        parsed = urlparse(clean)
+        if parsed.scheme.casefold() != "file":
+            return None
+        clean = ("//" + parsed.netloc if parsed.netloc else "") + unquote(parsed.path)
+    filename = ntpath.basename(clean.replace("/", "\\"))
+    # A SQL statement can end with an Office-looking token. Its complete
+    # text is not a filename and must never appear in the unresolved index.
+    if re.search(r"(?i)\b(?:select\s+.+\s+from|delete\s+.+\s+from|union\s+select|insert\s+into|update\s+\S+\s+set)\b",
+                 filename):
+        return None
+    if re.fullmatch(r"(?i)[^<>|?*\"'=;\[\](){}\r\n\t]+\.(?:xlsx|xlsm|accdb|mdb|xlsb|xls)", filename):
+        return filename
+    return None
+
+
+def _reference_filenames(raw):
+    """Extract every referenced Office basename, never arbitrary raw SQL/M."""
+    seen = set()
+    candidates = list(_possible_paths(raw))
+    candidates.extend(match.group(1) for match in re.finditer(
+        r"\[([^\[\]]+\.(?:xlsx|xlsm|accdb|mdb|xlsb|xls))\]", raw, re.I))
+    for candidate in candidates:
+        filename = _safe_reference_filename(candidate)
+        if filename and filename.casefold() not in seen:
+            seen.add(filename.casefold())
+            yield filename
+
+
+def scan_dependency_map(consumers, *, depth="quick", access_reader=None, progress=None, cancelled=None):
+    """Inspect each selected file once and index incoming/outgoing links.
+
+    The returned immutable report contains only matched edges and safe file
+    basenames for unmatched sources; raw M/SQL/credentials are discarded.
+    """
+    from pq_installer.core.access_dependency_reader import AccessEngineUnavailable, read_access_references
+
+    if depth not in {"quick", "deep"}:
+        raise ValueError("Scan depth must be quick or deep.")
+    chosen = tuple(dict.fromkeys(Path(value).expanduser().resolve() for value in consumers))
+    by_name = {}
+    for item in chosen:
+        by_name.setdefault(item.name.casefold(), []).append(item)
+    read_access = access_reader or read_access_references
+    inspected = []
+    edges = {}
+    unresolved = {}
+    issues = []
+    ambiguous_sources = set()
+    priorities = {"exact_path": 3, "filename_only": 2, "possible_literal": 1}
+    was_cancelled = False
+    if not chosen:
+        issues.append(ScanIssue("", "no_consumers", "No files were selected for dependency mapping."))
+    for number, source in enumerate(chosen, start=1):
+        if cancelled and cancelled():
+            was_cancelled = True
+            break
+        inspected.append(str(source))
+        references = ()
+        suffix = source.suffix.casefold()
+        def collect_reference(reference):
+            exact_paths = _explicit_reference_paths(reference)
+            for filename in _reference_filenames(reference.raw):
+                matches = [(target, _match_reference(reference, target))
+                           for target in by_name.get(filename.casefold(), ())]
+                matches = [(target, confidence) for target, confidence in matches if confidence]
+                exact = [(target, confidence) for target, confidence in matches
+                         if _normalize_path(str(target)) in exact_paths]
+                if exact:
+                    matches = exact
+                if len(matches) == 1:
+                    target, confidence = matches[0]
+                    key = (str(target), str(source), reference.source_kind, reference.source_name)
+                    if key not in edges or priorities[confidence] > priorities[edges[key].confidence]:
+                        edges[key] = DependencyHit(str(target), str(source), reference.source_kind,
+                                                   reference.source_name, confidence, target.name)
+                else:
+                    reference_key = (str(source), reference.source_kind, reference.source_name, filename)
+                    if reference_key not in unresolved:
+                        unresolved[reference_key] = UnresolvedReference(*reference_key)
+                    if len(matches) > 1 and reference_key not in ambiguous_sources:
+                        ambiguous_sources.add(reference_key)
+                        issues.append(ScanIssue(str(source), "ambiguous_reference",
+                                                 "Multiple files share a referenced basename; no edge was guessed."))
+        try:
+            if suffix in {".xlsx", ".xlsm"}:
+                references, problems = _excel_references(source, depth=depth, on_reference=collect_reference)
+                issues.extend(problems)
+            elif suffix in {".accdb", ".mdb"}:
+                references = read_access(source)
+            else:
+                issues.append(ScanIssue(str(source), "unsupported", "This file type is not supported by the read-only scanner."))
+        except AccessEngineUnavailable:
+            issues.append(ScanIssue(str(source), "engine_unavailable", "Microsoft Access DAO engine is unavailable; install a compatible Access Database Engine."))
+        except Exception:
+            issues.append(ScanIssue(str(source), "unreadable", "This source could not be inspected; it may be locked, encrypted, damaged, or inaccessible."))
+        for reference in references:
+            collect_reference(reference)
+        if progress:
+            progress(number, len(chosen), str(source))
+    return DependencyMapReport(tuple(map(str, chosen)), tuple(inspected),
+                               tuple(edges.values()), tuple(unresolved.values()), tuple(issues), depth, was_cancelled)
+
+
+def filter_dependency_map(report, file_path=None, *, direction="both"):
+    """Filter an existing in-memory map without reopening source files."""
+    if direction not in {"incoming", "outgoing", "both"}:
+        raise ValueError("Direction must be incoming, outgoing or both.")
+    if file_path is None:
+        return report.edges
+    name = str(Path(file_path).expanduser().resolve()).casefold()
+    return tuple(edge for edge in report.edges if (
+        (direction in {"incoming", "both"} and edge.target_path.casefold() == name)
+        or (direction in {"outgoing", "both"} and edge.consumer_path.casefold() == name)
+    ))

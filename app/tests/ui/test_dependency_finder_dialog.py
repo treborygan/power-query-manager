@@ -41,8 +41,9 @@ def test_dialog_runs_in_worker_and_shows_incoming_results(tmp_path):
     consumer.write_bytes(b"fixture")
     calls = []
 
-    def runner(targets, consumers, *, progress=None, cancelled=None):
+    def runner(targets, consumers, *, progress=None, cancelled=None, depth="deep"):
         calls.append((targets, consumers))
+        assert depth == "deep"
         progress(1, 1, str(consumer))
         return DependencyReport(tuple(map(str, targets)), tuple(map(str, consumers)), (
             DependencyHit(str(target), str(consumer), "Power Query", "Inventory", "exact_path", target.name),

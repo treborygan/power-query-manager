@@ -9,12 +9,16 @@ from threading import Event
 
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import (
-    QAbstractItemView, QCheckBox, QDialog, QFileDialog, QGridLayout,
+    QAbstractItemView, QCheckBox, QComboBox, QDialog, QFileDialog, QGridLayout,
     QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QMessageBox, QPlainTextEdit,
     QProgressBar, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout,
 )
 
-from pq_installer.core.reverse_dependencies import DependencyHit, discover_scan_files, scan_reverse_dependencies
+from pq_installer.core.reverse_dependencies import (
+    DependencyHit, DependencyMapReport, discover_scan_files, filter_dependency_map,
+    scan_dependency_map, scan_reverse_dependencies,
+)
+from pq_installer.ui.file_dependency_graph_dialog import FileDependencyGraphDialog
 
 
 _FILE_FILTER = "Office files (*.xlsx *.xlsm *.accdb *.mdb *.xlsb *.xls)"
@@ -35,11 +39,14 @@ class DependencyScanWorker(QObject):
     failed = Signal(str)
     finished = Signal()
 
-    def __init__(self, targets, consumers, scan_runner=None):
+    def __init__(self, targets, consumers, scan_runner=None, *, mode="reverse", depth="deep", map_runner=None):
         super().__init__()
         self.targets = tuple(targets)
         self.consumers = tuple(consumers)
         self.scan_runner = scan_runner or scan_reverse_dependencies
+        self.map_runner = map_runner or scan_dependency_map
+        self.mode = mode
+        self.depth = depth
         self._cancel_event = Event()
 
     def cancel(self):
@@ -48,10 +55,13 @@ class DependencyScanWorker(QObject):
     @Slot()
     def run(self):
         try:
-            self.completed.emit(self.scan_runner(
-                self.targets, self.consumers, progress=self.progressed.emit,
-                cancelled=self._cancel_event.is_set,
-            ))
+            if self.mode == "map":
+                result = self.map_runner(self.consumers, depth=self.depth,
+                    progress=self.progressed.emit, cancelled=self._cancel_event.is_set)
+            else:
+                result = self.scan_runner(self.targets, self.consumers, depth=self.depth,
+                    progress=self.progressed.emit, cancelled=self._cancel_event.is_set)
+            self.completed.emit(result)
         except Exception:
             # Raw M, SQL and connection strings could contain passwords.
             self.failed.emit("Dependency scanning failed. Inspect the selected paths and permissions.")
@@ -86,12 +96,13 @@ class InventoryWorker(QObject):
 
 
 class DependencyFinderDialog(QDialog):
-    def __init__(self, parent=None, *, scan_runner=None):
+    def __init__(self, parent=None, *, scan_runner=None, map_runner=None):
         super().__init__(parent)
         self.setWindowTitle("Dependency Finder — incoming references")
         self.resize(1050, 740)
         self.setMinimumSize(690, 540)
         self.scan_runner = scan_runner
+        self.map_runner = map_runner
         self.latest_report = None
         self._scan_thread = None
         self._scan_worker = None
@@ -107,6 +118,23 @@ class DependencyFinderDialog(QDialog):
                        "Only definitions and connection metadata are inspected; nothing is refreshed or changed.")
         intro.setWordWrap(True)
         layout.addWidget(intro)
+
+        mode_row = QHBoxLayout()
+        mode_row.addWidget(QLabel("Mode"))
+        self.mode_combo = QComboBox()
+        self.mode_combo.setAccessibleName("Dependency scanning mode")
+        self.mode_combo.addItem("Find dependents of selected target(s)", "reverse")
+        self.mode_combo.addItem("Map all selected files and their dependencies", "map")
+        self.mode_combo.currentIndexChanged.connect(self._on_mode_changed)
+        mode_row.addWidget(self.mode_combo, 2)
+        mode_row.addWidget(QLabel("Scan depth"))
+        self.scan_depth_combo = QComboBox()
+        self.scan_depth_combo.setAccessibleName("Quick or deep dependency scanning")
+        self.scan_depth_combo.addItem("Quick — queries, connections and links", "quick")
+        self.scan_depth_combo.addItem("Deep — also worksheet formulas and names", "deep")
+        self.scan_depth_combo.setCurrentIndex(1)  # retain previous reverse scan scope
+        mode_row.addWidget(self.scan_depth_combo, 2)
+        layout.addLayout(mode_row)
 
         selection = QGridLayout()
         selection.addWidget(QLabel("1. Select files to inspect (possible consumers)"), 0, 0)
@@ -161,6 +189,25 @@ class DependencyFinderDialog(QDialog):
         run_row.addWidget(self.cancel_button)
         layout.addLayout(run_row)
 
+        map_filter_row = QHBoxLayout()
+        self.map_filter_label = QLabel("Explore file")
+        self.map_filter_combo = QComboBox()
+        self.map_filter_combo.setAccessibleName("Filter dependency map by file")
+        self.map_filter_combo.addItem("All mapped files", None)
+        self.direction_combo = QComboBox()
+        self.direction_combo.setAccessibleName("Incoming or outgoing dependencies")
+        self.direction_combo.addItem("Both directions", "both")
+        self.direction_combo.addItem("Files depending on selected file", "incoming")
+        self.direction_combo.addItem("Files selected file depends on", "outgoing")
+        self.graph_button = QPushButton("Visual file graph…")
+        self.graph_button.setAccessibleName("Show visual file dependency graph")
+        self.graph_button.clicked.connect(self._show_file_graph)
+        self.map_filter_combo.currentIndexChanged.connect(self._render_map_results)
+        self.direction_combo.currentIndexChanged.connect(self._render_map_results)
+        for widget in (self.map_filter_label, self.map_filter_combo, self.direction_combo, self.graph_button):
+            map_filter_row.addWidget(widget)
+        layout.addLayout(map_filter_row)
+
         layout.addWidget(QLabel("3. Incoming dependencies (one row per source/query and target)"))
         self.results_table = QTableWidget(0, 5)
         self.results_table.setAccessibleName("Reverse dependency results")
@@ -186,6 +233,15 @@ class DependencyFinderDialog(QDialog):
         export_row.addWidget(self.export_json_button)
         export_row.addWidget(self.export_csv_button)
         layout.addLayout(export_row)
+        self._on_mode_changed()
+        self._update_enabled()
+
+    def _on_mode_changed(self, *_):
+        mapping = self.mode_combo.currentData() == "map"
+        self.scan_depth_combo.setCurrentIndex(0 if mapping else 1)
+        for widget in (self.map_filter_label, self.map_filter_combo, self.direction_combo, self.graph_button):
+            widget.setVisible(mapping)
+        self.run_button.setText("Build read-only dependency map" if mapping else "Run read-only dependency scan")
         self._update_enabled()
 
     def add_scan_paths(self, paths, *, recursive=True):
@@ -270,15 +326,23 @@ class DependencyFinderDialog(QDialog):
         self._update_enabled()
 
     def _update_enabled(self):
-        ready = bool(self.consumer_list.selectedItems()) and self.target_list.count() > 0
+        mapping = self.mode_combo.currentData() == "map"
+        ready = bool(self.consumer_list.selectedItems()) and (mapping or self.target_list.count() > 0)
         busy = self._running or self._inventory_running
         self.run_button.setEnabled(ready and not busy)
-        for button in (self.add_files_button, self.add_folder_button, self.add_targets_button,
-                       self.from_consumers_button, self.remove_targets_button, self.select_all_button):
+        for button in (self.add_files_button, self.add_folder_button, self.select_all_button):
             button.setEnabled(not busy)
+        for button in (self.add_targets_button, self.from_consumers_button, self.remove_targets_button):
+            button.setEnabled(not busy and not mapping)
+        self.mode_combo.setEnabled(not busy)
+        self.scan_depth_combo.setEnabled(not busy)
         self.recursive_check.setEnabled(not busy)
         self.consumer_list.setEnabled(not busy)
-        self.target_list.setEnabled(not busy)
+        self.target_list.setEnabled(not busy and not mapping)
+        is_map = isinstance(self.latest_report, DependencyMapReport)
+        self.map_filter_combo.setEnabled(is_map and not busy)
+        self.direction_combo.setEnabled(is_map and not busy)
+        self.graph_button.setEnabled(is_map and not busy)
         self.export_json_button.setEnabled(self.latest_report is not None and not busy)
         self.export_csv_button.setEnabled(self.latest_report is not None and not busy)
 
@@ -299,7 +363,9 @@ class DependencyFinderDialog(QDialog):
         self.cancel_button.setEnabled(True)
         self._update_enabled()
         self._scan_thread = QThread(self)
-        self._scan_worker = DependencyScanWorker(targets, consumers, self.scan_runner)
+        self._scan_worker = DependencyScanWorker(targets, consumers, self.scan_runner,
+            mode=self.mode_combo.currentData(), depth=self.scan_depth_combo.currentData(),
+            map_runner=self.map_runner)
         self._scan_worker.moveToThread(self._scan_thread)
         self._scan_thread.started.connect(self._scan_worker.run)
         self._scan_worker.progressed.connect(self._on_progress)
@@ -320,23 +386,61 @@ class DependencyFinderDialog(QDialog):
     @Slot(object)
     def _show_report(self, report):
         self.latest_report = report
-        self.results_table.setRowCount(len(report.hits))
-        for index, hit in enumerate(report.hits):
-            values = (hit.target_path, hit.consumer_path, hit.source_kind, hit.source_name, hit.confidence)
-            for column, value in enumerate(values):
-                self.results_table.setItem(index, column, QTableWidgetItem(str(value)))
-        self.results_table.resizeColumnsToContents()
-        lines = [f"Attempted {len(report.inspected)} file(s); found {len(report.hits)} dependency reference(s)."]
+        if isinstance(report, DependencyMapReport):
+            self.map_filter_combo.blockSignals(True)
+            self.map_filter_combo.clear()
+            self.map_filter_combo.addItem("All mapped files", None)
+            for path in report.files:
+                self.map_filter_combo.addItem(str(path), str(path))
+            self.map_filter_combo.blockSignals(False)
+            self._render_map_results()
+            total = len(report.edges)
+            lines = [f"Mapped {len(report.inspected)} file(s); {total} internal dependency edge(s); "
+                     f"{len(report.unresolved)} outside-scope or unresolvable file reference(s)."]
+            for item in report.unresolved[:20]:
+                lines.append(f"{Path(item.consumer_path).name}: unresolved reference to {item.reference_filename}")
+            if len(report.unresolved) > 20:
+                lines.append(f"…and {len(report.unresolved) - 20} further unresolved references in the exported index.")
+        else:
+            self._fill_results_table(report.hits)
+            lines = [f"Attempted {len(report.inspected)} file(s); found {len(report.hits)} dependency reference(s)."]
+            if not report.hits:
+                lines.append("No references found in inspected definitions; this is not proof that none exist.")
+        self._update_enabled()
         if report.cancelled:
             lines.append("CANCELLED: Remaining files were not inspected.")
-        for issue in report.issues:
+        for issue in report.issues[:40]:
             label = Path(issue.path).name if issue.path else "Scan scope"
             lines.append(f"{label}: {issue.status} — {issue.detail}")
-        if not report.hits:
-            lines.append("No references were found in the inspected definitions; this is not proof that no dependencies exist.")
+        if len(report.issues) > 40:
+            lines.append(f"…plus {len(report.issues) - 40} additional issues in the JSON/CSV export.")
         lines.append("Dynamic VBA, macros and external scripts may contain additional dependencies.")
         self.coverage_text.setPlainText("\n".join(lines))
         self.progress_label.setText("Read-only scan finished" + (" (partial)" if report.issues or report.cancelled else ""))
+
+    def _fill_results_table(self, hits):
+        self.results_table.setUpdatesEnabled(False)
+        self.results_table.setRowCount(len(hits))
+        for index, hit in enumerate(hits):
+            values = (hit.target_path, hit.consumer_path, hit.source_kind, hit.source_name, hit.confidence)
+            for column, value in enumerate(values):
+                self.results_table.setItem(index, column, QTableWidgetItem(str(value)))
+        self.results_table.setUpdatesEnabled(True)
+        if len(hits) < 400:
+            self.results_table.resizeColumnsToContents()
+        else:
+            for column in range(4):
+                self.results_table.setColumnWidth(column, 185)
+
+    def _render_map_results(self, *_):
+        if isinstance(self.latest_report, DependencyMapReport):
+            selected = self.map_filter_combo.currentData()
+            direction = self.direction_combo.currentData() or "both"
+            self._fill_results_table(filter_dependency_map(self.latest_report, selected, direction=direction))
+
+    def _show_file_graph(self):
+        if isinstance(self.latest_report, DependencyMapReport):
+            FileDependencyGraphDialog(self.latest_report, self).exec()
 
     @Slot(str)
     def _show_error(self, message):
@@ -388,18 +492,29 @@ class DependencyFinderDialog(QDialog):
         try:
             with open(filename, "x", encoding="utf-8", newline="") as output:
                 if kind == "json":
-                    json.dump({"schema_version": 1, **asdict(self.latest_report)}, output, indent=2)
+                    kind_name = "dependency-map" if isinstance(self.latest_report, DependencyMapReport) else "reverse-dependencies"
+                    json.dump({"schema_version": 1, "bundle_type": kind_name, **asdict(self.latest_report)}, output, indent=2)
                     output.write("\n")
                 else:
                     fields = ["row_type", *DependencyHit.__dataclass_fields__, "status", "detail"]
                     writer = csv.DictWriter(output, fieldnames=fields)
                     writer.writeheader()
-                    for hit in self.latest_report.hits:
+                    is_map = isinstance(self.latest_report, DependencyMapReport)
+                    hits = self.latest_report.edges if is_map else self.latest_report.hits
+                    for hit in hits:
                         writer.writerow(_safe_csv_row({"row_type": "dependency", **asdict(hit)}))
-                    for target in self.latest_report.targets:
+                    for target in self.latest_report.files if is_map else self.latest_report.targets:
+                        has_links = any(hit.target_path == target or (is_map and hit.consumer_path == target)
+                                        for hit in hits)
                         writer.writerow(_safe_csv_row({"row_type": "scan_summary", "target_path": target,
-                                         "status": "matches_found" if any(hit.target_path == target for hit in self.latest_report.hits) else "no_matches",
+                                         "status": ("links_found" if has_links else "no_links") if is_map else
+                                                   ("matches_found" if has_links else "no_matches"),
                                          "detail": f"Attempted {len(self.latest_report.inspected)} consumer file(s)."}))
+                    if is_map:
+                        for item in self.latest_report.unresolved:
+                            writer.writerow(_safe_csv_row({"row_type": "unresolved", "consumer_path": item.consumer_path,
+                                             "source_kind": item.source_kind, "source_name": item.source_name,
+                                             "evidence": item.reference_filename, "status": "outside_scope_or_unknown"}))
                     for issue in self.latest_report.issues:
                         writer.writerow(_safe_csv_row({"row_type": "coverage_issue", "consumer_path": issue.path,
                                          "status": issue.status, "detail": issue.detail}))

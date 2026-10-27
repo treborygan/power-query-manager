@@ -73,6 +73,9 @@ These are independent of internal implementation. Orchestrator links actual auto
 | DF-05 | Unsupported/unreadable/dynamic sources, absent DAO and canceled scans are visible; zero hits are never equated with proven independence. | PASS (portable unit); Windows matrix UNVERIFIED |
 | DF-06 | GUI worker remains responsive/cancellable; JSON and CSV preserve dependency matches and coverage issues; CLI exit 5 represents partial coverage. | PASS (portable UI/CLI); packaged Windows executable UNVERIFIED |
 | DF-07 | Verify Windows mapped-drive/UNC, OneDrive hydration, genuine `.xlsm`/`.xlsx` DataMashup and Access `.mdb`/`.accdb` smoke cases with original SHA-256 before/after. | UNVERIFIED — Windows smoke required |
+| DF-08 | General Map scans all selected consumer files once, including files that depend on one another, and retains a full incoming/outgoing index without repeatedly reading inputs when the UI filter changes. | PASS (portable unit/UI); Windows integration UNVERIFIED |
+| DF-09 | Quick excludes worksheet formulas/defined names; Deep includes them. Non-custom Excel XML is stream-parsed in bounded chunks; completed nodes and matched formula strings are discarded rather than buffered across the workbook. | PASS (portable synthetic ZIP / stream tests); real Excel package UNVERIFIED |
+| DF-10 | Filename collisions with no exact path produce ambiguous/unresolved reports rather than guessed graph edges; the full JSON/CSV export preserves them; an accessible visual graph displays the advisory relationships. | PASS (portable unit/UI); packaged GUI UNVERIFIED |
 
 ## Scenarios to add (unit + Excel where possible)
 

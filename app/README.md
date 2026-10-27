@@ -27,7 +27,12 @@ Before a staged import opens Excel, the manager reads the workbook DataMashup pe
 Choose **Dependency Finder…** to find *incoming* dependencies: for example,
 "Which `.xlsx`, `.xlsm`, `.accdb` or `.mdb` files reference `Warehouse.accdb`?"
 Inventory a mapped/local folder recursively or add individual files, select
-which candidate files to inspect, then select one or more targets. It scans
+which candidate files to inspect, then select one or more targets. Alternatively
+choose **Map all selected files** to index their internal links once, then
+explore incoming/outgoing edges by file without rescanning. **Quick** checks
+queries/connections/links; **Deep** additionally streams worksheet formula
+and defined-name metadata. A visual advisory file graph is available alongside
+the searchable results table. It scans
 embedded Excel Power Query and workbook link metadata without starting Excel,
 and Access table/query link definitions from an isolated temporary database
 copy using a compatible Windows DAO engine. View filename-only/possible
@@ -36,6 +41,7 @@ data is refreshed or modified. The existing packaged EXE has not been rebuilt
 or smoke-tested for this feature.
 
 CLI: `power-query-manager-cli dependency-scan --target "C:\Data\Warehouse.accdb" --folder "C:\Reports" --recursive`.
+General map: `power-query-manager-cli dependency-map --folder "C:\Reports" --recursive --depth quick`.
 See [usage, detection scope and acceptance gates](../docs/DEPENDENCY_FINDER.md).
 
 

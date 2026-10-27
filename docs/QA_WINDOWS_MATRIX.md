@@ -45,6 +45,16 @@ feature; the checked-in packaged binary has not been rebuilt.
    filename collision in a different folder. Verify coverage warnings.
 7. Build the Windows onedir package, test both GUI and packaged CLI under a
    normal non-admin token, and record release/version/provider bitness.
+8. Switch to **Map all selected files**. Check that an `.xlsx` consumer which
+   is *also* a dependency target still appears as a source of outgoing links;
+   use each file's Incoming/Outgoing/Both filters and confirm they update
+   without another scan. Confirm the visual graph and complete JSON/CSV
+   include all relationships, unresolved references and coverage statuses.
+9. Repeat Quick versus Deep with a large disposable worksheet containing
+   external-link formulas. Measure peak RSS and elapsed time, document the
+   256 MiB metadata budget behavior, and verify unchanged original hashes.
+   The streaming parser and temporary Access disk-copy behavior are not yet
+   validated with very large, real corporate-sized files.
 
 Acceptance: **UNVERIFIED** until actual Windows/Access/Excel host results and
 unchanged-file hashes are recorded. Synthetic portable tests alone are not a

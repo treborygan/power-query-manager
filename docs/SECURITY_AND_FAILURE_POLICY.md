@@ -36,6 +36,9 @@ are disposed after inspection. If an Access provider is unavailable,
 unsupported, password-protected, locked or corrupt, report coverage gaps,
 not an empty-success result. XML/ZIP parts have per-file entry/size limits
 and a 256 MiB cumulative per-workbook metadata budget.
+Non-custom Excel XML is stream-parsed, and formula strings are matched and
+discarded instead of retained. Embedded `customXml` DataMashup is still
+decoded in bounded memory; the cumulative budget is not a peak RAM ceiling.
 
 Reports omit raw M, SQL and connection strings, as these can contain
 passwords or private URLs. JSON and CSV outputs are explicitly user-chosen,
@@ -43,6 +46,10 @@ new files only. Formula-like CSV cell values are text-escaped to prevent
 Excel/CSV formula injection from malicious query/connection names. Matches
 from basename or inert literals must remain tentative;
 a zero-hit report cannot be used as proof that an old source can be removed.
+General mapping preserves only source/target paths, connection names, safe
+unresolved source **basenames** and coverage statuses, never unfiltered SQL,
+M-code bodies or connection strings. Duplicate filename candidates with no
+exact path emit an ambiguity rather than a guessed edge.
 
 ## Support matrix
 

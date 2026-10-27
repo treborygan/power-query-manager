@@ -29,7 +29,7 @@ Refresh is an explicit action because workbook queries may contact their configu
 - Save and validate versioned profiles; review conservative source mapping and multi-workbook deployment plans.
 - Use capability-probed Excel load modes and explicit selected/all refresh workflows where the installed Office build supports them.
 - Keep workbook changes staged, create verified backups, and verify saved query state before commit.
-- In the **source version**, use **Dependency Finder…** to look for other Excel/Access files that reference selected `.xlsx`, `.xlsm`, `.accdb` or `.mdb` targets. Folder/multi-file scanning is read-only; Windows Access Engine and packaged-executable verification are still outstanding. [Workflow and limitations](docs/DEPENDENCY_FINDER.md).
+- In the **source version**, use **Dependency Finder…** to find incoming references to `.xlsx`, `.xlsm`, `.accdb` or `.mdb` targets, or build a **general file dependency map** with incoming/outgoing filters. Quick/deep scans, streamed Excel XML and an in-memory link index support larger folders. Windows Access Engine and packaged-executable verification remain outstanding. [Workflow and limitations](docs/DEPENDENCY_FINDER.md).
 
 The M tokenizer is intentionally conservative and does not parse or evaluate the full M language. Unsupported or ambiguous Excel states are reported as unknown or disabled instead of being guessed.
 

@@ -9,6 +9,9 @@ This changelog records implementation milestones for the successor to Power Quer
 - Access metadata is inspected by DAO on disposable local database copies. No SharePoint-specific integration; `.xls`/`.xlsb` remain explicitly unsupported.
 - Portable tests pass; real Access Engine, Excel DataMashup, mapped Windows folders and packaged binaries still require smoke verification.
 - Review hardening: moved folder inventory off the GUI thread, added zero-match CSV summaries and spreadsheet-formula escaping, made M query-name attribution token-aware, released DAO proxies before temp cleanup, and capped cumulative ZIP/XML metadata reads.
+- Added **General Dependency Map** to index every selected Excel/Access file's incoming/outgoing relationships, allow instant file/direction filtering and show a visual advisory graph. `dependency-map` CLI exports the same edge/unresolved-reference index. Quick/deep modes allow formula scanning to be opt-in for large scans.
+- Non-custom Excel ZIP/XML metadata is now incrementally parsed and pruned; streamed references are matched immediately so large worksheet formula lists are not retained in RAM. Bounded DataMashup XML remains an exception. Tests are portable/synthetic; live Windows/Access and packaged validation remain unverified.
+- Final review hardened both modes against duplicate target basenames (ambiguous references do not become guessed edges), captured multiple distinct workbook/database references from one formula or saved query, and prevented raw SQL from being exported as a guessed filename. Repeated formula-edge objects are deduplicated incrementally.
 
 
 ## v2.0.0 — advanced tooling (partial implementation; gate **UNVERIFIED**)
