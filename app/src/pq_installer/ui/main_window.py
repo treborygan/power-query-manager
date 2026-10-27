@@ -581,10 +581,34 @@ class MainWindow(QMainWindow):
         self.inspector_dock.setWidget(panel)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea,self.inspector_dock)
         self.inspector_dock.hide()
-        self.inspector_toggle.toggled.connect(self.inspector_dock.setVisible)
+        self.inspector_toggle.toggled.connect(self._set_inspector_visible)
         self.inspector_dock.visibilityChanged.connect(self.inspector_toggle.setChecked)
         view_menu=self.menuBar().addMenu('&View');view_menu.addAction(self.inspector_dock.toggleViewAction())
         self._update_docked_inspector()
+
+    def _set_inspector_visible(self, visible):
+        if visible:
+            self._fit_inspector_dock()
+        self.inspector_dock.setVisible(visible)
+
+    def _fit_inspector_dock(self):
+        """Keep the workspace usable when a right dock cannot fit beside it."""
+        if not hasattr(self, 'inspector_dock') or self.inspector_dock.isFloating():
+            return
+        if self.dockWidgetArea(self.inspector_dock) != Qt.DockWidgetArea.RightDockWidgetArea:
+            return
+        required = (self.workspace_scroll.widget().minimumSizeHint().width()
+                    + self.inspector_dock.minimumSizeHint().width()
+                    + self.centralWidget().layout().contentsMargins().left()
+                    + self.centralWidget().layout().contentsMargins().right()
+                    + self.vector_nav_buttons['Workspace and workbook'].parentWidget().width() + 16)
+        if self.width() < required:
+            self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.inspector_dock)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, 'inspector_dock') and self.inspector_dock.isVisible():
+            self._fit_inspector_dock()
 
     def _record_diagnostic(self,operation,error):
         path=record_failure(operation,error)

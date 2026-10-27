@@ -9,6 +9,7 @@ This changelog records implementation milestones for the successor to Power Quer
 - Reflowed Dependency Finder in both scan modes and added no-horizontal-workspace-overflow coverage at laptop sizes.
 - Reflowed the file graph heading, zoom controls and status so its minimum layout fits a 960×600 window.
 - Added keyboard selection of file graph nodes with arrow keys and Home/End, with accessible instructions and a Qt keyboard regression.
+- Move the query inspector below the workspace when a right dock would force horizontal overflow on a narrow window.
 
 - Applied the selected Vector concept to the existing PySide6 desktop UI with a graphite canvas, acid-lime primary actions, teal focus markers, compact sidebar, status metrics based on the original query model, and a Ctrl+K action palette that triggers the existing buttons.
 - Reorganized workbook/source/import areas without replacing query models, source/target selectors, undo/redo, import safeguards, inspectors or history. Existing query-table and dialog action names remain available.

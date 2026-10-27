@@ -29,6 +29,7 @@ Finder stacks its mode selectors and file panels so the workspace fits narrow wi
 When the file graph has focus, use the arrow keys to select files and Home or End to jump to the first or last file; Tab moves to the next control.
 
 The workspace arranges its action controls and status cards in narrower rows so the original controls remain reachable on laptop-sized windows without horizontal workspace scrolling. Vertical scrolling is used to reach the full workflow.
+When the right-hand query inspector would squeeze the workspace beyond its minimum width, it moves below the workspace; it remains a movable dock.
 Unchecked checkbox outlines use the theme's contrasting muted color, including in light mode.
 
 **Status:** feature candidate with Windows tests and a locally rebuilt package; full visual and workflow acceptance remains open. See the Vector entry in [Windows QA](../docs/QA_WINDOWS_MATRIX.md) for the exact tested commit, package hashes, results and limitations. Existing ACE DAO 16.0 and mapped SMB/UNC waivers are unchanged and are not PASS evidence. The repository's existing `dist` package has not been replaced by this candidate.

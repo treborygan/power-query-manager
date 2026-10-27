@@ -323,6 +323,22 @@ def test_manager_initial_size_and_accessible_names_fit_laptop_layout(tmp_path):
 
 
 
+def test_inspector_moves_below_workspace_when_right_dock_would_overflow():
+    from PySide6.QtCore import Qt
+    window = MainWindow()
+    window.resize(1366, 768)
+    window.show()
+    window.inspector_toggle.setChecked(True)
+    app.processEvents()
+    assert window.inspector_dock.isVisible()
+    window.resize(960, 600)
+    app.processEvents()
+    assert window.dockWidgetArea(window.inspector_dock) == Qt.DockWidgetArea.BottomDockWidgetArea
+    assert window.workspace_scroll.horizontalScrollBar().maximum() == 0
+    assert window.inspector_source_text.isVisible()
+    window.close()
+
+
 def test_vector_workspace_preserves_commands_and_live_query_metrics(tmp_path):
     from PySide6.QtWidgets import QScrollArea
     window = MainWindow()
