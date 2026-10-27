@@ -11,7 +11,7 @@ Each milestone produces runnable code, tests, updated help, working local build 
 - [x] General file-level dependency index with incoming/outgoing filters, ambiguity reporting, unresolved external filename hints, advisory visual graph and CLI mapping command.
 - [x] Incremental ZIP/XML worksheet/formula/connection parsing with per-reference matching, Quick/Deep modes and bounded DataMashup decoding.
 - [ ] Validate actual `.accdb`/`.mdb` DAO reading and sample `.xlsx`/`.xlsm` DataMashup on Windows, with original hashes and no side effects.
-- [ ] Verify mapped/UNC paths, synced placeholders, performance and packaged onedir GUI/CLI before claiming supported Windows release.
+- [x] Windows local/OneDrive diagnostic acceptance completed on DAO 12.0 with packaged CLI, GUI dialog checks and repeated Quick/Deep timing (W296). **ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED for feature-PR integration only** (W297), not certified for release or deployment on those environments. Other application-wide release gates remain separate.
 
 ## v1.3.1 — safety, repeatability, packaging
 
