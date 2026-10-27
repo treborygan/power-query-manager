@@ -20,6 +20,14 @@ This source package includes v1.3.1 stability work, the v1.4 manager workflow, a
 
 Before a staged import opens Excel, the manager reads the workbook DataMashup permission metadata when present. It validates the workbook's DPAPI-bound permission binding and compares FirewallEnabled and WorkbookGroupType before commit; if the saved staged copy changes those settings or the binding cannot be validated for the current Windows user, the import fails closed and leaves the selected workbook unchanged. The check does not inspect or change source credentials or privacy-level assignments. Default FirewallEnabled=true / WorkbookGroupType=nil was preserved in one disposable Excel 16.0 build 20430.0 smoke. Non-default permission values and cross-user DPAPI-bound workbooks remain unverified.
 
+## Vector interface (design implementation candidate)
+
+The Vector design refreshes the **existing desktop PySide6 UI** with a graphite/lime/teal color system, a compact left navigation rail, dashboard counts derived from the query model, a high-priority review/import action and a searchable **Ctrl+K command palette**. The palette invokes the already-wired Qt buttons and respects disabled operations; it does not bypass review, approval, backup, source integrity or read-only safeguards. The original controls remain available in their sections.
+
+Dependency Finder uses separate files-to-inspect and targets panels, a scrollable laptop-sized layout, filter/graph controls, progress/cancel, coverage warning area and unchanged JSON/CSV exports. Both file and query dependency graphs use readable dark nodes, contrasting edges and accessible text summaries. The file graph also supports wheel zoom, pan, fit-to-view, reset and selection, while its render deduplicates repeated arrows without changing the full report.
+
+**Status:** source implementation on `feature/vector-ui-redesign`; this is not yet a Windows-tested or rebuilt packaged release. Run the full Windows suite, rebuild packaged GUI/CLI, repeat main window/Dependency Finder tests and real disposable Excel/DAO smoke, then verify the UI at 960×600, 1366×768 and 125%/150% scaling. Existing ACE DAO 16.0 and mapped SMB/UNC waivers are unchanged and are not PASS evidence.
+
 ## Functions
 
 ### Dependency Finder (Windows local/OneDrive tested; two scoped waivers)
