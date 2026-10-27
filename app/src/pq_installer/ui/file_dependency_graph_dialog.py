@@ -122,6 +122,10 @@ class FileDependencyGraphDialog(QDialog):
         self.summary.setPlainText("\n".join(lines) or "No file-to-file dependencies were detected.")
         layout.addWidget(self.summary, 1)
         buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        buttons.setAccessibleName("File dependency graph dialog actions")
+        close_button = buttons.button(QDialogButtonBox.Close)
+        if close_button is not None:
+            close_button.setAccessibleName("Close file dependency graph")
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
         apply_vector_theme(self, dark)
