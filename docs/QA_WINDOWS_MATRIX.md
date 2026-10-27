@@ -60,6 +60,34 @@ Acceptance: **UNVERIFIED** until actual Windows/Access/Excel host results and
 unchanged-file hashes are recorded. Synthetic portable tests alone are not a
 substitute.
 
+### DF current Windows build check — 2026-10-27
+
+- Tested source commit before this entry: `c5009db52d9c321f86d5e5bd9b11e7b73fa93aeb`.
+- Windows 10 build 26300, Python 3.11.9, PySide6 6.8.3, pywin32 310,
+  pytest 8.3.5, PyInstaller 6.13.0. `app/build.ps1` installed/confirmed the
+  pinned Windows dependencies, ran the complete suite (**536 passed in
+  37.79s**), and rebuilt the GUI and CLI.
+- `tools/package_release.py` staged the rebuilt release; the package verifier
+  passed (**116 files, 76,310,185 bytes**). The packaged CLI `--help` lists
+  `dependency-scan` and `dependency-map`; the latter lists `quick` and `deep`.
+  Both packaged EXEs have fresh hashes in `dist/SHA256SUMS`.
+- The packaged GUI launched and its Windows accessibility tree exposed
+  **Find files that depend on selected Excel or Access databases and
+  workbooks** and **Dependency graph**. This establishes launch/control
+  presence only; no scan, filter, graph, or export workflow was exercised.
+- **NOT VERIFIED:** real `.accdb`/`.mdb` DAO metadata reads, linked tables and
+  saved queries; genuine Excel Mashup/external workbook references; incoming,
+  outgoing and both filters; GUI/CLI result parity; JSON/CSV correctness;
+  large-workbook Quick/Deep timing and peak working set; local/mapped SMB/UNC/
+  synchronized path execution; scan-level source hashes/timestamps, lock-file
+  and temp cleanup. No `.accdb` or `.mdb` fixture was present in the checkout
+  or the inspected test fixture locations. Therefore the required acceptance
+  criteria remain **FAIL / OPEN** despite the passing suite and package build.
+- The committed CLI and synthetic scanner tests exercise Quick/Deep coverage
+  rules, but are not a substitute for large real workbook comparison. No
+  failure in the full suite required a source-code repair. This is a build and
+  portable suite result, not completed integration acceptance.
+
 
 ### W73 — 2026-10-22 — packaged GUI all-skip no-op
 

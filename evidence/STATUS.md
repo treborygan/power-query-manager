@@ -1141,3 +1141,11 @@
 - Final command: `PYTHONPATH=/workspace/scratch/ea9b0abc6b01/.deps:app/src QT_QPA_PLATFORM=offscreen python -m pytest -q app/tests --tb=short`
   — **526 passed, 10 skipped, 0 failed in 17.39 s** (post-review rerun). This closes the inherited
   Linux failures but does not advance the Windows/Excel/DAO release gates.
+
+## 2026-10-27 — Dependency Finder Windows build check
+
+- Exact source commit tested: `c5009db52d9c321f86d5e5bd9b11e7b73fa93aeb`.
+- On Windows 10 build 26300 / Python 3.11.9, `app/build.ps1` confirmed the pinned Windows dependencies, passed the full suite (**536 passed in 37.79s**) and rebuilt both onedir executables with PyInstaller 6.13.0.
+- Release staging and verification passed: **116 files / 76,310,185 bytes**. Packaged CLI help exposes `dependency-scan`, `dependency-map`, and Quick/Deep depth options. Packaged GUI launched; its accessibility tree showed the Dependency Finder and Dependency graph controls.
+- GUI scan behavior was not run. No `.accdb` or `.mdb` fixtures were found in the checkout or inspected fixture locations, so actual DAO linked-table/saved-query scanning cannot be claimed. Genuine workbook Mashup and external-link detection, scan filters, graph/export accuracy, large real-workbook Quick/Deep timing/RSS, local/SMB/UNC/synchronized folders, and scan-level unchanged-file/lock/temp checks remain **NOT VERIFIED**. Required acceptance is **FAIL / OPEN** until these integrations are exercised.
+- No source failure was found in the Windows suite; no repair was made. Portable tests for scanner behavior do not establish Office/DAO acceptance. Package executable hashes are recorded in generated `dist/SHA256SUMS`.
