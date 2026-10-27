@@ -58,6 +58,12 @@ def test_vector_finder_laptop_scroll_and_existing_actions(tmp_path):
     dialog.show()
     app.processEvents()
     assert dialog.width() >= 760 and dialog.height() >= 560
+    for size in ((760, 560), (960, 600), (1366, 768)):
+        dialog.resize(*size)
+        for mode in ("reverse", "map"):
+            dialog.mode_combo.setCurrentIndex(dialog.mode_combo.findData(mode))
+            app.processEvents()
+            assert scroller.horizontalScrollBar().maximum() == 0
     dialog.close()
 
 

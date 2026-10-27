@@ -1,6 +1,7 @@
 ## 2026-10-27 — Vector Windows validation in progress
 
 - A live light-theme inspection found low-contrast unchecked checkbox outlines. A theme styling fix was visually checked in the source application; a new full build and package reacceptance are required for that subsequent revision.
+- A measured Finder layout check found horizontal workspace overflow at laptop sizes. Finder panels, mode selectors and filters were reflowed; the new test checks both modes at 760×560, 960×600 and 1366×768. The 90 UI tests pass at simulated Qt scales 1.25 and 1.5. A new full build and packaged reacceptance remain required.
 - Initial Windows build stopped at its test gate: 537 passed, 3 failed (inspector test expected the old default palette, Finder test used an invalid Qt method, and workspace horizontal overflow at laptop width). The implementation and tests were corrected without removing the overflow or theme assertions. The rebuilt application at `d72c25440231def2c4bd91234523da72064d1456` passed 540 tests and package verification; live acceptance remains in progress. See the Vector entry in `docs/QA_WINDOWS_MATRIX.md` for results and open gates.
 - The 90 UI tests passed separately with `QT_SCALE_FACTOR=1.25` and `1.5` using the offscreen platform. This is simulated Qt scaling, not OS-level display scaling or physical-display acceptance.
 

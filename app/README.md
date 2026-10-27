@@ -25,6 +25,7 @@ Before a staged import opens Excel, the manager reads the workbook DataMashup pe
 The Vector design refreshes the **existing desktop PySide6 UI** with a graphite/lime/teal color system, a compact left navigation rail, dashboard counts derived from the query model, a high-priority review/import action and a searchable **Ctrl+K command palette**. The palette invokes the already-wired Qt buttons and respects disabled operations; it does not bypass review, approval, backup, source integrity or read-only safeguards. The original controls remain available in their sections.
 
 Dependency Finder uses separate files-to-inspect and targets panels, a scrollable laptop-sized layout, filter/graph controls, progress/cancel, coverage warning area and unchanged JSON/CSV exports. Both file and query dependency graphs use readable dark nodes, contrasting edges and accessible text summaries. The file graph also supports wheel zoom, pan, fit-to-view, reset and selection, while its render deduplicates repeated arrows without changing the full report.
+Finder stacks its mode selectors and file panels so the workspace fits narrow windows; result tables retain their own scrolling when columns need more room.
 
 The workspace arranges its action controls and status cards in narrower rows so the original controls remain reachable on laptop-sized windows without horizontal workspace scrolling. Vertical scrolling is used to reach the full workflow.
 Unchecked checkbox outlines use the theme's contrasting muted color, including in light mode.
