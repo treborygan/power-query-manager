@@ -4,13 +4,13 @@ import shutil
 import json
 
 from PySide6.QtCore import Qt, QThread, QObject, Slot
-from PySide6.QtGui import QFont, QKeySequence
+from PySide6.QtGui import QFont, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel,
     QLineEdit, QPushButton, QFileDialog, QTableView, QStyledItemDelegate,
     QHeaderView, QComboBox, QCheckBox, QPlainTextEdit, QMessageBox,
     QGroupBox, QSplitter, QAbstractItemView, QProgressBar, QDialog, QInputDialog, QSpinBox,
-    QTableWidget, QTableWidgetItem, QDockWidget, QTabWidget, QScrollArea, QFrame
+    QTableWidget, QTableWidgetItem, QDockWidget, QTabWidget, QScrollArea, QFrame, QListWidget
 )
 
 from pq_installer.core.models import ExistingQueryMode, LoadMode
@@ -126,6 +126,8 @@ class MainWindow(QMainWindow):
         self.table.selectionModel().selectionChanged.connect(self._update_docked_inspector)
         self.query_model.dataChanged.connect(self._update_docked_inspector)
         self._apply_theme(True)
+        self.vector_command_shortcut = QShortcut(QKeySequence("Ctrl+K"), self)
+        self.vector_command_shortcut.activated.connect(self._open_vector_command_palette)
 
     def _apply_theme(self, dark=True):
         """Change only presentation; the application's action state is retained."""
@@ -147,6 +149,91 @@ class MainWindow(QMainWindow):
         selected = Path(self.workbook_edit.text()).is_file()
         self.vector_kpis["Workbook"].setText("01" if selected else "00")
         self.vector_kpis["Mode"].setText("PLAN" if self.dry_run_check.isChecked() else "STAGED")
+
+    def _vector_command_entries(self):
+        """Expose existing actions through a keyboard palette, preserving button enablement."""
+        entries = [
+            ("Browse for workbook", self.vector_workbook_actions["Browse…"]),
+            ("Open workbook in Excel", self.open_btn),
+            ("Inspect workbook queries", self.inspect_btn),
+            ("Probe Excel capabilities", self.probe_btn),
+            ("Recover staged copy", self.recover_stage_btn),
+            ("Open Dependency Finder", self.dependency_finder_button),
+            ("Review and import queries", self.install_btn),
+            ("Show operation history", self.history_button),
+            ("Undo query edit", self.undo_button),
+            ("Redo query edit", self.redo_button),
+            ("Select all query rows", self.select_all_button),
+            ("Save profile", self.vector_profile_buttons["Save profile…"]),
+            ("Load profile", self.vector_profile_buttons["Load profile…"]),
+            ("Edit source mappings", self.edit_mappings_btn),
+        ]
+        entries.extend((label.rstrip("…"), button)
+                       for label, button in self.vector_source_actions.items())
+        entries.extend((label.rstrip("…"), button)
+                       for label, button in self.vector_bulk_actions.items())
+        return entries
+
+    def _open_vector_command_palette(self):
+        if self._operation_busy:
+            return
+        palette = QDialog(self)
+        palette.setWindowTitle("Vector · Command palette")
+        palette.setMinimumWidth(460)
+        panel = QVBoxLayout(palette)
+        panel.setContentsMargins(18, 17, 18, 17)
+        heading = QLabel("COMMAND   /   FIND AN ACTION")
+        heading.setObjectName("vectorEyebrow")
+        panel.addWidget(heading)
+        search = QLineEdit(palette)
+        search.setPlaceholderText("Type to filter commands…")
+        search.setAccessibleName("Search Power Query Manager commands")
+        panel.addWidget(search)
+        matches = QListWidget(palette)
+        matches.setAccessibleName("Available Power Query Manager commands")
+        entries = self._vector_command_entries()
+        panel.addWidget(matches)
+        controls = QHBoxLayout()
+        run = QPushButton("Run selected command")
+        run.setAccessibleName("Run selected command")
+        cancel = QPushButton("Close")
+        cancel.setAccessibleName("Close command palette")
+        controls.addStretch()
+        controls.addWidget(cancel)
+        controls.addWidget(run)
+        panel.addLayout(controls)
+
+        def filter_commands(query=""):
+            matches.clear()
+            needle = query.casefold().strip()
+            for label, button in entries:
+                if needle not in label.casefold():
+                    continue
+                from PySide6.QtWidgets import QListWidgetItem
+                item = QListWidgetItem(label)
+                item.setData(Qt.UserRole, button)
+                if not button.isEnabled():
+                    item.setFlags(item.flags() & ~Qt.ItemIsEnabled)
+                matches.addItem(item)
+            if matches.count():
+                matches.setCurrentRow(0)
+
+        def execute():
+            item = matches.currentItem()
+            if item is None:
+                return
+            button = item.data(Qt.UserRole)
+            if button is not None and button.isEnabled():
+                palette.accept()
+                button.click()
+
+        search.textChanged.connect(filter_commands)
+        matches.itemActivated.connect(lambda *_: execute())
+        run.clicked.connect(execute)
+        cancel.clicked.connect(palette.reject)
+        filter_commands()
+        search.setFocus()
+        palette.exec()
 
     def _build_ui(self):
         shell = QWidget(self)
@@ -210,6 +297,10 @@ class MainWindow(QMainWindow):
         status_eyebrow.setObjectName("vectorEyebrow")
         status_row.addWidget(status_eyebrow)
         status_row.addStretch()
+        self.vector_command_button = QPushButton("⌘  Command  Ctrl+K")
+        self.vector_command_button.setAccessibleName("Open command palette")
+        self.vector_command_button.clicked.connect(self._open_vector_command_palette)
+        status_row.addWidget(self.vector_command_button)
         self.theme_toggle = QCheckBox('Dark theme')
         self.theme_toggle.setAccessibleName('Toggle dark theme')
         self.theme_toggle.setChecked(True)
@@ -271,6 +362,7 @@ class MainWindow(QMainWindow):
         self.workbook_edit = QLineEdit(); self.workbook_edit.setPlaceholderText('Choose an .xlsx or .xlsm workbook')
         self.workbook_edit.setAccessibleName('Target workbook path')
         browse_wb = QPushButton('Browse…');browse_wb.setAccessibleName('Browse for target workbook'); browse_wb.clicked.connect(self._browse_workbook)
+        self.vector_workbook_actions = {"Browse…": browse_wb}
         self.open_btn = QPushButton('Open workbook');self.open_btn.setAccessibleName('Open selected workbook in Excel'); self.open_btn.setEnabled(False); self.open_btn.clicked.connect(self._open_workbook)
         self.inspect_btn = QPushButton('Inspect queries');self.inspect_btn.setAccessibleName('Inspect selected workbook queries read-only'); self.inspect_btn.setEnabled(False); self.inspect_btn.clicked.connect(self._inspect_workbook)
         self.probe_btn=QPushButton('Probe Excel capabilities');self.probe_btn.setAccessibleName('Probe Excel load capabilities');self.probe_btn.clicked.connect(self._probe_excel)
@@ -324,8 +416,10 @@ class MainWindow(QMainWindow):
             ('Inspect / compare selected…',self._inspect_selected),('Dependency graph…',self._show_dependency_graph),
             ('Browse selected path…',self._browse_source),('Remove selected',self._remove_selected),
             ('Clear list',self._clear_sources)]
+        self.vector_source_actions = {}
         for index,(label,callback) in enumerate(source_actions):
             button=QPushButton(label);button.setAccessibleName(label.rstrip('…'));button.clicked.connect(callback)
+            self.vector_source_actions[label] = button
             controls.addWidget(button,index//4,index%4)
         for column in range(4): controls.setColumnStretch(column,1)
         q_layout.addLayout(controls)
@@ -335,8 +429,10 @@ class MainWindow(QMainWindow):
             ('Set selected order…',self._set_selected_order),
             ('Configure selected destinations…',self._configure_destinations),
             ('Compare package versions…',self._preview_query_package_update)]
+        self.vector_bulk_actions = {}
         for index,(label,callback) in enumerate(bulk_actions):
             button=QPushButton(label);button.setAccessibleName(label.rstrip('…'));button.clicked.connect(callback)
+            self.vector_bulk_actions[label] = button
             bulk.addWidget(button,index//3,index%3)
         self.undo_action=self.query_model.undo_stack.createUndoAction(self,'Undo table edit')
         self.undo_action.setShortcut(QKeySequence.StandardKey.Undo);self.addAction(self.undo_action)
@@ -400,6 +496,7 @@ class MainWindow(QMainWindow):
         self.dry_run_check.toggled.connect(self._update_vector_metrics)
         save_profile_btn=QPushButton('Save profile…');save_profile_btn.setAccessibleName('Save import profile');save_profile_btn.clicked.connect(self._save_profile);options_layout.addWidget(save_profile_btn,2,1)
         load_profile_btn=QPushButton('Load profile…');load_profile_btn.setAccessibleName('Load import profile');load_profile_btn.clicked.connect(self._load_profile);options_layout.addWidget(load_profile_btn,3,0)
+        self.vector_profile_buttons = {"Save profile…": save_profile_btn, "Load profile…": load_profile_btn}
         self.edit_mappings_btn=QPushButton('Edit source mappings…');self.edit_mappings_btn.setAccessibleName('Edit source environment mappings');self.edit_mappings_btn.clicked.connect(self._edit_source_mappings);options_layout.addWidget(self.edit_mappings_btn,3,1)
         options_layout.setColumnStretch(0,1);options_layout.setColumnStretch(1,1)
         layout.addWidget(options)
