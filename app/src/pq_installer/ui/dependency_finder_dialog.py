@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QAbstractItemView, QCheckBox, QComboBox, QDialog, QFileDialog, QGridLayout,
     QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QMessageBox, QPlainTextEdit,
     QProgressBar, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout,
-    QFrame, QHeaderView,
+    QFrame, QHeaderView, QScrollArea, QWidget,
 )
 
 from pq_installer.core.reverse_dependencies import (
@@ -116,7 +116,18 @@ class DependencyFinderDialog(QDialog):
         apply_vector_theme(self, getattr(parent, "dark_theme_enabled", True))
 
     def _build_ui(self):
-        layout = QVBoxLayout(self)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        scroller = QScrollArea(self)
+        scroller.setObjectName("vectorScroll")
+        scroller.setWidgetResizable(True)
+        scroller.setFrameShape(QFrame.NoFrame)
+        scroller.setAccessibleName("Dependency Finder workspace")
+        body = QWidget()
+        body.setObjectName("vectorRoot")
+        scroller.setWidget(body)
+        outer.addWidget(scroller)
+        layout = QVBoxLayout(body)
         layout.setContentsMargins(22, 16, 22, 18)
         layout.setSpacing(12)
         eyebrow = QLabel("DEPENDENCY INTELLIGENCE    /    READ-ONLY")
@@ -215,7 +226,7 @@ class DependencyFinderDialog(QDialog):
         self.remove_targets_button.clicked.connect(self._remove_targets)
         for index, widget in enumerate((self.add_targets_button, self.from_consumers_button,
                                          self.remove_targets_button)):
-            target_actions.addWidget(widget, index // 2, index % 2)
+            target_actions.addWidget(widget, index, 0)
         target_actions.setColumnStretch(0, 1)
         target_actions.setColumnStretch(1, 1)
         target_layout.addLayout(target_actions)
