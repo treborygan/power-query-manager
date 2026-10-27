@@ -100,14 +100,20 @@ class FileDependencyGraphDialog(QDialog):
         self.summary.setReadOnly(True)
         self.summary.setAccessibleName("Text summary of file dependency arrows")
         self.summary.setMaximumHeight(165)
+        grouped = Counter((edge.consumer_path, edge.target_path, edge.confidence)
+                          for edge in report.edges)
         lines = [
-            f"{Path(edge.consumer_path).name} depends on {Path(edge.target_path).name} [{edge.confidence}]"
-            for edge in report.edges[:200]
+            f"{Path(consumer).name} depends on {Path(target).name} [{confidence}]"
+            + (f"  ×{count}" if count > 1 else "")
+            for (consumer, target, confidence), count in list(grouped.items())[:200]
         ]
-        if len(report.edges) > 200:
+        if len(grouped) > 200:
             lines.append(
-                f"…plus {len(report.edges) - 200} more references in the main results table/export."
+                f"…plus {len(grouped) - 200} distinct relationships in the main results table/export."
             )
+        if len(report.edges) > len(grouped):
+            lines.append(f"{len(report.edges)} total source/query records across "
+                         f"{len(grouped)} distinct file relationships.")
         if len(report.files) > _MAX_GRAPH_NODES:
             lines.append(
                 f"Diagram limited to {_MAX_GRAPH_NODES} of {len(report.files)} files; "
@@ -159,7 +165,16 @@ class FileDependencyGraphDialog(QDialog):
                 28 + (index % columns) * (width + gap_x),
                 26 + (index // columns) * (height + gap_y),
             )
-        for edge_index, edge in enumerate(self.report.edges):
+        # A workbook can contain many formulas referencing the same file; render
+        # one arrow per path/confidence instead of obscuring nodes with duplicates.
+        unique_edges = []
+        drawn = set()
+        for edge in self.report.edges:
+            identity = (edge.consumer_path, edge.target_path, edge.confidence)
+            if identity not in drawn:
+                drawn.add(identity)
+                unique_edges.append(edge)
+        for edge_index, edge in enumerate(unique_edges):
             if edge.consumer_path not in positions or edge.target_path not in positions:
                 continue
             sx, sy = positions[edge.consumer_path]
@@ -216,11 +231,13 @@ class FileDependencyGraphDialog(QDialog):
             stripe = scene.addRect(0, 0, 4, height, QPen(Qt.NoPen), QBrush(accent))
             stripe.setParentItem(node)
             stripe.setPos(0, 0)
+            stripe.setAcceptedMouseButtons(Qt.NoButton)
             name_label = scene.addText(name, QFont("Segoe UI", 10, QFont.Bold))
             name_label.setDefaultTextColor(QColor("#f0f9f8"))
             name_label.setTextWidth(width - 26)
             name_label.setParentItem(node)
             name_label.setPos(12, 8)
+            name_label.setAcceptedMouseButtons(Qt.NoButton)
             category = "ACCESS DATABASE" if is_access else "EXCEL WORKBOOK"
             detail = (
                 f"{category}   ·   {outbound[file_path]} outgoing  /  {inbound[file_path]} incoming"
@@ -230,6 +247,7 @@ class FileDependencyGraphDialog(QDialog):
             sublabel.setTextWidth(width - 20)
             sublabel.setParentItem(node)
             sublabel.setPos(12, 48)
+            sublabel.setAcceptedMouseButtons(Qt.NoButton)
         rows = max(1, (len(paths) + columns - 1) // columns)
         scene.setSceneRect(
             0, 0, columns * (width + gap_x) + 20,
