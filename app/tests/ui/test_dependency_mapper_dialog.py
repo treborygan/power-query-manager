@@ -62,6 +62,13 @@ def test_general_map_graph_has_accessible_visual_and_summary(tmp_path):
 
     dialog = FileDependencyGraphDialog(report)
 
+    dialog.resize(960, 600)
+    dialog.show()
+    app.processEvents()
+    assert dialog.minimumSizeHint().width() <= 960
+    assert dialog.minimumSizeHint().height() <= 600
+    assert dialog.graph_view.width() > 0 and dialog.graph_view.height() > 0
+
     assert dialog.graph_view.scene().items()
     assert "Dashboard.xlsx" in dialog.summary.toPlainText()
     assert "Warehouse.accdb" in dialog.summary.toPlainText()
