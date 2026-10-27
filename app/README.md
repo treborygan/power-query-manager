@@ -22,7 +22,7 @@ Before a staged import opens Excel, the manager reads the workbook DataMashup pe
 
 ## Functions
 
-### Dependency Finder (new source feature; Windows verification outstanding)
+### Dependency Finder (Windows local/OneDrive tested; two scoped waivers)
 
 Choose **Dependency Finder…** to find *incoming* dependencies: for example,
 "Which `.xlsx`, `.xlsm`, `.accdb` or `.mdb` files reference `Warehouse.accdb`?"
