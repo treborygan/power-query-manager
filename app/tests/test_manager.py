@@ -187,7 +187,8 @@ def test_profile_path_mapping_preview_is_anchored_and_longest_prefix(tmp_path):
     assert rows[0].mapped_path==str((root/'target'/'special'/'q.pq').resolve())
     document['queries'][0]['source_path']='queries_other/q.pq'
     rows=preview_profile_path_mappings(document,root/'profile.json')
-    assert rows[0].mapping_key is None and rows[0].mapped_path.endswith('queries_other\\q.pq')
+    assert rows[0].mapping_key is None
+    assert rows[0].mapped_path==str((root/'queries_other'/'q.pq').resolve())
 
 
 def test_profile_mapping_apply_requires_preview_and_rejects_ambiguous_mapping(tmp_path):

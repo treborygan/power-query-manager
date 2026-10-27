@@ -121,6 +121,10 @@ def _running_object_table_users(path,pythoncom_module=None):
 
 def _com_apartment_initialized():
     """Check COM state without changing the caller thread's initialization count."""
+    if os.name!='nt':
+        # Portable tests supply a fake pythoncom object. There is no Windows
+        # COM apartment to query on other hosts, so initialize that fake once.
+        return False
     ole32=ctypes.WinDLL('ole32',use_last_error=True)
     get_token=ole32.CoGetContextToken
     get_token.argtypes=[ctypes.POINTER(ctypes.c_void_p)]

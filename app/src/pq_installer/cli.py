@@ -26,6 +26,9 @@ from pq_installer.core.packages import (apply_query_package_manifest, extract_qu
     validate_deployment_bundle_manifest)
 from pq_installer.core.query_loader import discover_query_files
 from pq_installer.core.redaction import safe_error
+from pq_installer.core.reverse_dependencies import (
+    discover_scan_files, scan_dependency_map, scan_reverse_dependencies,
+)
 from pq_installer.core.error_log import ApprovalRequired,format_failure,record_failure
 
 
@@ -107,6 +110,19 @@ def _make_parser():
     inspect=commands.add_parser('inspect',help='Read query names, formulas, and observed load states from a workbook.')
     inspect.add_argument('--workbook',required=True,help='Target .xlsx/.xlsm workbook; opened read-only.')
     inspect.add_argument('--output',help='Write JSON to a new path; existing files are never overwritten.')
+    find=commands.add_parser('dependency-scan',help='Find files that refer to selected workbooks/Access databases without opening or refreshing them.')
+    find.add_argument('--target',action='append',required=True,dest='targets',help='Dependency target file to find incoming references to; repeat for multiple targets.')
+    find.add_argument('--file',action='append',default=[],dest='files',help='File to inspect for outgoing references; repeat to select multiple files.')
+    find.add_argument('--folder',action='append',default=[],dest='folders',help='Folder containing candidate Excel/Access files; repeat for multiple folders.')
+    find.add_argument('--recursive',action='store_true',help='Include nested folders when discovering candidate files.')
+    find.add_argument('--depth',choices=('quick','deep'),default='deep',help='Quick skips worksheet formulas/defined names; deep scans them (default: deep).')
+    find.add_argument('--output',help='Save report as JSON to a NEW path; no existing report is overwritten.')
+    mapping=commands.add_parser('dependency-map',help='Index all incoming and outgoing references between selected Excel/Access files.')
+    mapping.add_argument('--file',action='append',default=[],dest='files',help='File to include in general dependency map; repeat as needed.')
+    mapping.add_argument('--folder',action='append',default=[],dest='folders',help='Folder containing candidate Excel/Access files.')
+    mapping.add_argument('--recursive',action='store_true',help='Include nested folders.')
+    mapping.add_argument('--depth',choices=('quick','deep'),default='quick',help='Quick scans query/connections/links; deep also scans sheet formulas and defined names.')
+    mapping.add_argument('--output',help='Write complete graph JSON to a NEW file, without overwriting an existing file.')
     validate=commands.add_parser('validate',help='Validate a versioned import profile and enabled source files offline.')
     validate.add_argument('--profile',required=True,help='Versioned JSON import profile.')
     export=commands.add_parser('export',help='Export all workbook query definitions to .pq files or a verified package.')
@@ -400,6 +416,25 @@ def _import_query_package(package_path,workbook_path,*,policy='skip',dry_run=Fal
 
 def _dispatch_parsed(args,parser,*,inspector_factory=None,installer_factory=None,
                      refresher_factory=None,capability_probe=None,input_func=None,interactive=False):
+    if args.command in {'dependency-scan','dependency-map'}:
+        try:
+            if not (args.files or args.folders):
+                raise ValueError('Supply at least one --file or --folder to inspect.')
+            for source in (*args.files,*args.folders):
+                if not Path(source).exists():
+                    raise ValueError('A selected scan path does not exist.')
+            candidates=discover_scan_files((*args.files,*args.folders),recursive=args.recursive)
+            if args.command=='dependency-map':
+                report=scan_dependency_map(candidates,depth=args.depth)
+                bundle_type='dependency-map'
+            else:
+                report=scan_reverse_dependencies(args.targets,candidates,depth=args.depth)
+                bundle_type='reverse-dependencies'
+            _write_json_output(args.output,{'schema_version':1,'bundle_type':bundle_type,**asdict(report)})
+            return 5 if report.issues or report.cancelled else 0
+        except (ValueError,OSError) as exc:
+            print(f'Dependency scan failed: {format_failure(exc)}',file=sys.stderr)
+            return 2
     if args.command=='validate':
         try:
             _write_json_output(None,_validate_profile_sources(args.profile))

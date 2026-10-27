@@ -29,6 +29,7 @@ Refresh is an explicit action because workbook queries may contact their configu
 - Save and validate versioned profiles; review conservative source mapping and multi-workbook deployment plans.
 - Use capability-probed Excel load modes and explicit selected/all refresh workflows where the installed Office build supports them.
 - Keep workbook changes staged, create verified backups, and verify saved query state before commit.
+- In the **source version**, use **Dependency Finder…** to find incoming references to `.xlsx`, `.xlsm`, `.accdb` or `.mdb` targets, or build a **general file dependency map** with incoming/outgoing filters. Quick/deep scans, streamed Excel XML and an in-memory link index support larger folders. Windows packaged CLI and local/OneDrive scans were verified using real Excel and DAO 12.0 fixtures; ACE DAO 16.0 and mapped SMB/UNC tests were explicitly waived for feature integration, not passed. The broader product release matrix remains open. [Workflow and limitations](docs/DEPENDENCY_FINDER.md).
 
 The M tokenizer is intentionally conservative and does not parse or evaluate the full M language. Unsupported or ambiguous Excel states are reported as unknown or disabled instead of being guessed.
 
@@ -64,3 +65,18 @@ Start with the [documentation index](docs/README.md) for user guidance, architec
 - `dist/` — compact Windows GUI/CLI package, manual, and SHA-256 manifest
 
 For development and packaging instructions, follow [`app/README.md`](app/README.md) and [`app/build.ps1`](app/build.ps1). This repository does not configure GitHub Actions.
+
+## Portable regression tests on Linux
+
+The source-only regression suite runs without Excel or a Windows Access Engine:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r app/requirements-linux-tests.txt
+PYTHONPATH=app/src QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q app/tests
+```
+
+Latest Linux result: **526 passed, 10 skipped, 0 failed** (2026-10-27).
+The Windows-only integration checks remain skipped, not certified; an actual
+Windows/Excel/DAO host and packaged GUI/CLI still require their acceptance
+matrix before release.

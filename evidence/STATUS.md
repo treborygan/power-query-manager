@@ -1068,3 +1068,115 @@
 - The rebuilt packaged keyboard smoke did not complete reliably: one run found two matching title elements; the next observed focus leave the manager during Tab traversal. A one-off window inventory observed one visible main window. This remains inconclusive, not a pass, and is deferred while core import workflows remain the priority.
 - After adding the current-package Excel import result to the manual, final docs-only package refresh and verification passed: 116 files / 76,241,206 bytes. `dist/SHA256SUMS` SHA-256 `A543D52F5855F2DD8BBB83DF5B94598825561792849FFDC5F9630B3CF907E2FB`; GUI SHA-256 `EB53833FC96CBE8FBE3AD40280F6569799D1D4D5FAB223C8713CF67DD509A93C`; CLI SHA-256 `A631F4256483B10EA921CBBD463A28C88318C1C7E7361AC7AD17E6BFA9255C4E`. Only pre-existing Excel PID 36464 remained active.
 - Core workflow confirmation on the W302 package: `python -B tools/run_packaged_gui_import_smoke.py --exe dist/PowerQueryManager/PowerQueryManager.exe` passed on Windows 10 build 26300 / desktop Excel 16.0 build 20430.0, non-elevated. The disposable `.xlsx` received the exact formula; timestamped backup hash matched the original workbook; read-only reopen passed; manager exited 0; only PID 36464 remained. This does not cover load modes other than definition-only or broader Office builds.
+
+## 2026-10-27 — Dependency Finder implementation evidence
+
+- New source-only reverse dependency engine, Access-copy DAO metadata reader,
+  PySide6 dialog/worker and CLI; no SharePoint-specific API. Source code is on
+  a feature branch and has not been packaged or Windows-validated.
+- Focused pytest on synthetic files/fake DAO and existing dependency/CLI
+  regressions: **74 passed**, including literal precision, missing DAO,
+  empty scan scope, COM apartment/cleanup, CSV coverage/injection protection,
+  async mapped-folder inventory and XML budget handling.
+- Linux baseline prior to feature changes: **475 passed, 11 skipped, 11 failed**
+  due to existing Windows/path/package assumptions. Do not interpret those
+  failures as passing or silently skip them in a Windows release gate.
+- Full Linux regression after this feature: **498 passed, 11 skipped, 11 failed**;
+  the failing test names were identical to the pre-change baseline.
+- Windows `DAO.DBEngine`, real Access files, original before/after hashes,
+  Excel DataMashup and packaged GUI/CLI: **NOT VERIFIED**.
+
+## 2026-10-27 — General Dependency Map and bounded-stream scan evidence
+
+- Added general file-to-file dependency indexing across selected Excel and
+  Access files, an outgoing/incoming GUI filter backed by one in-memory index,
+  a visual advisory graph, and the `dependency-map` CLI. Find Dependents
+  remains available. Quick and Deep modes control worksheet-formula coverage.
+- Office XML metadata now uses incremental parsing with completed-node
+  removal, and matches/unresolved filename hints are deduplicated as each
+  reference arrives. A failing-first 60,000-formula stress test initially
+  peaked at 9,899,400 traced bytes; the incremental-index fix passed the
+  6 MiB peak threshold on that same synthetic sample. This does **not** claim
+  a strict peak-RAM bound for every file or actual Excel workbook.
+- The map CSV summary checks both incoming and outgoing links; a failing-first
+  UI regression caught its earlier misleading `no_matches` label for a
+  file with only outgoing links. Diagram arrowheads are also covered by a
+  portable GUI regression.
+- A fresh read-only reviewer found reverse duplicate-basename false positives
+  and lost second filenames inside a single formula/Access query; three
+  failing-first regressions reproduced them. Extraction now checks every
+  safe file mention and resolves exact-path priority or emits ambiguity.
+  A fourth failing-first regression excluded raw saved-SQL text from the
+  unresolved-filename export.
+- Final focused dependency/CLI/UI regression: **39 passed**. Full Linux
+  offscreen suite: **514 passed, 11 skipped, 11 failed**. The 11 failing names
+  are identical to the pre-feature Linux baseline and concern Windows/host
+  path/stream or existing release-package assumptions; they are still failures,
+  not skipped or claimed passed. Real Windows mapped folders,
+  genuine Excel DataMashup, DAO Access Engine, performance on large workbooks,
+  and the rebuilt packaged GUI/CLI are still **NOT VERIFIED**.
+
+## 2026-10-27 — resolved the 11 inherited Linux regression failures
+
+- Source environment: Linux, Python 3.12, `QT_QPA_PLATFORM=offscreen`,
+  `PYTHONPATH=/workspace/scratch/ea9b0abc6b01/.deps:app/src`; `jsonschema==4.26.0` installed alongside the
+  portable test dependencies. This was a **source-only** regression run, not
+  a Windows packaged build or Excel/Access integration run.
+- Two COM Running Object Table fake tests now avoid probing WinDLL on POSIX;
+  the Windows COM path itself is unchanged.
+- Four failed Internet/Restricted-zone preflight tests now exercise the full
+  policy through an injectable simulated `Zone.Identifier` reader on POSIX.
+  The intranet-zone acceptance test also uses the seam. Actual Windows ADS
+  reading and Office Protected View remain separate, unverified integration
+  gates; POSIX colon-named files are **not** treated as Windows ADS at runtime.
+- Three path-mapping failures used hard-coded Windows separators in expected
+  strings; their assertions now compare exact resolved paths on the host.
+- The versioned query-package schema test no longer fails for lack of the
+  declared `jsonschema` dependency. An additional formerly skipped test is
+  exercised when the dependency is installed.
+- The isolated release-package fixture now includes inert files at the two
+  mandatory Shiboken paths. The **production verifier remains unchanged**
+  and requires these files in a real release package; fake DLLs are never
+  shipped or executed.
+- Final command: `PYTHONPATH=/workspace/scratch/ea9b0abc6b01/.deps:app/src QT_QPA_PLATFORM=offscreen python -m pytest -q app/tests --tb=short`
+  — **526 passed, 10 skipped, 0 failed in 17.39 s** (post-review rerun). This closes the inherited
+  Linux failures but does not advance the Windows/Excel/DAO release gates.
+
+## 2026-10-27 — Dependency Finder Windows build check
+
+- Exact source commit tested: `c5009db52d9c321f86d5e5bd9b11e7b73fa93aeb`.
+- On Windows 10 build 26300 / Python 3.11.9, `app/build.ps1` confirmed the pinned Windows dependencies, passed the full suite (**536 passed in 37.79s**) and rebuilt both onedir executables with PyInstaller 6.13.0.
+- Release staging and verification passed: **116 files / 76,310,185 bytes**. Packaged CLI help exposes `dependency-scan`, `dependency-map`, and Quick/Deep depth options. Packaged GUI launched; its accessibility tree showed the Dependency Finder and Dependency graph controls.
+- GUI scan behavior was not run. No `.accdb` or `.mdb` fixtures were found in the checkout or inspected fixture locations, so actual DAO linked-table/saved-query scanning cannot be claimed. Genuine workbook Mashup and external-link detection, scan filters, graph/export accuracy, large real-workbook Quick/Deep timing/RSS, local/SMB/UNC/synchronized folders, and scan-level unchanged-file/lock/temp checks remain **NOT VERIFIED**. Required acceptance is **FAIL / OPEN** until these integrations are exercised.
+- No source failure was found in the Windows suite; no repair was made. Portable tests for scanner behavior do not establish Office/DAO acceptance. Package executable hashes are recorded in generated `dist/SHA256SUMS`.
+
+## 2026-10-27 — Dependency Finder harness and integration diagnostic
+
+- Added a repeatable Windows harness at `tools/run_dependency_windows_acceptance.py` for real ACE DAO databases, desktop Excel Mashup/external links, expected graph assertions, Quick/Deep scans, packaged CLI multi-target scans, GUI filtering/graph/exports, progress/cancellation, hashes/timestamps, lock/temp files, process cleanup, and optional mapped SMB/UNC/synchronized roots.
+- Fixed Office customXml Mashup detection for UTF-16LE/BE marker encodings. Focused regression module: **12 passed**. Windows `app/build.ps1` full suite: **537 passed in 39.46 s**; rebuilt packaged GUI and CLI. Package verifier: **116 files / 76,310,327 bytes**. Packaged CLI help shows `dependency-scan`, `dependency-map`, Quick and Deep options.
+- Harness diagnostic ran against base revision `7c9d94b5f3d7502b0204de7873042604fb36ee24` with then-uncommitted changes, using available `DAO.DBEngine.120`. It is not evidence for a clean commit. Required `DAO.DBEngine.160` was absent, so ACE 16.0 acceptance is **FAIL / OPEN**.
+- Excel 16.0 build 20430.0 created genuine Mashup and external workbook fixtures, plus a 31,200-cell external-formula workbook. Quick found 12 dependency records in 6.43 s with 189,259,776-byte peak process-tree working set; Deep found the same 12 in 3.63 s with 186,060,800-byte peak. Both returned the eight expected pairs, one ambiguous reference and two unresolved references. GUI directional filters, 12-edge graph, JSON/CSV exports, progress and cancellation passed. Multi-target CLI scan passed with six relationships.
+- Source SHA-256 and timestamps stayed unchanged; no Access lock files, leftover DAO temporary directories, or post-run Excel processes remained; disposable fixtures were removed. Excel did require forced termination after failing to exit naturally for 21.33 s, making cleanup status **FAIL**. Mapped SMB, UNC and synchronized folders were **NOT RUN**.
+- Full acceptance remains **FAIL / OPEN** pending ACE DAO 16.0, natural Excel process exit and mapped/UNC/synchronized repetitions. See `docs/QA_WINDOWS_MATRIX.md` for the detailed matrix and exact harness invocation. Final committed revision and package hashes follow after commit.
+- Clean-revision acceptance preflight on commit `f542a72f5c9087b44dae85cff614f5b0ed07b89f` confirmed the default required-provider gate: **FAIL**, because `DAO.DBEngine.160` is not registered (only `DAO.DBEngine.120` is available). No fixtures were created in this ACE 16.0 preflight. Full diagnostic details from the working-tree build are in `%TEMP%\\pqm-dependency-harness-final.json`; its initial dirty-tree SHA is explicitly not treated as the tested commit.
+
+## 2026-10-27 — Excel COM cleanup repair and repeated path/performance evidence
+
+- Supersedes the prior forced-cleanup diagnostic. The harness no longer initializes a parent COM apartment just to inspect the Excel PID set; it creates DAO fixtures in a short-lived worker before starting a separate Excel automation lifecycle. A full sequential DAO→Excel fixture exercise including a 31,200-formula workbook exited naturally in **3.63 s**, with no forced termination or Excel process leak. `Excel.Quit()` is unconditional and cleanup exceptions are recorded.
+- Three interleaved Quick/Deep repetitions passed for local and OneDrive synchronized locations using the packaged CLI, with DAO 12.0 diagnostic fixtures. Local Quick median **3.842 s**, range **2.922–8.667 s**, peak working set **120,893,440 bytes**; Deep median **3.841 s**, range **3.646–3.996 s**, peak **118,755,328 bytes**. OneDrive Quick median **3.241 s**, range **2.821–7.259 s**, peak **120,717,312 bytes**; Deep median **3.546 s**, range **3.362–3.615 s**, peak **118,595,584 bytes**. Each mode returned 12 dependency records; both detected the external-link edge for the 31,200-cell formula workbook through external-link relationship metadata. No mode-only edges appeared in this fixture.
+- Actual reads passed source SHA-256/size/mtime preservation, no Access lock files, temporary directory cleanup, Excel process-set restoration and removal of disposable fixtures on both roots. Local GUI filter/graph/export/progress/cancellation checks passed. OneDrive path scan passed.
+- Default ACE 16.0 preflight still fails before creating fixtures: only DAO 12.0 is registered. The session is non-administrator; no Office/Access runtime installation was attempted. `net use` and `Get-SmbMapping` show no mapped SMB connection, so mapped SMB/UNC are **NOT RUN**. OneDrive is the only synchronized-path acceptance in this run. Required Windows integration acceptance remains **FAIL / OPEN**.
+- The independent GitHub AI_Context repository review dated 2026-10-26 still classified Power Query Manager's packaged Windows acceptance as incomplete; this run advances that evidence only for the DAO 12 diagnostic and OneDrive path. ACE 16.0 and network share claims remain open.
+
+## 2026-10-27 — clean-revision W296 confirmation
+
+- Exact tested commit: `a13ff507e76e4cca80fd204c69781a033ffbed39`. The complete DAO 12.0 diagnostic harness passed on local and OneDrive synchronized roots. Excel exited normally in 3.23 s, no forced termination, no process leak. All source hashes/sizes/timestamps were unchanged; there were no Access lock files or scan temp directories; both disposable trees were removed.
+- Three interleaved packaged Quick/Deep runs on local: Quick median **3.060 s**, range **2.910–3.307 s**, peak working set **190,595,072 bytes**; Deep median **3.501 s**, range **3.388–3.682 s**, peak **192,208,896 bytes**. OneDrive: Quick median **3.174 s**, range **3.112–3.318 s**, peak **194,142,208 bytes**; Deep median **3.610 s**, range **3.565–3.733 s**, peak **191,352,832 bytes**. Each mode returned 12 dependency records for the 31,200-formula fixture, plus two unresolved references and one ambiguity issue. Local GUI checks passed.
+- ACE 16.0 preflight on this same SHA failed closed because the provider is not registered; DAO 12.0 is the only available provider. This session is non-administrator, so no runtime/Office install was attempted. No SMB mappings or `net use` connections exist; mapped SMB/UNC remain **NOT RUN**. Overall Windows acceptance remains **FAIL / OPEN**.
+
+## 2026-10-27 — explicit two-gate waiver for Dependency Finder PR #1
+
+- Repository owner authorized **waiving** the ACE DAO 16.0 and mapped SMB/UNC acceptance checks and allowed merge if appropriate. These are **WAIVED / NOT VERIFIED**, explicitly **not PASS**. The clean ACE 16.0 preflight was blocked by unregistered `DAO.DBEngine.160`; DAO 12.0 tests do not prove 16.0 compatibility. No mapped SMB/UNC test environment was available; OneDrive is not a substitute.
+- Evidence retained unchanged: clean tested source `a13ff507e76e4cca80fd204c69781a033ffbed39`; 537 Windows tests reported for the build; repeatable local and OneDrive DAO 12.0 integration passed; genuine Excel Mashup/external links, Quick/Deep, packaged CLI, GUI filters/graph/exports/cancellation and file-integrity checks passed; Excel exited naturally in 3.23 s with no residual process. Refer to W296 for precise benchmark values and fixtures.
+- **Feature PR disposition:** accepted **with the two named waivers** for integration; this documentation change does not rerun Windows tests or declare the full application's broader release gates complete. Supported tested paths: local and OneDrive-synchronized folders on the documented Windows host with DAO 12.0. ACE DAO 16.0 and mapped SMB/UNC remain unvalidated and must not be represented as verified.
+- Production scan behavior, fail-closed diagnostics, and test harness requirements are unchanged. This waiver does not authorize editing, refreshing or deleting source files.

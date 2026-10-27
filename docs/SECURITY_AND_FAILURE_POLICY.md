@@ -24,6 +24,33 @@ Missing required approval has its own `approval_required` diagnostic category. I
 
 Use deterministic immutable job plan with input/workbook checksums; verify before applying. Staged workbook approach protects original until successful verification. Backups collision-proof and user-visible with integrity hashes. If staging path is not semantically equivalent (Power Query relative paths, OneDrive sync, protected file), block and offer explicit output-copy workflow rather than unsafe in-place editing. Do not assume `os.replace` atomic across network shares. Test rollback after `Save`/COM partial write/commit conflict.
 
+## Reverse dependency scans
+
+Dependency Finder is a metadata-only operation: no Excel COM launch,
+query/SQL execution, VBA, refresh, link update or writeback. Access DAO is
+initialized inside the scan worker and opens a **temporary local copy** with
+its read-only flag; this avoids creating lock files beside mapped or synced
+original Access databases. OS reads, network traffic to fetch file bytes,
+cloud placeholder hydration and temporary-disk use can still occur. Copies
+are disposed after inspection. If an Access provider is unavailable,
+unsupported, password-protected, locked or corrupt, report coverage gaps,
+not an empty-success result. XML/ZIP parts have per-file entry/size limits
+and a 256 MiB cumulative per-workbook metadata budget.
+Non-custom Excel XML is stream-parsed, and formula strings are matched and
+discarded instead of retained. Embedded `customXml` DataMashup is still
+decoded in bounded memory; the cumulative budget is not a peak RAM ceiling.
+
+Reports omit raw M, SQL and connection strings, as these can contain
+passwords or private URLs. JSON and CSV outputs are explicitly user-chosen,
+new files only. Formula-like CSV cell values are text-escaped to prevent
+Excel/CSV formula injection from malicious query/connection names. Matches
+from basename or inert literals must remain tentative;
+a zero-hit report cannot be used as proof that an old source can be removed.
+General mapping preserves only source/target paths, connection names, safe
+unresolved source **basenames** and coverage statuses, never unfiltered SQL,
+M-code bodies or connection strings. Duplicate filename candidates with no
+exact path emit an ambiguity rather than a guessed edge.
+
 ## Support matrix
 
 Unsupported workbook types (`.xlsb`, `.xls`, encrypted/password protected, Protected View) **must be rejected or explicitly researched**, not silently processed. If user requests expanded formats, add separate feasibility/acceptance matrix before enabling. Queries containing `section` declarations or multiple definitions are not implicitly supported by current standalone-expression importer. Never split them with naive regex.

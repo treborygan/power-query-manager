@@ -22,6 +22,29 @@ Before a staged import opens Excel, the manager reads the workbook DataMashup pe
 
 ## Functions
 
+### Dependency Finder (Windows local/OneDrive tested; two scoped waivers)
+
+Choose **Dependency Finder…** to find *incoming* dependencies: for example,
+"Which `.xlsx`, `.xlsm`, `.accdb` or `.mdb` files reference `Warehouse.accdb`?"
+Inventory a mapped/local folder recursively or add individual files, select
+which candidate files to inspect, then select one or more targets. Alternatively
+choose **Map all selected files** to index their internal links once, then
+explore incoming/outgoing edges by file without rescanning. **Quick** checks
+queries/connections/links; **Deep** additionally streams worksheet formula
+and defined-name metadata. A visual advisory file graph is available alongside
+the searchable results table. It scans
+embedded Excel Power Query and workbook link metadata without starting Excel,
+and Access table/query link definitions from an isolated temporary database
+copy using a compatible Windows DAO engine. View filename-only/possible
+matches, incomplete coverage and export to a new JSON/CSV report. No source
+data is refreshed or modified. The existing packaged EXE has not been rebuilt
+or smoke-tested for this feature.
+
+CLI: `power-query-manager-cli dependency-scan --target "C:\Data\Warehouse.accdb" --folder "C:\Reports" --recursive`.
+General map: `power-query-manager-cli dependency-map --folder "C:\Reports" --recursive --depth quick`.
+See [usage, detection scope and acceptance gates](../docs/DEPENDENCY_FINDER.md).
+
+
 - Import `.m` and `.pq` source files together, by multi-select or from the selected folder.
 - Duplicate source paths are ignored when files are added, including duplicates within the same multi-file batch; the first selected row is kept.
 - Edit each row's enabled state, numeric order, query name, source path, and load mode. Use **Browse selected path** to change a source file.
@@ -74,6 +97,21 @@ The app uses a separate, hidden desktop Excel process. Bounded calls target only
 - Desktop Microsoft Excel installed and activated; Excel COM must be available to the current Windows user.
 - Python 3.11, 3.12, or 3.13 for building/running from source, plus PowerShell.
 - The Python process and Excel may use different bitness because Excel automation is out-of-process COM; if Excel activation fails, retry with Python matching the installed Office architecture and inspect the logged COM error.
+
+For **Linux source-only regression testing**, Python, a Qt offscreen backend
+and the pinned packages in `requirements-linux-tests.txt` are sufficient.
+From the repository root, run:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r app/requirements-linux-tests.txt
+PYTHONPATH=app/src QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q app/tests
+```
+
+The portable suite passed **526 tests with 10 Windows-specific skips and no
+failures** on 2026-10-27. Tests use fake COM/DAO and synthetic Windows
+security-zone streams; this does not verify native Windows API behavior,
+installed Excel/Access, or the rebuilt Windows package.
 
 ## Build on Windows
 

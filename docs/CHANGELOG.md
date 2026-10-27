@@ -1,6 +1,27 @@
 # Power Query Manager changelog
 
-This changelog records implementation milestones for the successor to Power Query Installer 1.3.0. It does not itself certify a release. See each [release evidence file](../evidence/releases/) for commands, observed results, limitations, and gate status. The recovered workspace has no Git metadata, so commit hashes are unavailable.
+This changelog records implementation milestones for the successor to Power Query Installer 1.3.0. It does not itself certify a release. See each [release evidence file](../evidence/releases/) for commands, observed results, limitations, and gate status.
+
+## 2026-10-27 — portable Linux regression repair (Windows gates unchanged)
+
+- Cleared the 11 previously recorded Linux failures without removing or skipping any failing assertions. COM Running Object Table tests can use fake COM on non-Windows hosts; the Windows security-zone preflight now has an injectable stream reader so inspector/import rejection paths are tested offline.
+- Made path-preview assertions OS-neutral without loosening path identity checks, and supplied mandatory Shiboken placeholder paths in the isolated packaging test fixture while retaining the production verifier's checks.
+- Added pinned Linux source-only test dependencies, including `jsonschema`. Full offscreen Linux suite: **526 passed, 10 skipped, 0 failed**. The 10 skipped Windows-only integrations still require their actual Windows/Excel/DAO QA runs.
+
+## 2026-10-27 — Dependency Finder (post-v2 feature; accepted for integration **with two waivers**)
+
+- Later Windows W296 validation supersedes the initial source-only evidence below: **537 Windows tests passed**; packaged GUI/CLI rebuilt; disposable real Excel Mashup/links and Access DAO 12.0 fixtures, local and OneDrive Quick/Deep, GUI filters/graph/JSON/CSV/cancellation, hash/timestamp/lock/temp cleanup and natural Excel process exit passed on the documented host.
+- The owner waived **ACE DAO 16.0** (provider unregistered; NOT VERIFIED) and **mapped SMB/UNC** (no test mappings; NOT RUN) solely for merging PR #1. Neither is a PASS or a compatibility claim. The overall product release gates remain separate. See W296/W297 in `QA_WINDOWS_MATRIX.md`. Earlier bullet points below describe implementation-stage evidence at the time, not the latest final acceptance state.
+
+- Added a read-only *reverse* dependency scan for incoming references to multiple selected targets across `.xlsx`, `.xlsm`, `.accdb` and `.mdb` consumer files.
+- Added separate GUI folder/multi-file selection, worker progress/cancellation, confidence/coverage displays, JSON/CSV export, and `dependency-scan` CLI command.
+- Access metadata is inspected by DAO on disposable local database copies. No SharePoint-specific integration; `.xls`/`.xlsb` remain explicitly unsupported.
+- Portable tests pass; real Access Engine, Excel DataMashup, mapped Windows folders and packaged binaries still require smoke verification.
+- Review hardening: moved folder inventory off the GUI thread, added zero-match CSV summaries and spreadsheet-formula escaping, made M query-name attribution token-aware, released DAO proxies before temp cleanup, and capped cumulative ZIP/XML metadata reads.
+- Added **General Dependency Map** to index every selected Excel/Access file's incoming/outgoing relationships, allow instant file/direction filtering and show a visual advisory graph. `dependency-map` CLI exports the same edge/unresolved-reference index. Quick/deep modes allow formula scanning to be opt-in for large scans.
+- Non-custom Excel ZIP/XML metadata is now incrementally parsed and pruned; streamed references are matched immediately so large worksheet formula lists are not retained in RAM. Bounded DataMashup XML remains an exception. Tests are portable/synthetic; live Windows/Access and packaged validation remain unverified.
+- Final review hardened both modes against duplicate target basenames (ambiguous references do not become guessed edges), captured multiple distinct workbook/database references from one formula or saved query, and prevented raw SQL from being exported as a guessed filename. Repeated formula-edge objects are deduplicated incrementally.
+
 
 ## v2.0.0 — advanced tooling (partial implementation; gate **UNVERIFIED**)
 
