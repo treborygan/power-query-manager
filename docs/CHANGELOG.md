@@ -8,7 +8,10 @@ This changelog records implementation milestones for the successor to Power Quer
 - Made path-preview assertions OS-neutral without loosening path identity checks, and supplied mandatory Shiboken placeholder paths in the isolated packaging test fixture while retaining the production verifier's checks.
 - Added pinned Linux source-only test dependencies, including `jsonschema`. Full offscreen Linux suite: **526 passed, 10 skipped, 0 failed**. The 10 skipped Windows-only integrations still require their actual Windows/Excel/DAO QA runs.
 
-## 2026-10-27 — Dependency Finder (post-v2 source enhancement; gate **UNVERIFIED**)
+## 2026-10-27 — Dependency Finder (post-v2 feature; accepted for integration **with two waivers**)
+
+- Later Windows W296 validation supersedes the initial source-only evidence below: **537 Windows tests passed**; packaged GUI/CLI rebuilt; disposable real Excel Mashup/links and Access DAO 12.0 fixtures, local and OneDrive Quick/Deep, GUI filters/graph/JSON/CSV/cancellation, hash/timestamp/lock/temp cleanup and natural Excel process exit passed on the documented host.
+- The owner waived **ACE DAO 16.0** (provider unregistered; NOT VERIFIED) and **mapped SMB/UNC** (no test mappings; NOT RUN) solely for merging PR #1. Neither is a PASS or a compatibility claim. The overall product release gates remain separate. See W296/W297 in `QA_WINDOWS_MATRIX.md`. Earlier bullet points below describe implementation-stage evidence at the time, not the latest final acceptance state.
 
 - Added a read-only *reverse* dependency scan for incoming references to multiple selected targets across `.xlsx`, `.xlsm`, `.accdb` and `.mdb` consumer files.
 - Added separate GUI folder/multi-file selection, worker progress/cancellation, confidence/coverage displays, JSON/CSV export, and `dependency-scan` CLI command.
