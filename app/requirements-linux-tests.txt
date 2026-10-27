@@ -1,0 +1,6 @@
+# Portable, source-only regression suite on Linux (no Excel COM or Windows packaging).
+# Keep these pins aligned with requirements-win.txt. Windows-specific smoke
+# tests remain gated separately and are not replaced by this environment.
+PySide6==6.8.3
+pytest==8.3.5
+jsonschema==4.26.0

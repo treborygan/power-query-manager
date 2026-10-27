@@ -21,6 +21,13 @@ def test_package_stager_can_build_and_verify_an_isolated_release() -> None:
         (source / "PowerQueryManager.exe").write_bytes(b"fake-gui-launcher")
         (source / "PowerQueryManagerCLI.exe").write_bytes(b"fake-cli-launcher")
         (source / "_internal" / "runtime.bin").write_bytes(b"runtime")
+        # This is a staging/manifest test, not a Windows DLL execution test.
+        # Supply the two mandatory runtime paths as inert fixture bytes so the
+        # real package verifier can enforce their presence on every host.
+        shiboken = source / "_internal" / "shiboken6"
+        shiboken.mkdir()
+        (shiboken / "Shiboken.pyd").write_bytes(b"fake-python-extension")
+        (shiboken / "shiboken6.abi3.dll").write_bytes(b"fake-runtime-dll")
 
         result = subprocess.run(
             [
@@ -126,6 +133,7 @@ def test_package_stager_can_build_and_verify_an_isolated_release() -> None:
         assert "Excel 16.0 build 20430.0" in summary
         assert "Excel 16.0 build 20430.0" in summary
         assert (destination / "PowerQueryManager" / "_internal" / "runtime.bin").read_bytes() == b"runtime"
+        assert (destination / "PowerQueryManager" / "_internal" / "shiboken6" / "Shiboken.pyd").read_bytes() == b"fake-python-extension"
         assert (destination / "SHA256SUMS").is_file()
 
         gui_exe = destination / "PowerQueryManager" / "PowerQueryManager.exe"

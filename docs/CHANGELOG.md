@@ -1,6 +1,12 @@
 # Power Query Manager changelog
 
-This changelog records implementation milestones for the successor to Power Query Installer 1.3.0. It does not itself certify a release. See each [release evidence file](../evidence/releases/) for commands, observed results, limitations, and gate status. The recovered workspace has no Git metadata, so commit hashes are unavailable.
+This changelog records implementation milestones for the successor to Power Query Installer 1.3.0. It does not itself certify a release. See each [release evidence file](../evidence/releases/) for commands, observed results, limitations, and gate status.
+
+## 2026-10-27 — portable Linux regression repair (Windows gates unchanged)
+
+- Cleared the 11 previously recorded Linux failures without removing or skipping any failing assertions. COM Running Object Table tests can use fake COM on non-Windows hosts; the Windows security-zone preflight now has an injectable stream reader so inspector/import rejection paths are tested offline.
+- Made path-preview assertions OS-neutral without loosening path identity checks, and supplied mandatory Shiboken placeholder paths in the isolated packaging test fixture while retaining the production verifier's checks.
+- Added pinned Linux source-only test dependencies, including `jsonschema`. Full offscreen Linux suite: **526 passed, 10 skipped, 0 failed**. The 10 skipped Windows-only integrations still require their actual Windows/Excel/DAO QA runs.
 
 ## 2026-10-27 — Dependency Finder (post-v2 source enhancement; gate **UNVERIFIED**)
 

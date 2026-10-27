@@ -40,38 +40,49 @@ def validate_table_name(value):
         raise ValueError('Excel table name cannot look like a cell reference.')
     return value
 
+
+def _read_zone_identifier(path):
+    """Read Windows ADS without treating POSIX colon-named files as streams.
+
+    Kept separate so source-only tests can supply synthetic stream contents
+    without requiring a live Windows filesystem.
+    """
+    if os.name != 'nt':
+        return None
+    zone_path = Path(str(path) + ':Zone.Identifier')
+    try:
+        with zone_path.open('rb') as stream:
+            return stream.read(4097)
+    except FileNotFoundError:
+        return None
+    except OSError as exc:
+        raise ValueError('Windows security-zone metadata could not be checked; workbook automation was stopped.') from exc
+
+
 def validate_workbook(path):
     path = Path(path)
     if not path.exists() or not path.is_file():
         raise ValueError('The selected Excel workbook does not exist.')
     if path.suffix.lower() not in {'.xlsx', '.xlsm'}:
         raise ValueError('Workbook must be an .xlsx or .xlsm file.')
-    if os.name == 'nt':
-        zone_path = Path(str(path) + ':Zone.Identifier')
+    raw_zone = _read_zone_identifier(path)
+    if raw_zone is not None:
+        if len(raw_zone) > 4096:
+            raise ValueError('Windows security-zone metadata is unexpectedly large; workbook automation was stopped.')
         try:
-            with zone_path.open('rb') as stream:
-                raw_zone = stream.read(4097)
-        except FileNotFoundError:
-            raw_zone = None
-        except OSError as exc:
-            raise ValueError('Windows security-zone metadata could not be checked; workbook automation was stopped.') from exc
-        if raw_zone is not None:
-            if len(raw_zone) > 4096:
-                raise ValueError('Windows security-zone metadata is unexpectedly large; workbook automation was stopped.')
-            try:
-                zone_text = raw_zone.decode('utf-8-sig')
-                zone_matches = re.findall(r'(?im)^\s*ZoneId\s*=\s*(\d+)\s*$', zone_text)
-                if not zone_matches or len({int(value) for value in zone_matches}) != 1:
-                    raise ValueError('Windows security-zone metadata is present but cannot be interpreted; workbook automation was stopped.')
-                zone_id = int(zone_matches[0])
-            except (UnicodeError, ValueError) as exc:
-                if isinstance(exc, ValueError) and str(exc).startswith('Windows security-zone'):
-                    raise
-                raise ValueError('Windows security-zone metadata is invalid; workbook automation was stopped.') from exc
-            if zone_id >= 3:
-                raise ValueError(
-                    f'Workbook carries a Windows Internet or Restricted zone mark (ZoneId={zone_id}); '
-                    'review it in Excel/Windows and resolve the mark before using workbook automation.')
+            zone_text = raw_zone.decode('utf-8-sig')
+            zone_matches = re.findall(r'(?im)^\s*ZoneId\s*=\s*(\d+)\s*$', zone_text)
+            if not zone_matches or len({int(value) for value in zone_matches}) != 1:
+                raise ValueError('Windows security-zone metadata is present but cannot be interpreted; workbook automation was stopped.')
+            zone_id = int(zone_matches[0])
+        except (UnicodeError, ValueError) as exc:
+            if isinstance(exc, ValueError) and str(exc).startswith('Windows security-zone'):
+                raise
+            raise ValueError('Windows security-zone metadata is invalid; workbook automation was stopped.') from exc
+        if zone_id >= 3:
+            raise ValueError(
+                f'Workbook carries a Windows Internet or Restricted zone mark (ZoneId={zone_id}); '
+                'review it in Excel/Windows and resolve the mark before using workbook automation.')
     return path
 
 def validate_workbook_for_write(path,*,active_file_users=None):

@@ -1115,3 +1115,29 @@
   not skipped or claimed passed. Real Windows mapped folders,
   genuine Excel DataMashup, DAO Access Engine, performance on large workbooks,
   and the rebuilt packaged GUI/CLI are still **NOT VERIFIED**.
+
+## 2026-10-27 — resolved the 11 inherited Linux regression failures
+
+- Source environment: Linux, Python 3.12, `QT_QPA_PLATFORM=offscreen`,
+  `PYTHONPATH=/workspace/scratch/ea9b0abc6b01/.deps:app/src`; `jsonschema==4.26.0` installed alongside the
+  portable test dependencies. This was a **source-only** regression run, not
+  a Windows packaged build or Excel/Access integration run.
+- Two COM Running Object Table fake tests now avoid probing WinDLL on POSIX;
+  the Windows COM path itself is unchanged.
+- Four failed Internet/Restricted-zone preflight tests now exercise the full
+  policy through an injectable simulated `Zone.Identifier` reader on POSIX.
+  The intranet-zone acceptance test also uses the seam. Actual Windows ADS
+  reading and Office Protected View remain separate, unverified integration
+  gates; POSIX colon-named files are **not** treated as Windows ADS at runtime.
+- Three path-mapping failures used hard-coded Windows separators in expected
+  strings; their assertions now compare exact resolved paths on the host.
+- The versioned query-package schema test no longer fails for lack of the
+  declared `jsonschema` dependency. An additional formerly skipped test is
+  exercised when the dependency is installed.
+- The isolated release-package fixture now includes inert files at the two
+  mandatory Shiboken paths. The **production verifier remains unchanged**
+  and requires these files in a real release package; fake DLLs are never
+  shipped or executed.
+- Final command: `PYTHONPATH=/workspace/scratch/ea9b0abc6b01/.deps:app/src QT_QPA_PLATFORM=offscreen python -m pytest -q app/tests --tb=short`
+  — **526 passed, 10 skipped, 0 failed in 17.39 s** (post-review rerun). This closes the inherited
+  Linux failures but does not advance the Windows/Excel/DAO release gates.

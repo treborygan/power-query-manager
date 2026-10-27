@@ -9,6 +9,22 @@ from pq_installer.core.backup import create_timestamped_backup
 from pq_installer.core.models import QuerySource
 
 
+@pytest.fixture
+def simulated_zone_stream(monkeypatch):
+    """Simulate ADS on Linux; retain native stream coverage on Windows."""
+    if os.name == 'nt':
+        return
+    from pq_installer.core import validation
+
+    def read_stream(path):
+        try:
+            return Path(str(path) + ':Zone.Identifier').read_bytes()
+        except FileNotFoundError:
+            return None
+
+    monkeypatch.setattr(validation, '_read_zone_identifier', read_stream)
+
+
 def test_windows_reparse_point_detector_uses_lstat_attributes(monkeypatch, tmp_path):
     from pq_installer.core.path_safety import contains_reparse_point, is_reparse_point
 
@@ -241,7 +257,7 @@ def test_worksheet_load_destinations_validate_excel_names_cells_and_table_names(
         with pytest.raises(ValueError):
             validate_query_sources([source])
 
-def test_workbook_marked_from_internet_is_refused_before_excel_automation(tmp_path):
+def test_workbook_marked_from_internet_is_refused_before_excel_automation(tmp_path, simulated_zone_stream):
     from pq_installer.core.validation import validate_workbook
 
     workbook = tmp_path / 'internet.xlsx'
@@ -252,7 +268,7 @@ def test_workbook_marked_from_internet_is_refused_before_excel_automation(tmp_pa
         validate_workbook(workbook)
 
 
-def test_local_intranet_mark_is_not_treated_as_internet_protected_view(tmp_path):
+def test_local_intranet_mark_is_not_treated_as_internet_protected_view(tmp_path, simulated_zone_stream):
     from pq_installer.core.validation import validate_workbook
 
     workbook = tmp_path / 'intranet.xlsx'
@@ -261,7 +277,7 @@ def test_local_intranet_mark_is_not_treated_as_internet_protected_view(tmp_path)
         stream.write('[ZoneTransfer]\r\nZoneId=2\r\n')
     assert validate_workbook(workbook) == workbook
 
-def test_internet_zone_workbook_is_rejected_before_inspector_creates_excel(tmp_path):
+def test_internet_zone_workbook_is_rejected_before_inspector_creates_excel(tmp_path, simulated_zone_stream):
     from pq_installer.core.excel_inspector import ExcelQueryInspector
 
     workbook = tmp_path / 'internet.xlsx'
@@ -276,7 +292,7 @@ def test_internet_zone_workbook_is_rejected_before_inspector_creates_excel(tmp_p
     assert factories == []
     assert workbook.read_bytes() == original
 
-def test_internet_zone_workbook_is_rejected_before_import_stage_or_excel(tmp_path):
+def test_internet_zone_workbook_is_rejected_before_import_stage_or_excel(tmp_path, simulated_zone_stream):
     from pq_installer.core.excel_queries import ExcelQueryInstaller
     from pq_installer.core.models import ExistingQueryMode, QuerySource
 
@@ -295,7 +311,7 @@ def test_internet_zone_workbook_is_rejected_before_import_stage_or_excel(tmp_pat
     assert workbook.read_bytes() == original
     assert not list(tmp_path.glob('*.pqstage-*'))
 
-def test_uninterpretable_windows_zone_stream_fails_closed(tmp_path):
+def test_uninterpretable_windows_zone_stream_fails_closed(tmp_path, simulated_zone_stream):
     from pq_installer.core.validation import validate_workbook
 
     workbook = tmp_path / 'unknown-zone.xlsx'

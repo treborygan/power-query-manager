@@ -98,6 +98,21 @@ The app uses a separate, hidden desktop Excel process. Bounded calls target only
 - Python 3.11, 3.12, or 3.13 for building/running from source, plus PowerShell.
 - The Python process and Excel may use different bitness because Excel automation is out-of-process COM; if Excel activation fails, retry with Python matching the installed Office architecture and inspect the logged COM error.
 
+For **Linux source-only regression testing**, Python, a Qt offscreen backend
+and the pinned packages in `requirements-linux-tests.txt` are sufficient.
+From the repository root, run:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r app/requirements-linux-tests.txt
+PYTHONPATH=app/src QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q app/tests
+```
+
+The portable suite passed **526 tests with 10 Windows-specific skips and no
+failures** on 2026-10-27. Tests use fake COM/DAO and synthetic Windows
+security-zone streams; this does not verify native Windows API behavior,
+installed Excel/Access, or the rebuilt Windows package.
+
 ## Build on Windows
 
 1. Extract this ZIP to a writable local folder.

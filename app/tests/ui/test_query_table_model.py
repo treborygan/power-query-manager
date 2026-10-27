@@ -543,7 +543,7 @@ def test_profile_mapping_preview_requires_explicit_ui_acceptance(tmp_path,monkey
     make_prompt.information=lambda *args:None
     monkeypatch.setattr(ui,'QMessageBox',make_prompt)
     window=MainWindow();window._load_profile()
-    assert 'source\\q.pq ->' in prompts[0].details and 'mapped\\q.pq' in prompts[0].details
+    assert f'{source.resolve()} -> {mapping.resolve()}' in prompts[0].details
     if accept:
         assert window.query_model.source_at(0).path==mapping.resolve()
     else:
