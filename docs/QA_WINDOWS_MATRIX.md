@@ -1316,3 +1316,16 @@ For each row record `PASS/FAIL/BLOCKED/UNVERIFIED`, test ID, timestamp, Office/W
 - Three interleaved packaged CLI repetitions on the exact commit: local Quick median **3.060 s** (2.910–3.307 s), peak process-tree working set **190,595,072 bytes**; Deep median **3.501 s** (3.388–3.682 s), peak **192,208,896 bytes**. OneDrive Quick median **3.174 s** (3.112–3.318 s), peak **194,142,208 bytes**; Deep median **3.610 s** (3.565–3.733 s), peak **191,352,832 bytes**. The fixture included 31,200 external-link formula cells.
 - Source hashes/sizes/timestamps remained unchanged at both locations; no Access lock files or scan temporary directories remained; both disposable fixture trees were removed.
 - ACE 16.0 preflight on the same SHA **FAIL**: provider class is unregistered; only `DAO.DBEngine.120` is available. No Access/Office runtime was installed because this Windows session is not elevated. `Get-SmbMapping` and `net use` returned no connections, so mapped SMB and UNC remain **NOT RUN**. Overall Windows acceptance remains **FAIL / OPEN** pending DAO 16.0 and SMB/UNC access.
+
+## W297 — scope-limited feature acceptance waiver (2026-10-27)
+
+**Decision:** the repository owner explicitly waived two Windows acceptance checks for merging PR #1, not because they passed. This permits **Dependency Finder feature-branch integration with documented limitations**; it does **not** certify those environments or mark the whole Power Query Manager release matrix complete.
+
+| Original check | Recorded evidence | Decision for PR #1 | Remaining limitation |
+| --- | --- | --- | --- |
+| ACE DAO 16.0 (`DAO.DBEngine.160`) | Clean revision `a13ff507e76e4cca80fd204c69781a033ffbed39`: provider not registered, preflight stopped before fixture creation; DAO 12.0 real `.accdb`/`.mdb` diagnostic passed | **WAIVED / NOT TESTED** | No ACE 16.0 compatibility claim; rerun on that engine before relying on ACE 16.0 deployments |
+| Mapped SMB and UNC | No mappings or share connections were present on the Windows test host; no scan ran | **WAIVED / NOT TESTED** | No mapped-network/UNC compatibility or path-identity assurance; verify before use on network shares |
+
+**Checks actually passed (W296, not re-executed by this documentation change):** 537 Windows tests in the earlier build report; packaged GUI/CLI; DAO 12.0 disposable Access/Excel graph; local and OneDrive Quick/Deep scans (31,200 external-formula cells); GUI filter/graph/JSON/CSV/progress/cancel; unchanged original SHA-256/size/timestamps; no Access lock/temp remnants; clean Excel exit in 3.23 seconds without forced termination. Both modes yielded 12 dependency records, two unresolved references and one ambiguity warning. The clean tested harness revision is `a13ff507e76e4cca80fd204c69781a033ffbed39`; evidence is also summarized in W296 and `evidence/STATUS.md`.
+
+**Scope:** PR #1 may be merged with the two waivers clearly disclosed. Waiver is *not* equivalent to PASS, does not disable fail-closed DAO/provider diagnostics, and does not alter scanner security or source integrity requirements. Other project-wide release and host-compatibility gates remain independently applicable. Do not advertise ACE 16.0 or mapped SMB/UNC as validated. Future testing should record actual results rather than inheriting this waiver as proof.
