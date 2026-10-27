@@ -320,7 +320,8 @@ class MainWindow(QMainWindow):
         status_eyebrow = QLabel("●  PQM  /  LOCAL WORKSPACE   /   MODULE 01")
         status_eyebrow.setObjectName("vectorEyebrow")
         status_row.addWidget(status_eyebrow)
-        status_row.addStretch()
+        layout.addLayout(status_row)
+        status_row = QHBoxLayout()
         self.vector_command_button = QPushButton("⌘  Command  Ctrl+K")
         self.vector_command_button.setAccessibleName("Open command palette")
         self.vector_command_button.clicked.connect(self._open_vector_command_palette)
@@ -338,7 +339,7 @@ class MainWindow(QMainWindow):
         eyebrow = QLabel("WORKSPACE   /   EXCEL AUTOMATION")
         eyebrow.setObjectName("vectorEyebrow")
         layout.addWidget(eyebrow)
-        hero = QHBoxLayout()
+        hero = QVBoxLayout()
         title = QLabel('QUERY OPERATIONS')
         title.setObjectName("vectorHero")
         title.setAccessibleName("Power Query Manager – query operations")
@@ -352,15 +353,15 @@ class MainWindow(QMainWindow):
         subtitle.setObjectName('secondaryText')
         layout.addWidget(subtitle)
 
-        metrics = QHBoxLayout()
+        metrics = QGridLayout()
         metrics.setSpacing(10)
         self.vector_kpis = {}
-        for label, value, hint in (
+        for index, (label, value, hint) in enumerate((
             ("Workbook", "00", "Active workbook"),
             ("Sources", "00", "Source definitions"),
             ("Enabled", "00", "Import queue"),
             ("Mode", "STAGED", "No automatic refresh"),
-        ):
+        )):
             card = QFrame()
             card.setObjectName("vectorMetric")
             cell = QVBoxLayout(card)
@@ -377,7 +378,7 @@ class MainWindow(QMainWindow):
             hint_label.setObjectName("vectorMetricCaption")
             cell.addWidget(hint_label)
             self.vector_kpis[label] = number
-            metrics.addWidget(card, 1)
+            metrics.addWidget(card, index // 2, index % 2)
         layout.addLayout(metrics)
 
         workbook_box = QGroupBox('01  /  WORKBOOK     Target workbook')
@@ -396,8 +397,8 @@ class MainWindow(QMainWindow):
         wb_layout.addWidget(QLabel('Target workbook'),0,0);wb_layout.addWidget(self.workbook_edit,0,1,1,2)
         workbook_actions=QGridLayout()
         for index, button in enumerate((browse_wb, self.open_btn, self.inspect_btn, self.probe_btn)):
-            workbook_actions.addWidget(button, 0, index)
-            workbook_actions.setColumnStretch(index, 1)
+            workbook_actions.addWidget(button, index // 2, index % 2)
+            workbook_actions.setColumnStretch(index % 2, 1)
         wb_layout.addLayout(workbook_actions,1,0,1,3)
         workbook_note=QLabel('Inspect opens read-only. Capability probes use temporary workbooks and never refresh data. Imports stage changes and do not refresh queries.')
         workbook_note.setWordWrap(True);workbook_note.setMinimumWidth(0);workbook_note.setObjectName('secondaryText')
@@ -444,8 +445,8 @@ class MainWindow(QMainWindow):
         for index,(label,callback) in enumerate(source_actions):
             button=QPushButton(label);button.setAccessibleName(label.rstrip('…'));button.clicked.connect(callback)
             self.vector_source_actions[label] = button
-            controls.addWidget(button,index//4,index%4)
-        for column in range(4): controls.setColumnStretch(column,1)
+            controls.addWidget(button,index//2,index%2)
+        for column in range(2): controls.setColumnStretch(column,1)
         q_layout.addLayout(controls)
         bulk=QGridLayout()
         bulk_actions=[('Enable selected',lambda:self._set_selected_enabled(True)),
@@ -457,19 +458,19 @@ class MainWindow(QMainWindow):
         for index,(label,callback) in enumerate(bulk_actions):
             button=QPushButton(label);button.setAccessibleName(label.rstrip('…'));button.clicked.connect(callback)
             self.vector_bulk_actions[label] = button
-            bulk.addWidget(button,index//3,index%3)
+            bulk.addWidget(button,index,0)
         self.undo_action=self.query_model.undo_stack.createUndoAction(self,'Undo table edit')
         self.undo_action.setShortcut(QKeySequence.StandardKey.Undo);self.addAction(self.undo_action)
         self.redo_action=self.query_model.undo_stack.createRedoAction(self,'Redo table edit')
         self.redo_action.setShortcut(QKeySequence.StandardKey.Redo);self.addAction(self.redo_action)
         self.undo_button=QPushButton('Undo');self.undo_button.setAccessibleName('Undo last table edit');self.undo_button.setToolTip('Undo the last table edit (Ctrl+Z)')
-        self.undo_button.clicked.connect(self.undo_action.trigger);bulk.addWidget(self.undo_button,2,0)
+        self.undo_button.clicked.connect(self.undo_action.trigger);bulk.addWidget(self.undo_button,len(bulk_actions),0)
         self.redo_button=QPushButton('Redo');self.redo_button.setAccessibleName('Redo last table edit');self.redo_button.setToolTip('Redo the last table edit (Ctrl+Y)')
-        self.redo_button.clicked.connect(self.redo_action.trigger);bulk.addWidget(self.redo_button,2,1)
+        self.redo_button.clicked.connect(self.redo_action.trigger);bulk.addWidget(self.redo_button,len(bulk_actions)+1,0)
         self.query_model.undo_stack.canUndoChanged.connect(self._update_undo_actions)
         self.query_model.undo_stack.canRedoChanged.connect(self._update_undo_actions)
         self._update_undo_actions()
-        for column in range(3): bulk.setColumnStretch(column,1)
+        bulk.setColumnStretch(0,1)
         q_layout.addLayout(bulk)
         self.search_edit=QLineEdit(); self.search_edit.setPlaceholderText('Filter queries by name, path, mode, or status…')
         self.search_edit.setAccessibleName('Filter query source rows')

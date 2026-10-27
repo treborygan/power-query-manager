@@ -98,9 +98,12 @@ def test_query_inspector_editors_follow_parent_theme_toggle(tmp_path):
     source_path=tmp_path/'theme.m';source_path.write_text('let text = "value" in text')
     window=MainWindow()
     dialog=QueryInspectorDialog(QuerySource(source_path,'Theme'),None,parent=window)
-    assert dialog.source_editor.palette().base().color().name()=='#ffffff'
+    assert window.theme_toggle.isChecked()
+    assert dialog.source_editor.palette().base().color().name()=='#0b1418'
+    window.theme_toggle.setChecked(False);app.processEvents()
+    assert dialog.source_editor.palette().base().color().name()=='#f6f9f8'
     window.theme_toggle.setChecked(True);app.processEvents()
-    assert dialog.source_editor.palette().base().color().name()=='#151b21'
+    assert dialog.source_editor.palette().base().color().name()=='#0b1418'
     assert dialog.source_editor.highlighter.string_format.foreground().color().name()=='#67dfa0'
     assert dialog.diff_view.highlighter.added.background().color().name()=='#193a2a'
     dialog.close();window.close()

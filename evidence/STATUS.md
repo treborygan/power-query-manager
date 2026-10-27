@@ -1,3 +1,8 @@
+## 2026-10-27 — Vector Windows validation in progress
+
+- Initial Windows build stopped at its test gate: 537 passed, 3 failed (inspector test expected the old default palette, Finder test used an invalid Qt method, and workspace horizontal overflow at laptop width). The implementation and tests were corrected without removing the overflow or theme assertions; full rebuild and acceptance remain in progress.
+- The 90 UI tests passed separately with `QT_SCALE_FACTOR=1.25` and `1.5` using the offscreen platform. This is simulated Qt scaling, not OS-level display scaling or physical-display acceptance.
+
 ## W292 — 2026-10-23 — current-package multi-workbook dry run
 
 - W282 packaged CLI `plan --dry-run` inspected two Excel-created disposable `.xlsx` targets with a static definition-only source. Both plans reported `create`; before/after workbook SHA-256 values matched. No backup or stage was created, and the Excel process set remained at baseline PID 36464 after the CLI run.

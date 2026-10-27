@@ -38,7 +38,7 @@ def test_vector_finder_laptop_scroll_and_existing_actions(tmp_path):
     app = QApplication.instance() or QApplication([])
     dialog = DependencyFinderDialog()
     scroller = dialog.findChild(QScrollArea)
-    assert scroller is not None and scroller.isWidgetResizable()
+    assert scroller is not None and scroller.widgetResizable()
     assert dialog.run_button.accessibleName() == "Run read-only dependency scan"
     assert dialog.add_files_button.text() == "Add files…"
     assert dialog.add_folder_button.text() == "Add folder…"

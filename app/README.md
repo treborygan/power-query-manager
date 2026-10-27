@@ -26,6 +26,8 @@ The Vector design refreshes the **existing desktop PySide6 UI** with a graphite/
 
 Dependency Finder uses separate files-to-inspect and targets panels, a scrollable laptop-sized layout, filter/graph controls, progress/cancel, coverage warning area and unchanged JSON/CSV exports. Both file and query dependency graphs use readable dark nodes, contrasting edges and accessible text summaries. The file graph also supports wheel zoom, pan, fit-to-view, reset and selection, while its render deduplicates repeated arrows without changing the full report.
 
+The workspace arranges its action controls and status cards in narrower rows so the original controls remain reachable on laptop-sized windows without horizontal workspace scrolling. Vertical scrolling is used to reach the full workflow.
+
 **Status:** source implementation on `feature/vector-ui-redesign`; this is not yet a Windows-tested or rebuilt packaged release. Run the full Windows suite, rebuild packaged GUI/CLI, repeat main window/Dependency Finder tests and real disposable Excel/DAO smoke, then verify the UI at 960×600, 1366×768 and 125%/150% scaling. Existing ACE DAO 16.0 and mapped SMB/UNC waivers are unchanged and are not PASS evidence.
 
 ## Functions
