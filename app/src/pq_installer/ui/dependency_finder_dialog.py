@@ -315,6 +315,7 @@ class DependencyFinderDialog(QDialog):
         for widget in (self.map_filter_label, self.map_filter_combo, self.direction_combo, self.graph_button):
             widget.setVisible(mapping)
         self.run_button.setText("Build read-only dependency map" if mapping else "Run read-only dependency scan")
+        self.run_button.setAccessibleName(self.run_button.text())
         self._update_enabled()
 
     def add_scan_paths(self, paths, *, recursive=True):
