@@ -1,5 +1,12 @@
 ## 2026-10-27 — Vector Windows validation in progress
 
+## 2026-10-28 — Vector responsive layout and graph label repair
+
+- Rebuilt the packaged GUI/CLI after responsive metric/action layout changes and query graph label z-order repair. Windows build 26300; `app/build.ps1`: **541 passed**. Release verification passed (116 payload files / 76,330,010 bytes); CLI `--help` exited 0. GUI SHA-256: `145F60264FD182B96787ED42F405C513FD3A7274155FF7A1C9FA336756D0F2B5`; CLI SHA-256: `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- Exact tested application commit: `e934432e2f8f86b421bf51d2b7869fad5326318c`.
+- The packaged app launched and was visually compared with the supplied Vector Concept 03 board. Main workspace, synthetic query table, five-node query graph and Finder empty state were observed; graph labels/status now render above the node cards. Finder accessibility tree exposes scan depth, file/target pickers, run/cancel, results, coverage and exports. This pass did not execute a packaged Finder scan or physically test the 125%/150% DPI and requested display resolutions.
+- See `docs/QA_WINDOWS_MATRIX.md` for exact limitations and remaining gates. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**. Merge gate remains open pending non-waived manual checks and review.
+
 - 2026-10-28: exact tested source tree `50f567d4e190aa24f479574810cfd580c1178b1a` passed `app/build.ps1` with 541 tests; its app source/tests are unchanged from `3c7e4173e7515007db49510a2cb1aafe4fbb1c72`. The package verifier passed for 116 files / 76,328,840 bytes; GUI and CLI hashes are recorded in the QA matrix. Packaged CLI `--help` exited 0. The GUI was launched and its main workspace, command palette and Dependency Finder were visually inspected; no workbook was selected or modified. Previously recorded disposable Excel/DAO and packaged import/history checks still apply. The keyboard traversal passed once after two unexplained focus-escape failures. Populated graph/dialog interactions and actual OS DPI/resolution checks remain open; ACE DAO 16.0 and mapped SMB/UNC remain explicitly waived.
 
 - A live light-theme inspection found low-contrast unchecked checkbox outlines. The Vector unchecked outline treatment was visually checked; the final package remains on the tested native checked-state rendering so its Windows check glyph stays visible.
