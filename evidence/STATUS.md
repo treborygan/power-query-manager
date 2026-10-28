@@ -1369,3 +1369,10 @@
 - Rebuilt package from app source `5f118615f405a3e2ffcf46d70c1b8eee30d35db9` was visually inspected at a 960×600 client area using two synthetic M files. The query table, graph text summary, and rendered direction agreed (`Final` depends on `Source`); the lime arrowhead was visible at the Source card edge pointing to Final. Dialog close remained reachable within the app bounds.
 - Latest packaged keyboard smoke passed: 43 focusable main-window controls and history, inspector, query-graph, and source-mapping dialog cycles. No workbook/Excel opened during the replay; app/Excel/Access process inventory was empty after shutdown.
 - W321 contains earlier direct visual evidence of the file relationship graph; W327 scanner GUI matrix also verified its 12-edge graph, filters and JSON/CSV exports. Remaining display/DPI, broad manual workflow/accessibility and integration gates stay open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 remains open and unmerged.
+
+
+## 2026-10-28 — W329 rebuilt-package Dependency Finder at 125%/150%
+
+- On the package built from exact app source `5f118615f405a3e2ffcf46d70c1b8eee30d35db9`, inspected Dependency Finder at Windows 125% and 150% (1920×1080). Setup and lower target/scan/results/coverage/export controls remained vertically reachable; no horizontal overflow or missing controls observed. No scan or workbook was used.
+- Restored 100% / 1920×1080. Closed app process; manager/Excel/Access inventory was empty. Evidence and limits are in W329 of `docs/QA_WINDOWS_MATRIX.md`.
+- Remaining workflow/accessibility gates stay open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 stays open and unmerged.
