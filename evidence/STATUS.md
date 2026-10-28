@@ -1308,3 +1308,8 @@
 
 - Replayed packaged keyboard traversal on the build from source commit `ecfa2b9b35ff79ff33e01e2d16db742ef267f01a`: 43 controls and the main Tab loop passed; history, inspector, query graph and source-mapping modal cycles passed. No workbook or Excel instance opened; process check after exit was clean. See W317 in `docs/QA_WINDOWS_MATRIX.md`.
 - This replay adds latest-package keyboard evidence only. Physical DPI, broad button/workflow coverage and integration acceptance still have open gates; ACE DAO 16.0 and mapped SMB/UNC remain waived. PR #2 remains open and unmerged.
+
+## 2026-10-28 — latest-package mixed profile import
+
+- Latest package passed a disposable profile-backed mixed `.m`/`.pq` import on Excel 16.0 build 20430.0: three formulas matched their sources, review/Excel order matched, backup and read-only reopen verified, and manager/owned Excel exited naturally. See W318 in `docs/QA_WINDOWS_MATRIX.md`.
+- This remains one Office build and one workflow. Other load modes, refresh, Access and 150% DPI remain open; DAO 16.0 and mapped SMB/UNC remain waived.
