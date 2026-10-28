@@ -1276,3 +1276,9 @@
 
 - On the GUI package built from app-code revision `a6b32e733fff3f48daf42cf1f90e1a93d840a5bf`, `tools/run_packaged_keyboard_smoke.py --dialogs` passed against feature harness revision `54b97d1a91ef8dfd230c768d3b078e7fe3686b28`: 43 controls traversed, main Tab cycle stayed in the manager, and history, inspector, query graph and both mapping-tab cycles reached expected controls. No workbook or Excel opened. See W310 in `docs/QA_WINDOWS_MATRIX.md`.
 - This closes the current-package keyboard traversal subset only. Screen-reader use, other modals, physical 960×600 and 150% DPI and broader manual gates remain open. ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED; PR #2 stays open and unmerged.
+
+## 2026-10-28 — refreshed-package parameter edit workflow
+
+- Harness fix `319c1d5dbc05d4eb2492df3cb77380fdb8aa5f19` replaces raw Win32 message clicks with UI Automation Invoke for opening the source inspector in the parameter-edit smoke; no assertions were weakened. The first run timed out at that click; the corrected run passed.
+- On package app-code revision `a6b32e733fff3f48daf42cf1f90e1a93d840a5bf`, packaged parameter edit saved an exact new source copy and left original source bytes unchanged; definition-only import formula and backup verified, read-only reopen passed, manager/Excel exited cleanly. See W312 in `docs/QA_WINDOWS_MATRIX.md`.
+- Remaining physical 960×600 / 150% DPI and broader manual gates remain open; ACE DAO 16.0 and mapped SMB/UNC remain waived. PR #2 remains open and unmerged.
