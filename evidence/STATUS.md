@@ -1376,3 +1376,9 @@
 - On the package built from exact app source `5f118615f405a3e2ffcf46d70c1b8eee30d35db9`, inspected Dependency Finder at Windows 125% and 150% (1920×1080). Setup and lower target/scan/results/coverage/export controls remained vertically reachable; no horizontal overflow or missing controls observed. No scan or workbook was used.
 - Restored 100% / 1920×1080. Closed app process; manager/Excel/Access inventory was empty. Evidence and limits are in W329 of `docs/QA_WINDOWS_MATRIX.md`.
 - Remaining workflow/accessibility gates stay open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 stays open and unmerged.
+
+## 2026-10-28 — W330 latest-package 1366×768 workspace and Finder
+
+- Latest package (app source `5f118615f405a3e2ffcf46d70c1b8eee30d35db9`) was inspected at 100% / 1366×768. Workspace controls and Finder setup were visible; vertical scrolling reached targets, scan/cancel, relationships table, coverage/warnings and exports. No scan/workbook was used.
+- Restored 100% / 1920×1080 and verified no manager/Excel/Access process remained. Exact hashes and scope are in W330 of `docs/QA_WINDOWS_MATRIX.md`.
+- Full workflow/accessibility matrix remains incomplete. ACE DAO 16.0 and mapped SMB/UNC are **WAIVED / NOT VERIFIED**; PR #2 remains draft/open/unmerged.
