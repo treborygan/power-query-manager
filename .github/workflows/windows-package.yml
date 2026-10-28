@@ -40,6 +40,8 @@ jobs:
 
       - name: Full Windows tests and frozen GUI/CLI build
         shell: pwsh
+        env:
+          PQM_CI_DIAGNOSTICS: '1'
         run: |
           $ErrorActionPreference = 'Stop'
           & .\app\build.ps1
