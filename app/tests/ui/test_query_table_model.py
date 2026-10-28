@@ -374,6 +374,18 @@ def test_vector_workspace_preserves_commands_and_live_query_metrics(tmp_path):
     window.close()
 
 
+def test_enabled_source_header_has_room_for_label_and_sort_indicator():
+    from PySide6.QtWidgets import QHeaderView
+    window = MainWindow()
+    window.resize(1182, 732)
+    window.show()
+    app.processEvents()
+    header = window.table.horizontalHeader()
+    assert header.sectionResizeMode(QueryTableModel.ENABLED) == QHeaderView.Interactive
+    assert header.sectionSize(QueryTableModel.ENABLED) >= 132
+    window.close()
+
+
 def test_query_table_supports_keyboard_tab_navigation(tmp_path):
     from PySide6.QtTest import QTest
     path=tmp_path/'keyboard.pq';path.write_text('1')
