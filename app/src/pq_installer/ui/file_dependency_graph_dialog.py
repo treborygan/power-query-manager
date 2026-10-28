@@ -5,7 +5,7 @@ from collections import Counter
 from math import atan2, cos, hypot, sin
 from pathlib import Path
 
-from PySide6.QtCore import QPointF, Qt
+from PySide6.QtCore import QPointF, Qt, QTimer
 from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPainterPath, QPen, QPolygonF
 from PySide6.QtWidgets import (
     QDialog, QDialogButtonBox, QGraphicsItem, QGraphicsScene, QGraphicsView,
@@ -164,6 +164,12 @@ class FileDependencyGraphDialog(QDialog):
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
         apply_vector_theme(self, dark)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        # The view has no useful viewport size until the dialog is laid out.
+        # Fit on the first event-loop turn so the initial graph is not clipped.
+        QTimer.singleShot(0, self._fit_graph)
 
     def _fit_graph(self):
         rect = self.graph_view.scene().sceneRect()
