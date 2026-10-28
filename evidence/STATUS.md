@@ -1425,3 +1425,9 @@
 - Rebuilt package verifier PASS: 118 files / 76,334,647 payload bytes. CLI `--help` exited 0. GUI/CLI SHA-256 `E8E9725BD54B05B67EF5C039FC1EAA144A9E157A4061669125AA3ABD37384318` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
 - Current packaged GUI was visually opened at 1182×732 in dark Vector theme. Compact command button and right-aligned toggles observed; inspected top portion showed no visible clipping. No workbook selected. GUI was closed; no PowerQueryManager, Excel or Access processes remained. No integration workflow run in this pass.
 - Physical 960×600 / 1366×768 and 125% / 150% DPI, complete controls/dialogs, both populated graphs, comprehensive workflows and keyboard navigation remain open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**. Keep PR #2 open/unmerged.
+
+## 2026-10-28 — W338 current-package keyboard and history accessibility
+
+- Current package from source `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`: packaged keyboard smoke passed full main Tab traversal (43 focusable controls) plus history, source inspector, query-dependency graph and source-mapping modal cycles. The workflow-control order included workbook path, Add files, query table, existing-query policy, backup and import action. No workbook/Excel was opened.
+- Packaged history UI Automation smoke passed: history table, retention spinner, snapshot checkbox and history actions were exposed; manager exited 0; history stayed under an isolated temporary user profile. Both checks exited with no PowerQueryManager, Excel or Access process remaining.
+- This verifies keyboard reachability and accessible control names/roles, not manual screen-reader behavior or every control's underlying workflow. Full manual screen-reader, physical layout/DPI, remaining workflow/graph and disposable integration acceptance remain open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**. PR #2 remains open/draft/unmerged.

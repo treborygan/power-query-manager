@@ -1,5 +1,13 @@
 # Windows Excel acceptance: manual + script-assisted test matrix
 
+## W338 — latest-package keyboard and history accessibility smoke, 2026-10-28
+
+- Exact packaged app source commit: `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb` (package hashes and full build record in W337).
+- `python tools/run_packaged_keyboard_smoke.py --exe app/vector-release/PowerQueryManager/PowerQueryManager.exe --dialogs`: **PASS**. Windows UI Automation completed the main-window Tab cycle and reached 43 focusable controls, including workbook path, Add files, query table, replace policy, backup and import action. History, inspector, query dependency graph and source-mapping dialog cycles passed; Escape closed dialogs, source-mapping Right Arrow changed categories. No workbook or Excel instance opened.
+- `python tools/run_packaged_history_a11y_smoke.py --exe app/vector-release/PowerQueryManager/PowerQueryManager.exe`: **PASS**. Windows UI Automation found the history entries table, retention spinner, snapshot option and history actions. The manager exited 0 and history stayed in an isolated temporary user profile.
+- After both runs, no PowerQueryManager, Excel or Access process remained. These checks exercise keyboard reachability and UI Automation naming/roles; they do not replace manual screen-reader testing or verify every button's business workflow.
+- **Still open:** manual screen-reader acceptance, complete button/workflow verification, physical resolution/DPI review and other remaining gates in the objective. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**. Keep PR #2 open and unmerged.
+
 ## W337 — compact Vector workspace toolbar and packaged visual check, 2026-10-28
 
 - Exact tested application source commit: `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`. The compact command palette control is capped at 220 px; source and bulk action buttons use reduced padding/height, retaining their accessible names, callbacks and keyboard shortcut. UI regression covers 960×600, 1180×700, 1366×768 and 1600×900 layouts.
