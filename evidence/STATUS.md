@@ -1205,3 +1205,10 @@
 - Regression changes cover KPI updates, original action presence, inspector and target behavior, scrollable finder, graph selection, zoom, summary and legacy accessibility/theme assertions. Existing checks for worker cancellation, source integrity, no-refresh scanning and query import remain unchanged.
 - **VALIDATION STATUS: NOT YET EXECUTED.** Neither PySide6 nor the Windows/Excel/DAO runtime is available in the current coding environment. No claim of successful pytest, screenshot verification, packaged EXE rebuild or Windows smoke testing. Before merging: run `python -m pytest -q app/tests/ui` and full Windows `app/build.ps1`; verify packaged Qt startup, dialog scanning, Ctrl+K, 960×600 / 1366×768 / 125% / 150% DPI, and that all original actions are reachable. Repeat disposable workbook import/readback and local/OneDrive Dependency Finder read-only checks on the compiled build.
 - ACE DAO 16.0 and mapped SMB/UNC remain explicitly WAIVED/NOT VERIFIED under W297 for the earlier feature; this redesign does not convert those waivers into passes.
+
+## 2026-10-28 — Vector graph viewport correction and Windows package
+
+- Fixed initial graph panning by fitting the dependency diagram after the first dialog layout; added a 960×600 scene-bounds regression assertion. App-source commit `536ee6ce5d901eabbe7345c8c2ffc287cc31d372`.
+- `app/build.ps1`: 541 tests passed (41.26 s); PyInstaller build succeeded. `tools/verify_release_package.py app/vector-release`: 116 files, 76,330,146 bytes, PASS. GUI and CLI EXE hashes are recorded in W298 of `docs/QA_WINDOWS_MATRIX.md`. CLI help passed; packaged GUI launched.
+- Disposable file-map scan detected the expected exact `Dashboard.xlsx` → `Inventory.xlsx` edge; pre/post SHA-256 hashes matched. Screenshot evidence from the earlier package identified the initial graph clipping, and manual Fit graph showed both nodes and edge. Corrected graph screenshot in rebuilt package remains unverified.
+- PR #2 remains open pending broader interactive workflow, physical display/DPI, and corrected-package graph checks. ACE DAO 16.0 and mapped SMB/UNC retain explicit WAIVED / NOT VERIFIED status.
