@@ -1346,3 +1346,8 @@
 - Replayed the packaged GUI from app commit `3edf19174edde17206349a07da8157251bd260fb`: 43 focusable controls and a complete in-window main Tab cycle passed, including workbook/source/query/import actions. History, inspector, query graph, and source-mapping dialog cycles passed. No workbook/Excel opened; no manager, Excel or Access process remained after the run.
 - Exact package verification passed at 118 files / 76,333,067 bytes. GUI/CLI SHA-256: `16F472FCF317862EC5563A0BD3911F3CDE399C0ACAD1A3728B0C052A997A787E` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`. See W324 in the Windows QA matrix.
 - This extends keyboard coverage on the newest package only. Screen-reader and other manual gates remain open; ACE DAO 16.0 and mapped SMB/UNC stay waived.
+
+## 2026-10-28 — latest-package physical DPI review
+
+- With Windows Settings showing 125%, inspected the latest packaged workspace and Dependency Finder at 1182×731. At 150%, inspected a fresh main workspace at 1183×663; major workspace controls were visible and lower content remained vertically scrollable. Package source is app commit `3edf19174edde17206349a07da8157251bd260fb`, GUI SHA-256 `16F472FCF317862EC5563A0BD3911F3CDE399C0ACAD1A3728B0C052A997A787E`, CLI SHA-256 `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- 1366×768 was offered but Windows reverted before the display change could be kept; this size remains **NOT VERIFIED** on the current package. Original desktop settings were restored to 100% / 1920×1080. Manager, Excel and Access process inventory was empty. Finder at 150%, screen-reader acceptance and remaining workflows are still open; ACE DAO 16.0 and mapped SMB/UNC remain waived.
