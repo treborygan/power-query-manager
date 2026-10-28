@@ -1244,3 +1244,10 @@
 - Packaged GUI Quick general map on disposable Dashboard.xlsx / Inventory.xlsx returned one exact edge; file graph showed both nodes and directed edge. Node selection and Fit graph worked. Incoming scan targeting Inventory.xlsx found Dashboard.xlsx as one dependent. Targeting both files intentionally produced the documented partial `no_consumers` result because no candidate files remained to inspect.
 - Keyboard smoke passed with 43 main controls and dialog cycles for history, inspector, query graph, and both mapping tabs. Smoke used temporary profile/source and no Excel instance. App and smoke processes exited cleanly.
 - Physical 960×600 and 150% DPI remain NOT VERIFIED; ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED. PR #2 remains open and unmerged.
+
+## 2026-10-28 — Finder long-path layout repair and refreshed package
+
+- App-code commit under test: pending commit at this entry; change keeps full path text and supplies full-path tooltips while eliding long table cells within fixed column widths. Automatic content sizing was removed because it caused horizontal overflow.
+- Regression: `test_map_results_keep_long_paths_without_horizontal_table_overflow` passed at 960×600, asserting full item text and tooltips, no table horizontal scroll, and column minimums within the window. Targeted UI tests: 2 passed. Full Windows build/test suite: 543 passed in 52.81 s; `app/build.ps1` completed.
+- Refreshed `app/vector-release` from that build; release verifier PASS, 116 files / 76,330,151 bytes. Packaged GUI launched successfully; packaged CLI `--help` listed all supported commands. GUI SHA-256: `1BBB016C3C1FAD2062A23370BFC99397CB8D395A14BACE5C634D7D3E66A4B804`; CLI SHA-256: `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- Existing physical layout notes are in W302; Finder and 43-control/dialog keyboard smoke in W303. The refreshed release has not yet had the prior disposable-data graph scenario replayed after rebuild. ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED. Physical 960×600 and 150% remain NOT VERIFIED. PR #2 stays open and unmerged.

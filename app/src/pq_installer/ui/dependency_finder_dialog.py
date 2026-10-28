@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from threading import Event
 
-from PySide6.QtCore import QObject, QThread, Signal, Slot
+from PySide6.QtCore import QObject, QThread, Signal, Slot, Qt
 from PySide6.QtWidgets import (
     QAbstractItemView, QCheckBox, QComboBox, QDialog, QFileDialog, QGridLayout,
     QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QMessageBox, QPlainTextEdit,
@@ -286,12 +286,13 @@ class DependencyFinderDialog(QDialog):
         self.results_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.results_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.results_table.setAlternatingRowColors(True)
+        self.results_table.setTextElideMode(Qt.TextElideMode.ElideMiddle)
         self.results_table.verticalHeader().setVisible(False)
         self.results_table.setMinimumHeight(185)
         header = self.results_table.horizontalHeader()
         header.setMinimumSectionSize(100)
         header.setSectionResizeMode(QHeaderView.Interactive)
-        for column, width in enumerate((175, 225, 155, 195, 150)):
+        for column, width in enumerate((150, 200, 130, 170, 140)):
             self.results_table.setColumnWidth(column, width)
         header.setStretchLastSection(True)
         layout.addWidget(self.results_table, 3)
@@ -506,13 +507,10 @@ class DependencyFinderDialog(QDialog):
         for index, hit in enumerate(hits):
             values = (hit.target_path, hit.consumer_path, hit.source_kind, hit.source_name, hit.confidence)
             for column, value in enumerate(values):
-                self.results_table.setItem(index, column, QTableWidgetItem(str(value)))
+                item = QTableWidgetItem(str(value))
+                item.setToolTip(str(value))
+                self.results_table.setItem(index, column, item)
         self.results_table.setUpdatesEnabled(True)
-        if len(hits) < 400:
-            self.results_table.resizeColumnsToContents()
-        else:
-            for column in range(4):
-                self.results_table.setColumnWidth(column, 185)
 
     def _render_map_results(self, *_):
         if isinstance(self.latest_report, DependencyMapReport):

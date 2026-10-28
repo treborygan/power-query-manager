@@ -52,6 +52,45 @@ def test_map_mode_discovers_all_edges_and_filters_without_rescan(tmp_path):
     dialog.close()
 
 
+def test_map_results_keep_long_paths_without_horizontal_table_overflow(tmp_path):
+    app = QApplication.instance() or QApplication([])
+    root = tmp_path
+    for index in range(4):
+        root = root / f"source-root-{index}-with-a-long-disambiguating-name"
+        root.mkdir()
+    target = root / "Inventory.xlsx"
+    consumer = root / "Dashboard.xlsx"
+    target.write_bytes(b"fixture")
+    consumer.write_bytes(b"fixture")
+    report = DependencyMapReport((str(target), str(consumer)), (str(target), str(consumer)), (
+        DependencyHit(str(target), str(consumer), "Excel connection", "Inventory", "exact_path", target.name),
+    ), (), (), "quick")
+
+    dialog = DependencyFinderDialog(map_runner=lambda *args, **kwargs: report)
+    dialog.add_scan_paths((target, consumer))
+    dialog.mode_combo.setCurrentIndex(dialog.mode_combo.findData("map"))
+    dialog.resize(960, 600)
+    dialog.show()
+    app.processEvents()
+    dialog.run_button.click()
+    deadline = time.monotonic() + 3
+    while dialog.latest_report is None and time.monotonic() < deadline:
+        app.processEvents()
+        time.sleep(.01)
+    app.processEvents()
+
+    target_item = dialog.results_table.item(0, 0)
+    consumer_item = dialog.results_table.item(0, 1)
+    assert target_item.text() == str(target)
+    assert consumer_item.text() == str(consumer)
+    assert target_item.toolTip() == str(target)
+    assert consumer_item.toolTip() == str(consumer)
+    assert dialog.results_table.horizontalScrollBar().maximum() == 0
+    assert dialog.minimumSizeHint().width() <= 960
+    assert dialog.minimumSizeHint().height() <= 600
+    dialog.close()
+
+
 def test_general_map_graph_has_accessible_visual_and_summary(tmp_path):
     app = QApplication.instance() or QApplication([])
     a = tmp_path / "Warehouse.accdb"
