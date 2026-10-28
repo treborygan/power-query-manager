@@ -66,17 +66,6 @@ def _excel_pids() -> set[int]:
     return found
 
 
-def _send_qt_click(button, main_hwnd: int) -> None:
-    """Click a Qt widget using its screen rect, avoiding DPI-scaled SendInput."""
-    rect = button.element_info.rectangle
-    screen_point = ((rect.left + rect.right) // 2, (rect.top + rect.bottom) // 2)
-    x, y = win32gui.ScreenToClient(main_hwnd, screen_point)
-    packed = win32api.MAKELONG(x, y)
-    win32gui.SendMessage(main_hwnd, win32con.WM_MOUSEMOVE, 0, packed)
-    win32gui.SendMessage(main_hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, packed)
-    win32gui.SendMessage(main_hwnd, win32con.WM_LBUTTONUP, 0, packed)
-
-
 def _wait_child(window, title: str, timeout: float = 15):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -205,7 +194,7 @@ def _exercise_packaged_parameter_editor(window, root: Path, source: Path,
     if not source_rows:
         raise AssertionError('Packaged parameter source row GuiSmoke is not available.')
     source_rows[0].select()
-    _send_qt_click(window.child_window(title='Inspect / compare selected', control_type='Button'), window.handle)
+    window.child_window(title='Inspect / compare selected', control_type='Button').invoke()
     inspector = _wait_child(window, 'Query inspector — GuiSmoke')
     parameter_button = inspector.child_window(title='Edit supported declared M parameter', control_type='Button')
     if not parameter_button.is_enabled():
