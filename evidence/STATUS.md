@@ -1405,3 +1405,9 @@
 
 - Follow-up resolved W333's inspector attempt: the packaged GUI opened the synthetic query inspector successfully in dark and light Vector themes. At 1182×732, both source/workbook panes, exact diff, search, title bar and footer actions fit. Amber line highlighting remained legible. No workbook/Office process was opened; no source edit or save occurred.
 - Disposable fixture was verified and removed; application closed cleanly with no manager/Excel/Access process. This is visual-only evidence on the package from source `a2bc54593feda9824a4bb30fd1a98a50ab2c2856`; no new tests/build are claimed. Remaining comprehensive UI/workflow/accessibility and DPI gates stay open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 remains open/unmerged.
+
+## 2026-10-28 — W335 responsive Vector density
+
+- Responsive breakpoints now use available workspace width after sidebar and margins. UI layout regression passed at 960×600, 1180×700 and 1366×768; full Windows build/test passed **546 tests in 40.75 s** on app source `de745715a1ead868dc6dcd9228e4b6eaa3f7f2d1`.
+- Release verifier passed **118 files / 76,333,924 bytes**; CLI help exited 0. GUI/CLI SHA-256: `F048F523CAC817D2F83CAA8142526DFC1D4EACE988593324CBA04FB5E4C1F81A` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- Actual package showed the two-column workspace at its default 1182-pixel width and denser four-column metrics/three-column source actions maximized. App exited and no manager/Excel/Access process remained. Exact lower physical display sizes and remaining DPI/workflow/accessibility gates are still open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 remains open/unmerged.
