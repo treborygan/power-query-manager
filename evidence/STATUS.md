@@ -1323,3 +1323,8 @@
 
 - Latest packaged CLI and UI scanner passed the disposable local DAO 12.0 matrix: Quick/Deep matched 12/12 edges, GUI filters and JSON/CSV exports matched, progress/cancellation passed, source hashes/sizes/timestamps stayed unchanged, and fixtures/Excel/Access processes cleaned up. Raw report: `evidence/W320-dao12-acceptance.json`.
 - DAO 16.0 and mapped SMB/UNC were not tested and remain waived. The release folder was reverified at 116 files after moving the report to evidence.
+
+## 2026-10-28 — latest-package query graph and inspector
+
+- Live packaged review at 1182×732 added only two synthetic temporary M sources; no workbook was selected. Query graph displayed `Final → Source` and matching text; inspector showed source, workbook, and line-diff panes with the unavailable-workbook state correctly marked unknown. App and Excel/Access process inventory were clean after closing. See W321 in `docs/QA_WINDOWS_MATRIX.md`.
+- This adds scoped current-package view evidence only. Physical display/DPI and broader workflows remain open; ACE DAO 16.0 and mapped SMB/UNC stay waived.
