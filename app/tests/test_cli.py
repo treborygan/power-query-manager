@@ -443,9 +443,12 @@ def test_cli_import_package_preserves_names_order_and_requires_typed_confirmatio
     code=cli.main(['import','--apply','--package',str(package),'--workbook',str(target),'--policy','replace'],
       inspector_factory=lambda:SimpleNamespace(inspect=lambda path:()),
       installer_factory=lambda path:Installer(),input_func=lambda prompt:(prompts.append(prompt) or 'IMPORT'))
-    captured=capsys.readouterr().out
+    output=capsys.readouterr()
+    captured=output.out
+    assert code==0, f"Package import returned {code}: stdout={output.out!r} stderr={output.err!r}"
+    assert '{' in captured, f"Package import did not produce JSON: stdout={output.out!r} stderr={output.err!r}"
     report=json.loads(captured[captured.find('{'):])
-    assert code==0 and report['results'][0]['status']=='applied'
+    assert report['results'][0]['status']=='applied'
     assert calls[0][0]==(('Second',0,'definition_only'),('First',1,'definition_only'))
     assert calls[0][1] is ExistingQueryMode.REPLACE
     assert prompts==['Type IMPORT to continue: ']
