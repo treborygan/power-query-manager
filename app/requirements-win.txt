@@ -5,3 +5,5 @@ pytest==8.3.5
 PyInstaller==6.13.0
 # Build/test-only: validate frozen profile and plan JSON contracts.
 jsonschema==4.26.0
+# Bound a stuck Qt/Windows test on headless CI instead of hanging the runner.
+pytest-timeout==2.4.0
