@@ -1449,3 +1449,8 @@
 - Exact current package tested from commit `f0286e013a5aaf302dff9d8dd2d33b10d96100f2` with DAO 12.0 diagnostic provider: `evidence/W341-dao12-acceptance.json`. Harness PASS on 10 generated fixtures; source hash/size/timestamps stayed unchanged and cleanup/process restoration passed.
 - Quick/Deep each found 12 relationships across 31,200 formula cells, with no differing edges; multi-target reverse scan found 6. UI filter counts matched expected incoming/outgoing/both results; graph and JSON/CSV exports verified all 12 edges. UI progress observed and cancellation passed.
 - Excel seed process exited naturally, no lock files or Access temp directories remained, and fixture cleanup completed. No forced termination. DAO 12.0 evidence is not DAO 16.0 acceptance; ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**. Remaining manual layout, screen-reader and workflow gates are open.
+
+## 2026-10-28 — W342 Qt UI scale-factor regression
+
+- Current-source `tests/ui` passed with `PYTHONPATH=src`: **96 passed in 4.49 s at QT_SCALE_FACTOR=1.25** and **96 passed in 4.63 s at 1.5**. The first attempt omitted the source path and failed collection (`ModuleNotFoundError: pq_installer`); corrected invocations both passed.
+- These are Qt scale-factor checks only. Windows Settings AX could not be acquired/raised through current CUA session; physical DPI/resolution remained unchanged and unverified. Still required: physical 960×600 / 1366×768 and actual 125%/150% OS display checks.

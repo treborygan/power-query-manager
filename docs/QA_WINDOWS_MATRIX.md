@@ -1,5 +1,11 @@
 # Windows Excel acceptance: manual + script-assisted test matrix
 
+## W342 — current-source Qt UI scale-factor regression, 2026-10-28
+
+- Ran the complete `tests/ui` suite from `app/` against current source commit `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb` with `PYTHONPATH=src`: `QT_SCALE_FACTOR=1.25` **96 passed in 4.49 s**; `QT_SCALE_FACTOR=1.5` **96 passed in 4.63 s**.
+- An initial invocation omitted `PYTHONPATH=src` and stopped at collection with `ModuleNotFoundError: pq_installer`; no tests ran in that attempt. The corrected invocations completed both suites.
+- These are Qt offscreen scale-factor regressions and do not substitute for actual Windows display scaling or resolution. Settings was visible in the app inventory but its AX state could not be acquired/raised in the current CUA session; no display setting was changed. Physical 125%/150% DPI and requested 960×600 / 1366×768 checks remain open.
+
 ## W341 — current-package disposable dependency scanner acceptance, 2026-10-28
 
 - Exact packaged application commit: `f0286e013a5aaf302dff9d8dd2d33b10d96100f2`; package details in W337. Ran `python tools/run_dependency_windows_acceptance.py --dao-progid DAO.DBEngine.120 --cli-exe app/vector-release/PowerQueryManager/PowerQueryManagerCLI.exe --performance-repeats 1 --report evidence/W341-dao12-acceptance.json`. Result **PASS** on Windows / Excel 16.0 build 20430.0 with 10 generated fixtures (4 Access, 4 Excel, plus source/support).
