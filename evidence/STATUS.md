@@ -1400,3 +1400,8 @@
 - Rechecked packaged profile mappings in dark and light themes; both tabs and native caption followed Vector palette. No settings saved.
 - Tried to inspect a synthetic M source in the package. The Windows file picker did not accept the fixture via accessible controls; inspector appearance remains **NOT VERIFIED**. No workbook selected; disposable fixture cleaned up. No new build/test claim.
 - Full UI interaction/accessibility matrix remains open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 stays open/unmerged.
+
+## 2026-10-28 — W334 packaged query inspector
+
+- Follow-up resolved W333's inspector attempt: the packaged GUI opened the synthetic query inspector successfully in dark and light Vector themes. At 1182×732, both source/workbook panes, exact diff, search, title bar and footer actions fit. Amber line highlighting remained legible. No workbook/Office process was opened; no source edit or save occurred.
+- Disposable fixture was verified and removed; application closed cleanly with no manager/Excel/Access process. This is visual-only evidence on the package from source `a2bc54593feda9824a4bb30fd1a98a50ab2c2856`; no new tests/build are claimed. Remaining comprehensive UI/workflow/accessibility and DPI gates stay open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 remains open/unmerged.
