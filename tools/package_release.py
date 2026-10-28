@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import hashlib
 import argparse
+import json
+import re
 import os
 from pathlib import Path
 import shutil
@@ -780,6 +782,32 @@ with (DIST / "RELEASE_SUMMARY.txt").open("a", encoding="utf-8") as summary:
     summary.write(
         "\nW293 verified packaged CLI query-package import with three exact definitions including a Unicode name, unchanged source workbook on export, verified target backup, and no external source evaluation. W294 verified that the packaged CLI rejects a ZIP traversal entry before workbook inspection without changing the target or starting Excel. W295 verified current packaged GUI import to a disposable VBA-bearing .xlsm with exact formula, preserved VBA source, unchanged Workbook_Open marker, verified backup, and owned-process cleanup. W297 verified packaged CLI mixed-batch isolation: one writable target applied and a second read-only target returned blocked_preflight with unchanged bytes and no backup; the command returned the partial-failure exit code and owned Excel processes exited. W298 adds the injectable Excel workbook lifecycle port across inspector, importer, refresher, and load-capability probe; 91 focused fake-COM/service tests passed, the rebuilt package passed definition-only GUI import on Excel 16.0 build 20430.0, CLI help passed, and the compact manifest verified. W299 verified packaged CLI active-use refusal while Excel held a disposable workbook read-only without an owner-lock file; the workbook hash remained unchanged, no backup/stage was created, and no additional Excel process started. W300 makes multi-row source removal one undoable action and verifies original row identity/order across undo and redo. The focused 40-test UI model suite passed; rebuilt packaged GUI keyboard traversal (35 controls), CLI help, and package verification passed. W301 records packaged CLI dry-run plans and deployment outcomes in local history using action/status and aggregate counts only; focused tests confirm sensitive paths are excluded. Broader Windows/Office release gates remain UNVERIFIED.\n"
     )
+
+# The GitHub Windows package workflow supplies the exact source SHA before
+# building. Put a verifiable provenance record INSIDE the package, rather than
+# shipping an unstamped binary that might be mistaken for current source.
+build_source_sha = os.environ.get("PQM_BUILD_SOURCE_SHA", "").strip().lower()
+if build_source_sha:
+    if not re.fullmatch(r"[0-9a-f]{40}", build_source_sha):
+        raise SystemExit("PQM_BUILD_SOURCE_SHA must be a full 40-digit commit SHA.")
+    gui_binary = TARGET / "PowerQueryManager.exe"
+    cli_binary = TARGET / "PowerQueryManagerCLI.exe"
+    provenance = {
+        "source_commit": build_source_sha,
+        "ui_design": "Vector Concept 03",
+        "package_status": "development-preview",
+        "gui_sha256": hashlib.sha256(gui_binary.read_bytes()).hexdigest(),
+        "cli_sha256": hashlib.sha256(cli_binary.read_bytes()).hexdigest(),
+    }
+    (TARGET / "BUILD_PROVENANCE.json").write_text(
+        json.dumps(provenance, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    with (DIST / "RELEASE_SUMMARY.txt").open("a", encoding="utf-8") as summary:
+        summary.write(
+            "\nBuild provenance: Vector Concept 03; "
+            f"source commit {build_source_sha}; executable digests in "
+            "PowerQueryManager/BUILD_PROVENANCE.json.\n"
+        )
 
 files = sorted(path for path in DIST.rglob("*") if path.is_file() and path.name != "SHA256SUMS")
 manifest = "".join(
