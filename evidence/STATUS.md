@@ -1459,3 +1459,9 @@
 
 - Packaged GUI `--skip-existing` passed on Excel 16.0 build 20430.0 using a generated disposable `.xlsx`. Existing query was skipped; UI reported no commit. Workbook SHA-256, timestamp and existing formula stayed unchanged; no backup/stage file was created.
 - Manager exited 0; read-only verification Excel exited naturally with no forced termination; process inventory clean. Tested application source `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`. This no-op check does not qualify other workbook types or refresh/load workflows. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**.
+
+## 2026-10-28 — W344 limited-scope Vector design sign-off
+
+- User directly authorized finalization after testing the most important few functionalities and waiving the rest. Accepted core checks: full 546-test Windows build at source `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`, packaged integrity/CLI help, keyboard/dialog and history accessibility, replace/skip/mixed-profile Excel imports with backup/read-only/integrity checks, and DAO12 Quick/Deep scan/filter/graph/export/progress/cancel with synthetic-source integrity/cleanup. Detailed records are W337–W343.
+- Outstanding physical display/DPI, exhaustive button/workflow, manual screen-reader and remaining dialog/environment checks are **WAIVED BY USER / NOT VERIFIED**, not PASS. A combined package/history dialog run had the package preview pass but history-row selection fail/inconclusive; it is waived and explicitly not accepted as a pass. Separate history accessibility passed.
+- Preserve explicit ACE DAO 16.0 and mapped SMB/UNC **WAIVED / NOT VERIFIED** classifications. No safety safeguards or assertions were relaxed. PR #2 can be finalized under this limited acceptance scope; summarize the waiver in the PR before merge.
