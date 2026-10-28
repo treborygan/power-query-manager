@@ -1340,3 +1340,9 @@
 - Exact tested app commit `3edf19174edde17206349a07da8157251bd260fb`: Windows `app/build.ps1` passed **545 tests in 37.79 s**; package verification passed at **118 files / 76,333,067 bytes**; packaged CLI `--help` exited 0. GUI/CLI SHA-256: `16F472FCF317862EC5563A0BD3911F3CDE399C0ACAD1A3728B0C052A997A787E` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
 - Removed the native Windows blue caption from the dark Vector presentation. The native title bar, text and border now follow the selected Vector palette. Rebuilt package was visually inspected at 1182×732 in dark and light themes, including Dependency Finder; app shutdown left no manager, Excel or Access process.
 - Remaining physical display/DPI, workflow/accessibility and integration gates stay open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 is open and unmerged.
+
+## 2026-10-28 — latest-package keyboard and modal traversal
+
+- Replayed the packaged GUI from app commit `3edf19174edde17206349a07da8157251bd260fb`: 43 focusable controls and a complete in-window main Tab cycle passed, including workbook/source/query/import actions. History, inspector, query graph, and source-mapping dialog cycles passed. No workbook/Excel opened; no manager, Excel or Access process remained after the run.
+- Exact package verification passed at 118 files / 76,333,067 bytes. GUI/CLI SHA-256: `16F472FCF317862EC5563A0BD3911F3CDE399C0ACAD1A3728B0C052A997A787E` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`. See W324 in the Windows QA matrix.
+- This extends keyboard coverage on the newest package only. Screen-reader and other manual gates remain open; ACE DAO 16.0 and mapped SMB/UNC stay waived.
