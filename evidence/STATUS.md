@@ -1313,3 +1313,8 @@
 
 - Latest package passed a disposable profile-backed mixed `.m`/`.pq` import on Excel 16.0 build 20430.0: three formulas matched their sources, review/Excel order matched, backup and read-only reopen verified, and manager/owned Excel exited naturally. See W318 in `docs/QA_WINDOWS_MATRIX.md`.
 - This remains one Office build and one workflow. Other load modes, refresh, Access and 150% DPI remain open; DAO 16.0 and mapped SMB/UNC remain waived.
+
+## 2026-10-28 — latest-package all-skip import
+
+- Latest package passed the disposable Excel 16.0 all-skip scenario: exact workbook hash/timestamp and existing formula preserved, no backup or stage, explicit no-change UI result, and clean natural Excel/manager shutdown. See W319 in `docs/QA_WINDOWS_MATRIX.md`.
+- This closes only the tested no-op branch; Access, load/refresh variants, broad security matrix and 150% DPI remain open. DAO 16.0 and mapped SMB/UNC remain waived.
