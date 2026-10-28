@@ -1411,3 +1411,9 @@
 - Responsive breakpoints now use available workspace width after sidebar and margins. UI layout regression passed at 960×600, 1180×700 and 1366×768; full Windows build/test passed **546 tests in 40.75 s** on app source `de745715a1ead868dc6dcd9228e4b6eaa3f7f2d1`.
 - Release verifier passed **118 files / 76,333,924 bytes**; CLI help exited 0. GUI/CLI SHA-256: `F048F523CAC817D2F83CAA8142526DFC1D4EACE988593324CBA04FB5E4C1F81A` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
 - Actual package showed the two-column workspace at its default 1182-pixel width and denser four-column metrics/three-column source actions maximized. App exited and no manager/Excel/Access process remained. Exact lower physical display sizes and remaining DPI/workflow/accessibility gates are still open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 remains open/unmerged.
+
+## 2026-10-28 — W336 compact source action groups
+
+- Seven source-management bulk actions now wrap into two columns at laptop widths and three columns when usable content width is at least 1360 px. The destination button has a compact visible label while preserving its full accessible name, tooltip and command-palette label. Automated regression passed at 960×600, 1180×700, 1366×768 and 1600×900; no horizontal overflow. Full Windows suite **546 passed in 36.81 s** on source commit `443a4eb737ead86718ec69be37c8947b0f2e1cd8`.
+- Rebuilt package verified: 118 files / 76,334,491 bytes; CLI help exited 0. GUI/CLI SHA-256: `B021F2D19F8548A6B5E8B606277989F4FB26C9CFA866A092E62EB2FA9444942A` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- Packaged GUI two-column source and bulk action groups visually checked at default 1182 width; clean exit and no Office processes. Three-column visual layout and broad workflows/accessibility remain unverified; ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**.
