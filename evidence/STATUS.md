@@ -1388,3 +1388,9 @@
 - Fixed the Ctrl+K palette's Windows title bar by applying the shared Vector caption/theme helper. Added a regression check for dark/light theme propagation. Actual rebuilt package showed matching Vector captions in both modes.
 - Exact tested source `79d6b1e73aa84712ae23eef5df3536be936a9370`; Windows suite **546 passed in 38.63 s**. Package verifier passed (118 files / 76,333,108 bytes); packaged CLI help exited 0. GUI/CLI SHA-256: `33DB186B1B6B6781BBC04C72BA070F9CE7C0AB46D72C9B514B97BF596A2624C6` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
 - No workbook or Office process was opened; app closed and process inventory was clean. Remaining broad workflow/accessibility gates stay open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 stays open and unmerged.
+
+## 2026-10-28 — W332 secondary dialog caption consistency
+
+- Wired the active Vector native caption/theme into history and version comparison, query inspector, profile mappings, package update preview, workbook inventory, refresh options and open dialogs on theme changes. Existing graph/Finder dialogs already use the shared helper. Actual rebuilt History dialog caption visually verified in dark mode; no history contents recorded.
+- Exact tested source `a2bc54593feda9824a4bb30fd1a98a50ab2c2856`; full Windows build **546 passed in 40.79 s**. Release package verified at 118 files / 76,333,760 bytes; CLI help exited 0. GUI/CLI hashes: `62842C1857B57ED73E29EFE9D7E7BB45B17812EA30DD410FADA45B11235AA49D` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- App closed with no manager/Excel/Access process. Full visual and interaction audit of every dialog/workflow remains incomplete. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 stays open/unmerged.
