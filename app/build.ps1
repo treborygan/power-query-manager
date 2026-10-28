@@ -31,7 +31,7 @@ Invoke-Checked $Python @('-m', 'pip', 'install', '--no-deps', '-e', '.')
 # CI diagnostic mode provides a named, short first failure instead of hanging
 # for the entire job. Normal/release runs must execute the complete suite.
 if ($env:PQM_CI_DIAGNOSTICS -eq '1') {
-    Invoke-Checked $Python @('-m', 'pytest', '-vv', '-x', '--tb=short')
+    Invoke-Checked $Python @('-m', 'pytest', '-vv', '--tb=short', '--maxfail=15', '--timeout=75', '--timeout-method=thread')
 } else {
     Invoke-Checked $Python @('-m', 'pytest', '-q')
 }
