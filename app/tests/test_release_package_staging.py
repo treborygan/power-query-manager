@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import hashlib
+import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -164,12 +166,19 @@ def test_package_stager_can_build_and_verify_an_isolated_release() -> None:
                 str(destination),
             ],
             cwd=ROOT,
+            env={**os.environ, "PQM_BUILD_SOURCE_SHA": "a" * 40},
             capture_output=True,
             text=True,
             check=False,
         )
         assert replacement.returncode == 0, replacement.stdout + replacement.stderr
         assert (destination / "PowerQueryManager" / "PowerQueryManagerCLI.exe").is_file()
+        provenance = json.loads((destination / "PowerQueryManager" / "BUILD_PROVENANCE.json").read_text(encoding="utf-8"))
+        assert provenance["source_commit"] == "a" * 40
+        assert provenance["ui_design"] == "Vector Concept 03"
+        assert provenance["gui_sha256"] == hashlib.sha256(gui_exe.read_bytes()).hexdigest()
+        assert provenance["cli_sha256"] == hashlib.sha256((destination / "PowerQueryManager" / "PowerQueryManagerCLI.exe").read_bytes()).hexdigest()
+        assert "Vector Concept 03" in (destination / "RELEASE_SUMMARY.txt").read_text(encoding="utf-8")
 
         sentinel = destination / "keep-user-file.txt"
         sentinel.write_text("must remain", encoding="utf-8")
