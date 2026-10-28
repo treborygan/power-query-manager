@@ -44,7 +44,11 @@ def _tab_cycle(window, automation, process_id: int, label: str, limit: int = 100
         time.sleep(0.06)
         focused = automation.GetFocusedElement()
         if focused.CurrentProcessId != process_id:
-            raise AssertionError(f"Tab moved focus outside the packaged manager during {label} traversal.")
+            raise AssertionError(
+                f"Tab moved focus outside the packaged manager during {label} traversal; "
+                f"visited={visited!r}, focused_name={focused.CurrentName!r}, "
+                f"focused_pid={focused.CurrentProcessId}, manager_pid={process_id}."
+            )
         visited.append(focused.CurrentName or "")
         if tuple(focused.GetRuntimeId()) == first_runtime_id and len(visited) > 1:
             return visited[:-1]

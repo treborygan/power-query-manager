@@ -1,5 +1,7 @@
 ## 2026-10-27 — Vector Windows validation in progress
 
+- 2026-10-28: application source `3c7e4173e7515007db49510a2cb1aafe4fbb1c72` passed 541 Windows tests, 91 UI tests at each simulated Qt scale, package verification, local DAO 12.0 scanning, and packaged create/history and profile replacement imports with natural Excel shutdown. Packaged keyboard traversal passed once after two unexplained focus-escape failures. The QA matrix records exact hashes and open acceptance gates.
+
 - A live light-theme inspection found low-contrast unchecked checkbox outlines. A theme styling fix was visually checked in the source application; a new full build and package reacceptance are required for that subsequent revision.
 - A measured Finder layout check found horizontal workspace overflow at laptop sizes. Finder panels, mode selectors and filters were reflowed; the new test checks both modes at 760×560, 960×600 and 1366×768. The 90 UI tests pass at simulated Qt scales 1.25 and 1.5. A new full build and packaged reacceptance remain required.
 - A further file-graph layout check found its minimum width exceeded 960 pixels. Its heading, controls and status were reflowed; focused Qt regression passed. Rebuild and packaged visual reacceptance are pending.
