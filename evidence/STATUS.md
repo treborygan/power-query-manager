@@ -1318,3 +1318,8 @@
 
 - Latest package passed the disposable Excel 16.0 all-skip scenario: exact workbook hash/timestamp and existing formula preserved, no backup or stage, explicit no-change UI result, and clean natural Excel/manager shutdown. See W319 in `docs/QA_WINDOWS_MATRIX.md`.
 - This closes only the tested no-op branch; Access, load/refresh variants, broad security matrix and 150% DPI remain open. DAO 16.0 and mapped SMB/UNC remain waived.
+
+## 2026-10-28 — latest-package DAO 12.0 scanner acceptance
+
+- Latest packaged CLI and UI scanner passed the disposable local DAO 12.0 matrix: Quick/Deep matched 12/12 edges, GUI filters and JSON/CSV exports matched, progress/cancellation passed, source hashes/sizes/timestamps stayed unchanged, and fixtures/Excel/Access processes cleaned up. Raw report: `evidence/W320-dao12-acceptance.json`.
+- DAO 16.0 and mapped SMB/UNC were not tested and remain waived. The release folder was reverified at 116 files after moving the report to evidence.
