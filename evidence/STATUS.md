@@ -1231,3 +1231,9 @@
 - Fresh packaged UI screenshot at 1182×732 shows the complete Enabled heading and synthetic source row. Packaged Excel GUI create, skip, replace and mixed three-source import passed with exact readback and safety checks; snapshot compare/restore and package compare dialogs passed. See W300 for exact evidence.
 - Current packaged CLI/GUI DAO 12.0 acceptance passed on 10 local synthetic Excel/Access fixtures: unchanged file hashes/sizes/timestamps, no lock/temp artifacts, Quick/Deep 12-edge parity over 31,200 formula cells, verified JSON/CSV exports and filters, progress/cancel, natural Excel exit, no residual processes. This does not verify DAO 16.0.
 - Physical 960×600 / 1366×768 and OS-level 125%/150% DPI checks remain open; CUA resize did not change the window from 1182×732. Full keyboard-only coverage and remaining manual controls remain open. ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED. PR #2 remains open and unmerged.
+
+## 2026-10-28 — physical Vector display observation
+
+- On packaged app-code commit `3e45bc450482b5311a6a30938c27ea19fca50a45`, inspected the maximized app at physical 1366×768/100%; workspace fit without visible clipping. At 1366×768/125%, metric cards reflowed to two columns and the observed workspace remained scrollable without visible clipping.
+- Windows scale selector offered 100% and 125% only. Physical 150% is NOT VERIFIED; Qt scale-factor suites passed at 1.25 and 1.5 but are not physical DPI evidence. Physical 960×600 is NOT VERIFIED because it was not offered as a display mode; Qt layout checks cover it. Settings restored and confirmed at 1920×1080/100%.
+- ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED. PR #2 remains open and unmerged pending open acceptance gates.
