@@ -278,11 +278,16 @@ def test_light_dark_theme_toggle_applies_readable_theme_styles():
     window = MainWindow()
     assert window.theme_toggle.isChecked() and window.dark_theme_enabled
     assert "background-color: #080e12" in window.styleSheet()
+    assert "QCheckBox::indicator:checked" in window.styleSheet()
+    assert "background-color: #cff66d" in window.styleSheet()
+    assert "checkmark-dark.svg" in window.styleSheet()
     assert "QLabel#secondaryText" in window.styleSheet()
     assert "color: #adbec3" in window.styleSheet()
     window.theme_toggle.setChecked(False)
     assert not window.dark_theme_enabled
     assert "background-color: #f1f6f5" in window.styleSheet()
+    assert "background-color: #3b6a21" in window.styleSheet()
+    assert "checkmark-light.svg" in window.styleSheet()
     assert "color: #193037" in window.styleSheet()
     window.theme_toggle.setChecked(True)
     assert window.dark_theme_enabled

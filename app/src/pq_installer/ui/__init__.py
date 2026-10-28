@@ -4,6 +4,7 @@ Presentation only: this module does not touch Excel, DAO or query operations.
 The contrast-focused dark palette is the default; light mode remains available.
 """
 from string import Template
+from pathlib import Path
 
 
 def vector_colors(dark=True):
@@ -142,6 +143,10 @@ QCheckBox::indicator { width: 16px; height: 16px; }
 QCheckBox::indicator:unchecked {
     background: $surface; border: 1px solid $muted; border-radius: 3px;
 }
+QCheckBox::indicator:checked {
+    background: $accent; border: 1px solid $accent; border-radius: 3px;
+    image: url("$checkmark_image");
+}
 QHeaderView::section {
     background-color: $surface_alt; color: $muted;
     padding: 9px 7px; border: 0px; border-bottom: 1px solid $border;
@@ -184,7 +189,10 @@ QToolTip { background: $surface_alt; color: $text; border: 1px solid $teal; padd
 
 def vector_stylesheet(dark=True):
     """Return a shared style sheet. Bright focus states apply in both themes."""
-    return _VECTOR_QSS.substitute(vector_colors(dark))
+    colors = vector_colors(dark)
+    checkmark = "checkmark-dark.svg" if dark else "checkmark-light.svg"
+    colors["checkmark_image"] = (Path(__file__).parent / "assets" / checkmark).as_posix()
+    return _VECTOR_QSS.substitute(colors)
 
 
 def apply_vector_theme(widget, dark=True):
