@@ -1328,3 +1328,9 @@
 
 - Live packaged review at 1182×732 added only two synthetic temporary M sources; no workbook was selected. Query graph displayed `Final → Source` and matching text; inspector showed source, workbook, and line-diff panes with the unavailable-workbook state correctly marked unknown. App and Excel/Access process inventory were clean after closing. See W321 in `docs/QA_WINDOWS_MATRIX.md`.
 - This adds scoped current-package view evidence only. Physical display/DPI and broader workflows remain open; ACE DAO 16.0 and mapped SMB/UNC stay waived.
+
+## 2026-10-28 — Vector checked-control styling and rebuild
+
+- Exact tested code commit `8637477b5c7763b5b9a495d85ae0328aa0bf2571`: `app/build.ps1` passed 544 tests in 41.45 s; package verification passed at 118 files / 76,331,811 bytes; packaged CLI `--help` exited 0. GUI/CLI SHA-256: `9D149D28EA7A1DF7CE84E903A7C9FCC4377ECDFE1CA425BDD2513BB44C87E309` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- Fixed the Windows-blue checked checkbox against the supplied Vector board: the shared theme now loads a dark checkmark on lime in dark mode and a white checkmark on deep green in light mode. Theme regression failed first on the missing asset reference, then passed. The rebuilt packaged GUI was visually inspected at 1182×732 and displayed the checked lime toggle with visible dark tick; light theme was also opened.
+- No workbook was selected for this visual review. Physical target resolutions/DPI, broad manual workflows, screen-reader acceptance and remaining integrations stay open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 remains open and unmerged.
