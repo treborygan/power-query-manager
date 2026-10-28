@@ -2,6 +2,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
                                QTabWidget, QWidget, QTableWidget, QTableWidgetItem,
                                QPushButton, QHeaderView, QMessageBox)
+from pq_installer.ui import apply_vector_theme
 
 
 class ProfileMappingsDialog(QDialog):
@@ -14,6 +15,7 @@ class ProfileMappingsDialog(QDialog):
     def __init__(self,path_mappings=(),environment_mappings=(),parent=None):
         super().__init__(parent)
         self.setWindowTitle('Edit source environment mappings')
+        apply_vector_theme(self, getattr(parent, "dark_theme_enabled", True))
         self.resize(900,560)
         self.setMinimumSize(700,420)
         root=QVBoxLayout(self)

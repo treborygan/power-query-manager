@@ -133,6 +133,9 @@ class MainWindow(QMainWindow):
         """Change only presentation; the application's action state is retained."""
         self.dark_theme_enabled = bool(dark)
         apply_vector_theme(self, dark)
+        for dialog in self.findChildren(QDialog):
+            if dialog.isWindow():
+                apply_vector_theme(dialog, dark)
 
     def _scroll_to_vector(self, section):
         """Sidebar navigates to the original widgets and highlights the active area."""
@@ -1098,7 +1101,7 @@ class MainWindow(QMainWindow):
         self.inventory=tuple(inventory)
         self._record_history('workbook_inspected',{'query_count':len(self.inventory)})
         self.query_model.apply_inventory(self.inventory,skip_existing=self.mode_combo.currentData()==ExistingQueryMode.SKIP.value)
-        dialog=QDialog(self);dialog.setWindowTitle(f'Workbook query inventory ({len(self.inventory)})');dialog.resize(1000,600)
+        dialog=QDialog(self);dialog.setWindowTitle(f'Workbook query inventory ({len(self.inventory)})');apply_vector_theme(dialog,self.dark_theme_enabled);dialog.resize(1000,600)
         layout=QVBoxLayout(dialog);view=QTableView(dialog);view.setAccessibleName('Workbook query inventory');view.setModel(QueryInventoryModel(self.inventory,view));view.setAlternatingRowColors(True)
         view.setSelectionBehavior(QAbstractItemView.SelectRows);view.setWordWrap(False)
         view.horizontalHeader().setSectionResizeMode(0,QHeaderView.ResizeToContents);view.horizontalHeader().setSectionResizeMode(1,QHeaderView.Stretch)
@@ -1129,7 +1132,7 @@ class MainWindow(QMainWindow):
         else:
             names=None
             scope=f'all {len(self.inventory)} workbook query(s)'
-        options=QDialog(dialog);options.setWindowTitle('Refresh options')
+        options=QDialog(dialog);options.setWindowTitle('Refresh options');apply_vector_theme(options,self.dark_theme_enabled)
         layout=QVBoxLayout(options)
         notice=QLabel('Refreshing may access external data sources and change query results. It runs only after you confirm. The workbook is refreshed in a staged copy and committed only if every selected refresh succeeds.')
         notice.setWordWrap(True);layout.addWidget(notice)
@@ -1359,7 +1362,7 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             QMessageBox.warning(self,'History unavailable',f'Local history could not be opened: {exc}')
             return
-        dialog=QDialog(self);dialog.setWindowTitle('Local operation history');dialog.resize(850,460)
+        dialog=QDialog(self);dialog.setWindowTitle('Local operation history');apply_vector_theme(dialog,self.dark_theme_enabled);dialog.resize(850,460)
         layout=QVBoxLayout(dialog)
         hint=QLabel('History metadata omits formulas and redacts recognized secrets. Optional workbook snapshots contain the full local workbook, may include sensitive data, and stay in this Windows user profile. Retention and deletion controls apply to snapshots too.')
         hint.setAccessibleName('History privacy and snapshot information')
@@ -1472,7 +1475,7 @@ class MainWindow(QMainWindow):
                         'comparison':'completed',
                     })
                     if dialog.isVisible():
-                        result=HistoryComparisonDialog(outcome['before'],outcome['after'],outcome['changes'],dialog)
+                        result=HistoryComparisonDialog(outcome['before'],outcome['after'],outcome['changes'],dialog,self.dark_theme_enabled)
                         result.exec()
                 def compare_failed(message):
                     if dialog.isVisible():QMessageBox.warning(dialog,'Version comparison stopped',message)

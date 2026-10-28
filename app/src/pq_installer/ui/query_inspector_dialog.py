@@ -9,6 +9,7 @@ from pq_installer.core.manager import QueryInfo,diff_m_code
 from pq_installer.core.models import QuerySource
 from pq_installer.core.parameters import inspect_parameter,edit_parameter
 from pq_installer.ui.window_sizing import resize_dialog_to_parent
+from pq_installer.ui import apply_vector_theme
 
 
 class QueryInspectorDialog(QDialog):
@@ -16,6 +17,7 @@ class QueryInspectorDialog(QDialog):
         super().__init__(parent)
         self.source=source;self.existing=existing;self._on_source_saved=on_source_saved
         self.setWindowTitle(f'Query inspector — {source.name}')
+        apply_vector_theme(self,getattr(parent,'dark_theme_enabled',True))
         self._original_bytes=Path(source.path).read_bytes()
         try:self._source_text=self._original_bytes.decode('utf-8-sig')
         except UnicodeDecodeError as exc:raise ValueError('Query source must be UTF-8 before it can be inspected or edited.') from exc

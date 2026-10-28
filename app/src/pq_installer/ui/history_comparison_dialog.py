@@ -1,13 +1,15 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QDialog,QVBoxLayout,QHBoxLayout,QLabel,QTableWidget,
     QTableWidgetItem,QPlainTextEdit,QPushButton,QAbstractItemView)
+from pq_installer.ui import apply_vector_theme
 
 
 class HistoryComparisonDialog(QDialog):
-    def __init__(self,before,after,changes,parent=None):
+    def __init__(self,before,after,changes,parent=None,dark=True):
         super().__init__(parent)
         self.before=before;self.after=after;self.changes=tuple(changes)
         self.setWindowTitle('Workbook version comparison');self.resize(980,620)
+        apply_vector_theme(self,dark)
         layout=QVBoxLayout(self)
         self.summary_label=QLabel(self._summary());self.summary_label.setWordWrap(True);layout.addWidget(self.summary_label)
         self.change_table=QTableWidget(len(self.changes),3,self)

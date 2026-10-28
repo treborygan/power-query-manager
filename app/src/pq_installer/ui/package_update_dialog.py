@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
                                QTableWidget, QTableWidgetItem, QPlainTextEdit,
                                QSplitter, QPushButton, QHeaderView)
+from pq_installer.ui import apply_vector_theme
 
 
 class QueryPackageUpdateDialog(QDialog):
@@ -18,6 +19,7 @@ class QueryPackageUpdateDialog(QDialog):
         super().__init__(parent)
         self.changes=tuple(changes)
         self.setWindowTitle('Query package update preview')
+        apply_vector_theme(self, getattr(parent, "dark_theme_enabled", True))
         self.resize(920,620)
         self.setMinimumSize(720,450)
         root=QVBoxLayout(self)
