@@ -3,6 +3,8 @@
 Presentation only: this module does not touch Excel, DAO or query operations.
 The contrast-focused dark palette is the default; light mode remains available.
 """
+import ctypes
+import os
 from string import Template
 from pathlib import Path
 
@@ -197,3 +199,38 @@ def vector_stylesheet(dark=True):
 
 def apply_vector_theme(widget, dark=True):
     widget.setStyleSheet(vector_stylesheet(dark))
+    _apply_windows_caption_theme(widget, dark)
+
+
+def _apply_windows_caption_theme(widget, dark, dwm_api=None):
+    """Match the native Windows title bar to the active Vector palette."""
+    if os.name != "nt" and dwm_api is None:
+        return False
+    if dwm_api is None:
+        try:
+            dwm_api = ctypes.WinDLL("dwmapi").DwmSetWindowAttribute
+        except (AttributeError, OSError):
+            return False
+
+    colors = vector_colors(dark)
+
+    def colorref(value):
+        red, green, blue = (int(value[index:index + 2], 16) for index in (1, 3, 5))
+        return red | (green << 8) | (blue << 16)
+
+    handle = ctypes.c_void_p(int(widget.winId()))
+    attributes = (
+        (20, int(bool(dark))),  # DWMWA_USE_IMMERSIVE_DARK_MODE
+        (35, colorref(colors["window"])),  # DWMWA_CAPTION_COLOR
+        (36, colorref(colors["text"])),  # DWMWA_TEXT_COLOR
+        (34, colorref(colors["border"])),  # DWMWA_BORDER_COLOR
+    )
+    applied = False
+    for attribute, value in attributes:
+        buffer = ctypes.c_int(value)
+        try:
+            dwm_api(handle, attribute, ctypes.byref(buffer), ctypes.sizeof(buffer))
+            applied = True
+        except (OSError, TypeError, ValueError):
+            continue
+    return applied

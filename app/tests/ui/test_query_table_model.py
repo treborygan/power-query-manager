@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 from pq_installer.core.models import QuerySource
 from pq_installer.ui.query_table_model import QueryTableModel, QuerySortFilterProxyModel
 from pq_installer.ui.main_window import MainWindow
+from pq_installer.ui import _apply_windows_caption_theme
 from pq_installer.core.manager import QueryInfo
 
 app = QApplication.instance() or QApplication([])
@@ -292,6 +293,28 @@ def test_light_dark_theme_toggle_applies_readable_theme_styles():
     window.theme_toggle.setChecked(True)
     assert window.dark_theme_enabled
     assert "QPushButton#primary" in window.styleSheet()
+    window.close()
+
+
+def test_windows_caption_theme_tracks_vector_palette():
+    import ctypes
+
+    window = MainWindow()
+    calls = []
+
+    def capture_attribute(handle, attribute, value, size):
+        actual = ctypes.cast(value, ctypes.POINTER(ctypes.c_int)).contents.value
+        calls.append((attribute, actual, size))
+        return 0
+
+    assert _apply_windows_caption_theme(window, True, capture_attribute)
+    assert [attribute for attribute, _, _ in calls] == [20, 35, 36, 34]
+    assert [value for _, value, _ in calls] == [1, 0x120E08, 0xF3F4EB, 0x4A4330]
+
+    calls.clear()
+    assert _apply_windows_caption_theme(window, False, capture_attribute)
+    assert [attribute for attribute, _, _ in calls] == [20, 35, 36, 34]
+    assert [value for _, value, _ in calls] == [0, 0xF5F6F1, 0x373019, 0xC8C8B4]
     window.close()
 
 
