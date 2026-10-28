@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 )
 
 from pq_installer.ui import apply_vector_theme, vector_colors
+from pq_installer.ui.window_sizing import resize_dialog_to_parent
 
 
 _MAX_GRAPH_NODES = 80  # the complete index always remains in the report/CSV/JSON
@@ -66,7 +67,6 @@ class FileDependencyGraphDialog(QDialog):
                        getattr(getattr(parent, "parent", lambda: None)(), "dark_theme_enabled", True))
         self._colors = vector_colors(dark)
         self.setWindowTitle("File dependencies — advisory map")
-        self.resize(1180, 790)
         self.setMinimumSize(680, 500)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 16, 20, 18)
@@ -163,6 +163,7 @@ class FileDependencyGraphDialog(QDialog):
             close_button.setAccessibleName("Close file dependency graph")
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
+        resize_dialog_to_parent(self, 1180, 790)
         apply_vector_theme(self, dark)
 
     def showEvent(self, event):

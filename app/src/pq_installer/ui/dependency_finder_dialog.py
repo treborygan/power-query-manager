@@ -21,6 +21,7 @@ from pq_installer.core.reverse_dependencies import (
 )
 from pq_installer.ui.file_dependency_graph_dialog import FileDependencyGraphDialog
 from pq_installer.ui import apply_vector_theme
+from pq_installer.ui.window_sizing import resize_dialog_to_parent
 
 
 _FILE_FILTER = "Office files (*.xlsx *.xlsm *.accdb *.mdb *.xlsb *.xls)"
@@ -101,7 +102,6 @@ class DependencyFinderDialog(QDialog):
     def __init__(self, parent=None, *, scan_runner=None, map_runner=None):
         super().__init__(parent)
         self.setWindowTitle("Dependency Finder — incoming references")
-        self.resize(1180, 800)
         self.setMinimumSize(760, 560)
         self.scan_runner = scan_runner
         self.map_runner = map_runner
@@ -113,6 +113,7 @@ class DependencyFinderDialog(QDialog):
         self._inventory_worker = None
         self._inventory_running = False
         self._build_ui()
+        resize_dialog_to_parent(self, 1180, 800)
         apply_vector_theme(self, getattr(parent, "dark_theme_enabled", True))
 
     def _build_ui(self):

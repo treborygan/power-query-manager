@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 from pq_installer.core.dependencies import analyze_query_references, find_dependency_cycles
 from pq_installer.core.query_loader import read_m_code
 from pq_installer.ui import apply_vector_theme
+from pq_installer.ui.window_sizing import resize_dialog_to_parent
 
 
 @dataclass(frozen=True)
@@ -105,7 +106,6 @@ class DependencyGraphDialog(QDialog):
     def __init__(self, sources, parent=None):
         super().__init__(parent)
         self.setWindowTitle('Query dependencies')
-        self.resize(1050, 700)
         self._vector_dark = getattr(parent, "dark_theme_enabled", True)
         self.analysis = analyze_dependency_graph(sources)
         layout = QVBoxLayout(self)
@@ -137,6 +137,7 @@ class DependencyGraphDialog(QDialog):
         buttons.rejected.connect(self.reject)
         buttons.accepted.connect(self.accept)
         layout.addWidget(buttons)
+        resize_dialog_to_parent(self, 1050, 700)
         apply_vector_theme(self, self._vector_dark)
 
     def _summary_text(self):
