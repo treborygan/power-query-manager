@@ -19,7 +19,7 @@ permissions:
 
 concurrency:
   group: windows-package-main
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build-windows-package:
