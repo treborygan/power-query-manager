@@ -1237,3 +1237,10 @@
 - On packaged app-code commit `3e45bc450482b5311a6a30938c27ea19fca50a45`, inspected the maximized app at physical 1366×768/100%; workspace fit without visible clipping. At 1366×768/125%, metric cards reflowed to two columns and the observed workspace remained scrollable without visible clipping.
 - Windows scale selector offered 100% and 125% only. Physical 150% is NOT VERIFIED; Qt scale-factor suites passed at 1.25 and 1.5 but are not physical DPI evidence. Physical 960×600 is NOT VERIFIED because it was not offered as a display mode; Qt layout checks cover it. Settings restored and confirmed at 1920×1080/100%.
 - ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED. PR #2 remains open and unmerged pending open acceptance gates.
+
+## 2026-10-28 — live package Finder and keyboard accessibility
+
+- Verified the staged release again: 116 files / 76,330,196 bytes; GUI SHA-256 `CFD598065D357484D3C79935E2465587858FBAD4D7930A051F706A48EDD646AB`; CLI SHA-256 `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- Packaged GUI Quick general map on disposable Dashboard.xlsx / Inventory.xlsx returned one exact edge; file graph showed both nodes and directed edge. Node selection and Fit graph worked. Incoming scan targeting Inventory.xlsx found Dashboard.xlsx as one dependent. Targeting both files intentionally produced the documented partial `no_consumers` result because no candidate files remained to inspect.
+- Keyboard smoke passed with 43 main controls and dialog cycles for history, inspector, query graph, and both mapping tabs. Smoke used temporary profile/source and no Excel instance. App and smoke processes exited cleanly.
+- Physical 960×600 and 150% DPI remain NOT VERIFIED; ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED. PR #2 remains open and unmerged.
