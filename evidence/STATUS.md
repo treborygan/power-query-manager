@@ -1470,3 +1470,8 @@
 
 - Reviewed `origin/main...5ce3cb69b1e892202ebeff4699d354bb7a3ddb6e`. Production changes are in the UI package and PyInstaller UI asset include; automated checks are in UI tests and packaged Windows harness tools; no core engine files changed. Existing callbacks/model/COM safety paths remain present; no safety assertion weakened. `git diff --check` is clean.
 - GitHub readback had no status checks and no submitted reviews. Recorded this as an integration review, not an independent reviewer approval. Finalization is based on the user's explicit limited-scope acceptance/waiver. DAO16 and SMB/UNC remain explicitly waived/not verified.
+
+## 2026-10-28 — W346 Vector Concept 03 merged
+
+- PR #2 merged to `main`: merge commit `e615594d3fed91c48421712681c0cb0f9ba7b983`, feature head `a995dd68065ccf5add716d9107bc92dfe014a34e`; local `main` fast-forward verification matched origin.
+- Tested application source/package evidence and accepted core workflows remain W337–W343; user-approved limited-scope waiver and final diff review are W344–W345. Physical display/DPI, exhaustive workflow/dialog and manual screen-reader checks remain WAIVED BY USER / NOT VERIFIED. ACE DAO 16.0 and mapped SMB/UNC remain explicitly WAIVED / NOT VERIFIED.

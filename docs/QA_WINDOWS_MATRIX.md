@@ -1,5 +1,11 @@
 # Windows Excel acceptance: manual + script-assisted test matrix
 
+## W346 — Vector Concept 03 merged, 2026-10-28
+
+- PR #2 merged into `main` at `e615594d3fed91c48421712681c0cb0f9ba7b983` from reviewed feature head `a995dd68065ccf5add716d9107bc92dfe014a34e`. Final PR body preserves limited-scope acceptance and all unverified/waived states.
+- Tested application source remains `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`; build, package, hashes, core behavior evidence and user-directed acceptance waivers are recorded in W337–W345.
+- Merge was authorized by the user's instruction to test the key workflows, waive the rest and finalize the design. Physical layout/DPI, exhaustive remaining workflows/dialogs and manual screen-reader checks remain **WAIVED BY USER / NOT VERIFIED**. ACE DAO 16.0 and mapped SMB/UNC remain explicitly **WAIVED / NOT VERIFIED**. These are not reported as passed.
+
 ## W344 — limited-scope design sign-off and user-directed waivers, 2026-10-28
 
 - The user directed: “Test only the most important few functionalities, waive the rest, and finally finalize the new design.” This authorizes a limited-scope sign-off; unrun or incomplete checks below are recorded **WAIVED BY USER / NOT VERIFIED**, never PASS. The pre-existing ACE DAO 16.0 and mapped SMB/UNC waivers remain separate and unchanged.
