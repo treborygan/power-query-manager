@@ -220,6 +220,9 @@ class DependencyGraphDialog(QDialog):
             direction.setPath(arrow_path)
             direction.setBrush(QBrush(QColor('#81e4d3' if self._vector_dark else '#12645b')))
             direction.setPen(QPen(QColor('#81e4d3' if self._vector_dark else '#12645b')))
+            # Keep the arrowhead above the dependency card; otherwise its tip
+            # and most of the triangle are hidden by the node's higher Z value.
+            direction.setZValue(3)
             scene.addItem(direction)
 
         for name, node in nodes.items():

@@ -2,7 +2,7 @@ import os
 os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
 
 from pathlib import Path
-from PySide6.QtWidgets import QApplication, QGraphicsView, QGraphicsTextItem, QPushButton
+from PySide6.QtWidgets import QApplication, QGraphicsView, QGraphicsTextItem, QGraphicsPathItem, QPushButton
 
 from pq_installer.core.models import QuerySource
 from pq_installer.ui.dependency_graph_dialog import DependencyGraphDialog, analyze_dependency_graph
@@ -54,6 +54,9 @@ def test_dependency_graph_dialog_has_visual_and_accessible_text_views(tmp_path):
                   if isinstance(item, QGraphicsTextItem)]
     assert len(text_items) == 4
     assert all(item.zValue() > 1 for item in text_items)
+    arrow_items = [item for item in dialog.graph_view.scene().items()
+                   if isinstance(item, QGraphicsPathItem) and item.zValue() > 1]
+    assert len(arrow_items) == len(dialog.analysis.edges)
     dialog.close()
 
 

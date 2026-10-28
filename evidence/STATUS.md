@@ -1356,3 +1356,9 @@
 
 - At retained Windows 100% / 1366×768, inspected the packaged workspace and opened Dependency Finder. The main workspace’s top-level controls and Finder’s header, scan settings, file controls and target section were visible; Finder’s longer form scrolls vertically. No scan/workbook interaction occurred. Closed the app and restored 100% / 1920×1080. Exact package/source hashes and scope are in W326 of `docs/QA_WINDOWS_MATRIX.md`.
 - This closes latest-package 1366×768 top-level visual inspection only. Lower Finder content, other graph/dialog states, all manual workflows, screen-reader acceptance, and the 960×600/125%/150% current-package matrix remain open. ACE DAO 16.0 and mapped SMB/UNC remain waived; PR #2 stays open and unmerged.
+
+## 2026-10-28 — W327 rebuilt-package tests and integrations
+
+- Windows build passed 545 tests in 38.21 s; staged package verification passed (118 files / 76,333,090 bytes). GUI/CLI hashes: `8B2AFE0456D4662D4D17DA77138FD33EC4300AFDE33684DF36FA4E4199EB0206` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`. Packaged CLI help, GUI import/history/parameter/no-op smokes, and both Excel CLI refresh modes passed with disposable workbooks and verified read-only integrity/backups/clean shutdown.
+- Disposable DAO 12 scanner matrix passed (10 fixtures, Quick/Deep, filters, graph, exports, progress/cancel, immutable fixtures and cleanup); see W327 report. A graph arrowhead occlusion regression was fixed with a test that failed before and passed after. Full visual confirmation of the rebuilt graph is pending.
+- Full app source commit to be recorded after this QA entry is committed. ACE DAO 16.0 and mapped SMB/UNC are **WAIVED / NOT VERIFIED**. Remaining visual/workflow/accessibility/integration gates are open; PR #2 remains open and unmerged.

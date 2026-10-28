@@ -774,6 +774,10 @@ def main() -> int:
                 final_status = window.child_window(control_type='StatusBar').window_text()
                 children = [child.window_text() for child in window.descendants(control_type='Window')]
                 if expected_dialog in children:
+                    # Read the terminal status after the completion dialog is
+                    # visible. A sample taken just before the worker's
+                    # completion signal can still contain the startup status.
+                    final_status = window.child_window(control_type='StatusBar').window_text()
                     completed_dialog = True
                     window.child_window(title=expected_dialog, control_type='Window').child_window(
                         title='OK', control_type='Button').invoke()
