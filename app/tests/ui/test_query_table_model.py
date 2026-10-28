@@ -402,6 +402,36 @@ def test_vector_workspace_preserves_commands_and_live_query_metrics(tmp_path):
     window.close()
 
 
+def test_command_palette_applies_vector_caption_theme(monkeypatch):
+    from PySide6.QtCore import QTimer
+    from PySide6.QtWidgets import QApplication, QDialog
+    import pq_installer.ui.main_window as main_window
+
+    window = MainWindow()
+    calls = []
+    monkeypatch.setattr(
+        main_window, "apply_vector_theme",
+        lambda widget, dark=True: calls.append((widget, dark)),
+    )
+
+    def close_palette():
+        palettes = [
+            widget for widget in QApplication.topLevelWidgets()
+            if isinstance(widget, QDialog)
+            and widget.windowTitle() == "Vector · Command palette"
+        ]
+        assert len(palettes) == 1
+        palettes[0].reject()
+
+    QTimer.singleShot(0, close_palette)
+    window._open_vector_command_palette()
+
+    assert len(calls) == 1
+    assert calls[0][0].windowTitle() == "Vector · Command palette"
+    assert calls[0][1] is True
+    window.close()
+
+
 def test_enabled_source_header_has_room_for_label_and_sort_indicator():
     from PySide6.QtWidgets import QHeaderView
     window = MainWindow()

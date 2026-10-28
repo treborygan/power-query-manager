@@ -198,6 +198,7 @@ class MainWindow(QMainWindow):
             return
         palette = QDialog(self)
         palette.setWindowTitle("Vector · Command palette")
+        apply_vector_theme(palette, self.dark_theme_enabled)
         palette.setMinimumWidth(460)
         panel = QVBoxLayout(palette)
         panel.setContentsMargins(18, 17, 18, 17)
