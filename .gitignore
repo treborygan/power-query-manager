@@ -33,3 +33,5 @@ desktop.ini
 *.db
 user-data/
 
+# Temporary Windows release ZIP produced by GitHub Actions
+PowerQueryManager-Windows.zip
