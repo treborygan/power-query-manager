@@ -1,0 +1,149 @@
+name: Build and publish current Windows ZIP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/windows-package.yml"
+      - "app/src/**"
+      - "app/tests/**"
+      - "app/build.ps1"
+      - "app/PowerQueryInstaller.spec"
+      - "app/requirements-win.txt"
+      - "tools/package_release.py"
+      - "tools/verify_release_package.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows-package-main
+  cancel-in-progress: false
+
+jobs:
+  build-windows-package:
+    if: github.ref == 'refs/heads/main'
+    runs-on: windows-2022
+    timeout-minutes: 55
+    steps:
+      - name: Check out exact main source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Install Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Full Windows tests and frozen GUI/CLI build
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & .\app\build.ps1
+          if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
+            throw "Windows build/test failed ($LASTEXITCODE)."
+          }
+
+      - name: Stage current-source package with build provenance
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $env:PQM_BUILD_SOURCE_SHA = $env:GITHUB_SHA
+          & .\app\.venv\Scripts\python.exe .\tools\package_release.py
+          if ($LASTEXITCODE -ne 0) { throw "Release staging failed ($LASTEXITCODE)." }
+          & .\app\.venv\Scripts\python.exe .\tools\verify_release_package.py .\dist
+          if ($LASTEXITCODE -ne 0) { throw "Package manifest verification failed ($LASTEXITCODE)." }
+
+      - name: Reject stale GUI and check executable hashes and CLI
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $folder = Join-Path $env:GITHUB_WORKSPACE 'dist\PowerQueryManager'
+          $marker = Join-Path $folder 'BUILD_PROVENANCE.json'
+          if (-not (Test-Path -LiteralPath $marker)) { throw 'Build provenance is missing.' }
+          $provenance = Get-Content -LiteralPath $marker -Raw | ConvertFrom-Json
+          if ($provenance.source_commit -ne $env:GITHUB_SHA) {
+            throw "Packaged source SHA does not match this workflow run."
+          }
+          if ($provenance.ui_design -ne 'Vector Concept 03') {
+            throw 'Incorrect packaged UI design.'
+          }
+          $gui = Join-Path $folder 'PowerQueryManager.exe'
+          $cli = Join-Path $folder 'PowerQueryManagerCLI.exe'
+          $guiHash = (Get-FileHash -LiteralPath $gui -Algorithm SHA256).Hash.ToLowerInvariant()
+          $cliHash = (Get-FileHash -LiteralPath $cli -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($guiHash -ne $provenance.gui_sha256 -or $cliHash -ne $provenance.cli_sha256) {
+            throw 'Packaged binary hash differs from build provenance.'
+          }
+          # This exact GUI hash is the stale, pre-Vector executable checked into main.
+          if ($guiHash -eq 'f4d44b1f8182e4beacc64886f606cf4b56038d4ee9535eb11b931cd1db89816d') {
+            throw 'Refusing to republish the known pre-Vector GUI executable.'
+          }
+          & $cli --help
+          if ($LASTEXITCODE -ne 0) { throw "Packaged CLI startup failed ($LASTEXITCODE)." }
+          Write-Host "Verified Vector GUI SHA-256: $guiHash"
+          Write-Host "Verified CLI SHA-256: $cliHash"
+
+      - name: Create portable ZIP with full runtime and SHA256SUMS
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $archive = Join-Path $env:GITHUB_WORKSPACE 'PowerQueryManager-Windows.zip'
+          Compress-Archive -Path (Join-Path $env:GITHUB_WORKSPACE 'dist\*') -DestinationPath $archive -CompressionLevel Optimal -Force
+          if (-not (Test-Path -LiteralPath $archive)) { throw 'Release ZIP was not created.' }
+          Write-Host "Windows ZIP SHA-256: $((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash)"
+
+      - name: Preserve verified artifact even if publishing is blocked
+        uses: actions/upload-artifact@v4
+        with:
+          name: PowerQueryManager-Windows-${{ github.sha }}
+          path: PowerQueryManager-Windows.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Synchronize built dist binaries into repository main ZIP
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add --all -- dist
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "build: sync verified Vector Windows package [skip ci]"
+            if ($LASTEXITCODE -ne 0) { throw 'Failed to commit rebuilt dist.' }
+            # Fail on a concurrent main update instead of overwriting newer source.
+            git push origin HEAD:main
+            if ($LASTEXITCODE -ne 0) { throw 'Cannot publish dist: main changed or push was denied.' }
+          } else {
+            Write-Host 'Tracked dist is already identical to this verified build.'
+          }
+
+      - name: Publish new versioned GitHub Release ZIP
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $short = $env:GITHUB_SHA.Substring(0, 12)
+          $tag = "vector-$short"
+          $publishedCommit = (git rev-parse HEAD).Trim()
+          $notes = @"
+          Vector Concept 03 portable Windows development preview.
+          Built and tested from source commit $env:GITHUB_SHA.
+          GitHub source archive for this release includes the synchronized runtime at $publishedCommit.
+          The ZIP contains BUILD_PROVENANCE.json and SHA256SUMS for independent verification.
+          ACE DAO 16.0, mapped SMB/UNC, broader display/DPI/screen-reader and history comparison remain unverified or explicitly waived; this is not a production certification.
+          "@
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag .\PowerQueryManager-Windows.zip --clobber
+            if ($LASTEXITCODE -ne 0) { throw 'Release asset replacement failed.' }
+            gh release edit $tag --latest --notes $notes
+          } else {
+            gh release create $tag .\PowerQueryManager-Windows.zip --target $publishedCommit --title "Vector Windows development preview ($short)" --notes $notes --latest
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'GitHub Release publication failed.' }
