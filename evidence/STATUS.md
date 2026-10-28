@@ -1292,3 +1292,8 @@
 
 - On feature head `36238ce97adf03dbf348ebdedd0b83200c0426d5`, `app/build.ps1` passed all 543 tests in 48.97 seconds and rebuilt GUI/CLI. `tools/package_release.py` staged the build; `tools/verify_release_package.py` passed with 116 files / 76,330,151 bytes. Packaged CLI `--help` exited 0. GUI/CLI SHA-256 remained `1BBB016C3C1FAD2062A23370BFC99397CB8D395A14BACE5C634D7D3E66A4B804` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
 - Physical 960×600 and 150% DPI and broader remaining acceptance are still open. ACE DAO 16.0 and mapped SMB/UNC remain waived; PR #2 remains unmerged.
+
+## 2026-10-28 09:57 UTC — live window resize retry
+
+- On the freshly rebuilt GUI (hash unchanged), the live main workspace remained 1182×732 after border-drag attempts toward 1000×650 and 960×600. The window closed and no manager process remained. Qt resize assertions in the passing full suite still cover 960×600, but physical layout at either target is **NOT VERIFIED**. See W315.
+- No fixed-size or maximized startup call was found; source declares a 960×600 minimum. Physical 150% DPI and remaining acceptance remain open; waivers and PR status are unchanged.
