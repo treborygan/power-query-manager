@@ -1,5 +1,13 @@
 # Windows Excel acceptance: manual + script-assisted test matrix
 
+## W337 — compact Vector workspace toolbar and packaged visual check, 2026-10-28
+
+- Exact tested application source commit: `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`. The compact command palette control is capped at 220 px; source and bulk action buttons use reduced padding/height, retaining their accessible names, callbacks and keyboard shortcut. UI regression covers 960×600, 1180×700, 1366×768 and 1600×900 layouts.
+- Full `app/build.ps1` run: **546 passed in 36.21 s**, and PyInstaller GUI/CLI build succeeded. An earlier full-suite invocation had an intermittent Python access violation (`-1073741819`) at `test_history_comparison_event.py`; the isolated test passed (1 passed in 5.45 s), followed by the clean full-suite pass above. Assertions were not weakened.
+- Packaged GUI launched from `app/vector-release/PowerQueryManager/PowerQueryManager.exe` and was visually checked in dark Vector theme at the available 1182×732 window. Command palette control was compact and theme/inspector toggles aligned right; workspace top section had no visible clipping. This check did not exercise the action controls or dialogs. Packaged CLI `--help` exited 0. `tools/verify_release_package.py app/vector-release`: **PASS, 118 files / 76,334,647 payload bytes**. GUI SHA-256 `E8E9725BD54B05B67EF5C039FC1EAA144A9E157A4061669125AA3ABD37384318`; CLI SHA-256 `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- The application was launched without selecting a workbook. GUI was closed after visual review; no workbook, Excel or Access process remained. No Excel/Access integration was run in this pass.
+- **Still open:** physical 960×600 and 1366×768 layouts, physical 125%/150% DPI, complete keyboard navigation, Dependency Finder scans and both populated graphs, inspector/dialogs, and the remaining workflows in the acceptance task were not verified by this pass. Reuse earlier evidence only within its documented scope. ACE DAO 16.0 and mapped SMB/UNC remain explicitly **WAIVED / NOT VERIFIED**, never PASS. Keep PR #2 open and unmerged until all non-waived acceptance checks and review are complete.
+
 ## W300 — final packaged header fix and end-to-end Windows checks, 2026-10-28
 
 - Exact tested application commit: `3e45bc450482b5311a6a30938c27ea19fca50a45`. Windows 10 build 26300, Python 3.11.9 x64, PySide6 6.8.3, pywin32 310, PyInstaller 6.13.0, Excel 16.0 build 20430.0; acceptance harness confirmed non-elevated launch.
