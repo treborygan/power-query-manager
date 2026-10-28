@@ -1303,3 +1303,8 @@
 - Committed responsive dialog sizing as `ecfa2b9b35ff79ff33e01e2d16db742ef267f01a`; it applies parent-bounded initial sizing to Finder, both dependency graphs and query inspector while preserving declared minimum sizes. The new 960×600 Qt regression test is included in the full **544-pass** Windows `app/build.ps1` run (41.80 s).
 - The rebuilt GUI was live-tested at a 960×600 client area: the main workspace, Dependency Finder and file dependency graph fit the workspace; a disposable Deep/general-map scan showed the expected exact Dashboard-to-Inventory edge, with matching visible and accessible graph descriptions. Package verification passed at 116 files / 76,331,125 bytes; GUI/CLI SHA-256 values are recorded in W316 of `docs/QA_WINDOWS_MATRIX.md`.
 - This does not close 1366×768, physical 125%/150% DPI, query graph/inspector live views, broad workflows, Excel/Access integration or screen-reader acceptance. ACE DAO 16.0 and mapped SMB/UNC remain waived. PR #2 stays open and unmerged.
+
+## 2026-10-28 — latest-package keyboard and modal replay
+
+- Replayed packaged keyboard traversal on the build from source commit `ecfa2b9b35ff79ff33e01e2d16db742ef267f01a`: 43 controls and the main Tab loop passed; history, inspector, query graph and source-mapping modal cycles passed. No workbook or Excel instance opened; process check after exit was clean. See W317 in `docs/QA_WINDOWS_MATRIX.md`.
+- This replay adds latest-package keyboard evidence only. Physical DPI, broad button/workflow coverage and integration acceptance still have open gates; ACE DAO 16.0 and mapped SMB/UNC remain waived. PR #2 remains open and unmerged.
