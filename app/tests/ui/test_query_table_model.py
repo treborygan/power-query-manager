@@ -330,9 +330,9 @@ def test_manager_initial_size_and_accessible_names_fit_laptop_layout(tmp_path):
     assert window.workbook_edit.accessibleName()=='Target workbook path'
     assert window.table.accessibleName()=='Query source settings table'
     assert window.search_edit.accessibleName()=='Filter query source rows'
-    for size in ((960,600),(1180,700),(1366,768)):
+    for size in ((960,600),(1180,700),(1366,768),(1600,900)):
         window.resize(*size);window.show();app.processEvents()
-        assert window.width()<=1366 and window.height()<=768
+        assert window.width()<=1600 and window.height()<=900
         assert window.minimumWidth()<=window.width() and window.minimumHeight()<=window.height()
         assert window.table.height()>=140
         assert window.workspace_scroll.horizontalScrollBar().maximum()==0
@@ -347,6 +347,11 @@ def test_manager_initial_size_and_accessible_names_fit_laptop_layout(tmp_path):
         assert window._vector_metric_columns == expected_metric_columns
         assert window._vector_workbook_action_columns == (4 if content_width >= 1080 else 2)
         assert window._vector_source_action_columns == (3 if content_width >= 1080 else 2)
+        expected_bulk_columns = 3 if content_width >= 1360 else 2
+        expected_bulk_rows = (len(window.vector_bulk_actions) + 2 + expected_bulk_columns - 1) // expected_bulk_columns
+        bulk_rows = {button.y() for button in window.vector_bulk_actions.values()}
+        bulk_rows.update((window.undo_button.y(), window.redo_button.y()))
+        assert len(bulk_rows) == expected_bulk_rows
     assert window.workspace_scroll.verticalScrollBar().maximum()>0
     window.workbook_edit.setFocus();QTest.keyClick(window.workbook_edit,Qt.Key_Tab);app.processEvents()
     assert window.focusWidget().text()=='Browse…'

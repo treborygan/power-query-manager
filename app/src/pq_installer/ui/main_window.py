@@ -461,28 +461,33 @@ class MainWindow(QMainWindow):
         for column in range(2): controls.setColumnStretch(column,1)
         q_layout.addLayout(controls)
         bulk=QGridLayout()
-        bulk_actions=[('Enable selected',lambda:self._set_selected_enabled(True)),
-            ('Disable selected',lambda:self._set_selected_enabled(False)),
-            ('Set selected order…',self._set_selected_order),
-            ('Configure selected destinations…',self._configure_destinations),
-            ('Compare package versions…',self._preview_query_package_update)]
+        self._vector_bulk_action_layout = bulk
+        self._vector_bulk_action_buttons = []
+        bulk_actions=[('Enable selected','Enable selected',lambda:self._set_selected_enabled(True)),
+            ('Disable selected','Disable selected',lambda:self._set_selected_enabled(False)),
+            ('Set selected order…','Set order…',self._set_selected_order),
+            ('Configure selected destinations…','Destinations…',self._configure_destinations),
+            ('Compare package versions…','Compare package versions…',self._preview_query_package_update)]
         self.vector_bulk_actions = {}
-        for index,(label,callback) in enumerate(bulk_actions):
-            button=QPushButton(label);button.setAccessibleName(label.rstrip('…'));button.clicked.connect(callback)
+        for index,(label,display_label,callback) in enumerate(bulk_actions):
+            button=QPushButton(display_label);button.setAccessibleName(label.rstrip('…'));button.setToolTip(label);button.clicked.connect(callback)
             self.vector_bulk_actions[label] = button
-            bulk.addWidget(button,index,0)
+            self._vector_bulk_action_buttons.append(button)
+            bulk.addWidget(button,index//2,index%2)
         self.undo_action=self.query_model.undo_stack.createUndoAction(self,'Undo table edit')
         self.undo_action.setShortcut(QKeySequence.StandardKey.Undo);self.addAction(self.undo_action)
         self.redo_action=self.query_model.undo_stack.createRedoAction(self,'Redo table edit')
         self.redo_action.setShortcut(QKeySequence.StandardKey.Redo);self.addAction(self.redo_action)
         self.undo_button=QPushButton('Undo');self.undo_button.setAccessibleName('Undo last table edit');self.undo_button.setToolTip('Undo the last table edit (Ctrl+Z)')
-        self.undo_button.clicked.connect(self.undo_action.trigger);bulk.addWidget(self.undo_button,len(bulk_actions),0)
+        self.undo_button.clicked.connect(self.undo_action.trigger);self._vector_bulk_action_buttons.append(self.undo_button)
+        bulk.addWidget(self.undo_button,(len(self._vector_bulk_action_buttons)-1)//2,(len(self._vector_bulk_action_buttons)-1)%2)
         self.redo_button=QPushButton('Redo');self.redo_button.setAccessibleName('Redo last table edit');self.redo_button.setToolTip('Redo the last table edit (Ctrl+Y)')
-        self.redo_button.clicked.connect(self.redo_action.trigger);bulk.addWidget(self.redo_button,len(bulk_actions)+1,0)
+        self.redo_button.clicked.connect(self.redo_action.trigger);self._vector_bulk_action_buttons.append(self.redo_button)
+        bulk.addWidget(self.redo_button,(len(self._vector_bulk_action_buttons)-1)//2,(len(self._vector_bulk_action_buttons)-1)%2)
         self.query_model.undo_stack.canUndoChanged.connect(self._update_undo_actions)
         self.query_model.undo_stack.canRedoChanged.connect(self._update_undo_actions)
         self._update_undo_actions()
-        bulk.setColumnStretch(0,1)
+        bulk.setColumnStretch(0,1);bulk.setColumnStretch(1,1)
         q_layout.addLayout(bulk)
         self.search_edit=QLineEdit(); self.search_edit.setPlaceholderText('Filter queries by name, path, mode, or status…')
         self.search_edit.setAccessibleName('Filter query source rows')
@@ -672,6 +677,19 @@ class MainWindow(QMainWindow):
                 for index, button in enumerate(source_buttons):
                     source_layout.addWidget(button, index // columns, index % columns)
                 self._vector_source_action_columns = columns
+        bulk_layout = getattr(self, "_vector_bulk_action_layout", None)
+        bulk_buttons = getattr(self, "_vector_bulk_action_buttons", ())
+        if bulk_layout is not None and bulk_buttons:
+            columns = 3 if content_width >= 1360 else 2
+            if columns != getattr(self, "_vector_bulk_action_columns", None):
+                while bulk_layout.count():
+                    bulk_layout.takeAt(0)
+                for column in range(3):
+                    bulk_layout.setColumnStretch(column, 1 if column < columns else 0)
+                    bulk_layout.setColumnMinimumWidth(column, 0)
+                for index, button in enumerate(bulk_buttons):
+                    bulk_layout.addWidget(button, index // columns, index % columns)
+                self._vector_bulk_action_columns = columns
         if hasattr(self, 'inspector_dock') and self.inspector_dock.isVisible():
             self._fit_inspector_dock()
 
