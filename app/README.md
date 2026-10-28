@@ -8,9 +8,11 @@ Windows desktop utility for adding and updating Power Query M query definitions 
 
 ## Portable Windows download
 
-Download the [latest repository ZIP](https://github.com/treborygan/power-query-manager/archive/refs/heads/main.zip), extract it with File Explorer, then open `power-query-manager-main\dist\PowerQueryManager\` and run `PowerQueryManager.exe`. Keep the entire `PowerQueryManager` folder together so its `_internal` runtime files remain beside the application. This is a portable folder, not an MSI or setup wizard; administrator installation is not required. Desktop Microsoft Excel is required for workbook operations. The package manual is at `dist/README.txt`.
+Download the [latest verified Windows package ZIP](https://github.com/treborygan/power-query-manager/releases/latest/download/PowerQueryManager-Windows.zip), extract it to a fresh directory, then open `PowerQueryManager\PowerQueryManager.exe`. The ZIP contains the complete `_internal` runtime and the CLI. This is a portable folder, not an installer; administrator privileges are not required. Excel desktop is needed for workbook operations.
 
-If startup reports `No module named 'shiboken6.Shiboken'`, confirm that `dist\PowerQueryManager\_internal\shiboken6\Shiboken.pyd` exists. Re-extract the complete ZIP if it is missing; the executable cannot run by itself.
+The build's `PowerQueryManager\BUILD_PROVENANCE.json` identifies the **Vector Concept 03** design, the source commit and SHA-256 of both executables. If that file is absent, the package was built before this update. **Do not reuse an older extracted folder** or copy only the EXE. The [Windows package workflow](../.github/workflows/windows-package.yml) builds from current main, runs the project tests, verifies the staged release, synchronizes `dist/` in GitHub source ZIPs and publishes a ZIP in Releases. The release download is preferable to GitHub Code → Download ZIP while a rebuild is running.
+
+For incomplete packages reporting `No module named 'shiboken6.Shiboken'`, re-extract the entire ZIP and confirm `PowerQueryManager\_internal\shiboken6\Shiboken.pyd` exists. This is a development preview with documented acceptance waivers, not universal Office/Windows certification.
 
 ## Current release status
 
@@ -32,7 +34,7 @@ The workspace arranges its action controls and status cards in narrower rows so 
 When the right-hand query inspector would squeeze the workspace beyond its minimum width, it moves below the workspace; it remains a movable dock.
 Unchecked checkbox outlines use the theme's contrasting muted color, including in light mode.
 
-**Status:** feature candidate with Windows tests and a locally rebuilt package; full visual and workflow acceptance remains open. See the Vector entry in [Windows QA](../docs/QA_WINDOWS_MATRIX.md) for the exact tested commit, package hashes, results and limitations. Existing ACE DAO 16.0 and mapped SMB/UNC waivers are unchanged and are not PASS evidence. The repository's existing `dist` package has not been replaced by this candidate.
+**Status:** feature candidate with Windows tests and a locally rebuilt package; full visual and workflow acceptance remains open. See the Vector entry in [Windows QA](../docs/QA_WINDOWS_MATRIX.md) for the exact tested commit, package hashes, results and limitations. Existing ACE DAO 16.0 and mapped SMB/UNC waivers are unchanged and are not PASS evidence. The source and a locally rebuilt candidate were validated. GitHub's verified Windows packaging workflow now manages replacement of the tracked `dist` folder and the downloadable release ZIP; consult the workflow status and package provenance before claiming the release asset is current.
 
 ## Functions
 
