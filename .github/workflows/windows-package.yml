@@ -18,7 +18,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: windows-package-diagnostic
+  group: windows-package-diagnostic-v2
   cancel-in-progress: true
 
 jobs:
