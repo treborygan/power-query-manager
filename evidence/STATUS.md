@@ -1282,3 +1282,8 @@
 - Harness fix `319c1d5dbc05d4eb2492df3cb77380fdb8aa5f19` replaces raw Win32 message clicks with UI Automation Invoke for opening the source inspector in the parameter-edit smoke; no assertions were weakened. The first run timed out at that click; the corrected run passed.
 - On package app-code revision `a6b32e733fff3f48daf42cf1f90e1a93d840a5bf`, packaged parameter edit saved an exact new source copy and left original source bytes unchanged; definition-only import formula and backup verified, read-only reopen passed, manager/Excel exited cleanly. See W312 in `docs/QA_WINDOWS_MATRIX.md`.
 - Remaining physical 960×600 / 150% DPI and broader manual gates remain open; ACE DAO 16.0 and mapped SMB/UNC remain waived. PR #2 remains open and unmerged.
+
+## 2026-10-28 09:47 UTC — packaged Finder Deep GUI scan
+
+- Launched the refreshed packaged GUI, opened Dependency Finder with Ctrl+K, selected general map + Deep, and scanned disposable `Dashboard.xlsx` / `Inventory.xlsx`. **PASS for this scoped GUI check:** one exact-path `Dashboard.xlsx → Inventory.xlsx` Excel-connection edge, zero unresolved/out-of-scope references; graph accessibility summary and visible lime arrow agreed. No Excel process was started and the scan was read-only. See W313 in `docs/QA_WINDOWS_MATRIX.md`.
+- Tested package is built from app-code revision `a6b32e733fff3f48daf42cf1f90e1a93d840a5bf`. Physical 960×600 and 150% DPI, remaining non-waived acceptance and review remain open. ACE DAO 16.0 and mapped SMB/UNC remain waived; PR #2 remains open and unmerged.
