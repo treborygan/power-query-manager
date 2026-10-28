@@ -8,18 +8,22 @@ Power Query Manager combines a PySide6 interface with desktop Excel automation. 
 
 ## Download and run on Windows
 
-1. [Download the latest repository ZIP](https://github.com/treborygan/power-query-manager/archive/refs/heads/main.zip).
-2. In File Explorer, right-click the downloaded ZIP and choose **Extract All…**.
-3. Open the extracted `power-query-manager-main\dist\PowerQueryManager\` folder.
-4. Double-click `PowerQueryManager.exe`.
+**Use the rebuilt Windows package, not an older extracted folder or EXE.**
 
-This is a portable one-folder package, not an MSI or setup wizard. Keep the whole `PowerQueryManager` folder together, including `_internal`; do not move the EXE on its own. No administrator installation is required. Desktop Microsoft Excel is needed for workbook features.
+1. [Download the latest Windows package ZIP](https://github.com/treborygan/power-query-manager/releases/latest/download/PowerQueryManager-Windows.zip).
+2. Right-click the ZIP in File Explorer and choose **Extract All…**, preferably to a new folder so Windows cannot silently retain files from an older design.
+3. Open `PowerQueryManager\` inside the extracted ZIP and run `PowerQueryManager.exe`.
+4. Keep `_internal` beside the EXE; `PowerQueryManagerCLI.exe` is in the same folder.
 
-**If startup reports `No module named 'shiboken6.Shiboken'`:** the runtime file `dist\PowerQueryManager\_internal\shiboken6\Shiboken.pyd` is missing from the extracted application. Re-extract the complete ZIP and launch the EXE from that folder; do not download or copy the EXE by itself.
+The current UI is **Vector Concept 03** (graphite/lime/teal, navigation rail, Ctrl+K palette). Look for `PowerQueryManager\BUILD_PROVENANCE.json`, which records the exact source commit and GUI/CLI SHA-256 values for each automatically built ZIP. If that file is missing or does not say `Vector Concept 03`, you have an older package.
 
-The same folder contains `PowerQueryManagerCLI.exe` for offline profile checks and explicitly staged command-line operations. See the [packaged user manual](dist/README.txt) for usage details.
+The repository's **Code → Download ZIP** is primarily a source snapshot. Its tracked `dist/` folder is refreshed by the [Windows packaging workflow](.github/workflows/windows-package.yml) after successful Windows tests and build; it can lag briefly while a new build is running. The **Releases ZIP** above is the authoritative ready-to-extract distribution. Builds and hashes are published only after verification; a failed workflow does not replace a previously verified package.
 
-Refresh is an explicit action because workbook queries may contact their configured data sources.
+This is a portable one-folder development preview, not an MSI or a production-certified release. No administrator installation is required; desktop Microsoft Excel is needed for workbook operations. Read [the packaged manual](dist/README.txt) and [Windows QA evidence](docs/QA_WINDOWS_MATRIX.md) for limitations. ACE DAO 16.0, mapped SMB/UNC and the additional waived display/accessibility checks remain unverified.
+
+If startup reports `No module named 'shiboken6.Shiboken'`, re-extract the **complete ZIP** and confirm `PowerQueryManager\_internal\shiboken6\Shiboken.pyd` exists. Never copy just the EXE.
+
+Refresh is an explicit operation: workbook queries may contact their data sources.
 
 ## What it can do
 
