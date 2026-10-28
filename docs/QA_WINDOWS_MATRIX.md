@@ -1,5 +1,11 @@
 # Windows Excel acceptance: manual + script-assisted test matrix
 
+## W343 — current-package all-skip no-op integrity, 2026-10-28
+
+- Ran `python tools/run_packaged_gui_import_smoke.py --exe app/vector-release/PowerQueryManager/PowerQueryManager.exe --skip-existing` against app source `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`, on Windows build 26300 / Excel 16.0 build 20430.0, non-elevated. **PASS:** existing query was skipped; UI reported that no workbook changes were committed.
+- Disposable `.xlsx` hash and timestamp and its existing formula remained unchanged; no backup or staging file was created. Packaged manager exited 0; read-only verification Excel exited without forced termination; process set returned empty.
+- This verifies the all-skip no-op path for the generated workbook only. It does not qualify other workbook types or refresh/load workflows. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**.
+
 ## W342 — current-source Qt UI scale-factor regression, 2026-10-28
 
 - Ran the complete `tests/ui` suite from `app/` against current source commit `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb` with `PYTHONPATH=src`: `QT_SCALE_FACTOR=1.25` **96 passed in 4.49 s**; `QT_SCALE_FACTOR=1.5` **96 passed in 4.63 s**.

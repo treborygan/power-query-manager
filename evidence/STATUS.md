@@ -1454,3 +1454,8 @@
 
 - Current-source `tests/ui` passed with `PYTHONPATH=src`: **96 passed in 4.49 s at QT_SCALE_FACTOR=1.25** and **96 passed in 4.63 s at 1.5**. The first attempt omitted the source path and failed collection (`ModuleNotFoundError: pq_installer`); corrected invocations both passed.
 - These are Qt scale-factor checks only. Windows Settings AX could not be acquired/raised through current CUA session; physical DPI/resolution remained unchanged and unverified. Still required: physical 960×600 / 1366×768 and actual 125%/150% OS display checks.
+
+## 2026-10-28 — W343 current-package all-skip integrity
+
+- Packaged GUI `--skip-existing` passed on Excel 16.0 build 20430.0 using a generated disposable `.xlsx`. Existing query was skipped; UI reported no commit. Workbook SHA-256, timestamp and existing formula stayed unchanged; no backup/stage file was created.
+- Manager exited 0; read-only verification Excel exited naturally with no forced termination; process inventory clean. Tested application source `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`. This no-op check does not qualify other workbook types or refresh/load workflows. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**.
