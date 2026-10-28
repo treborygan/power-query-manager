@@ -1437,3 +1437,9 @@
 - Packaged GUI smoke `--replace-existing` passed on Excel 16.0 build 20430.0 / Windows build 26300, using a generated disposable workbook and non-elevated token. UIA found the workbook, query grid, filter, replace policy, backup, import and operation log controls. Existing query definition replacement read back the exact new formula; pre-import backup and unrelated worksheet marker verified intact.
 - Manager exited 0. Owned Excel and read-only verification Excel both exited naturally; no forced termination and no residual PowerQueryManager/Excel/Access process. Test files stayed within the temporary harness directory.
 - Current app source under test: `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`. This does not qualify refresh or worksheet/Data Model load options, arbitrary production workbooks, ACE DAO 16.0 or mapped SMB/UNC; ACE DAO16 and SMB/UNC remain explicitly **WAIVED / NOT VERIFIED**. Other acceptance gates remain open and PR #2 stays open/unmerged.
+
+## 2026-10-28 — W340 current-package mixed-source profile import
+
+- Packaged GUI mixed-import smoke passed on Windows build 26300 / Excel 16.0 build 20430.0, non-elevated, using three generated `.m`/`.pq` source files and a versioned profile. Numbered review order matched Excel query order; exact formulas read back; pre-import backup and read-only reopen verified.
+- Manager and both owned/verification Excel processes exited naturally; no forced termination and no residual manager/Excel/Access process. All synthetic files stayed under the harness temporary directory. Exact app source tested: `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`.
+- Evidence is definition-only. Refresh and worksheet/Data Model loads, remaining display/workflow/accessibility acceptance, ACE DAO 16.0 and mapped SMB/UNC are still open or explicitly waived. PR #2 remains open/unmerged.

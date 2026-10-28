@@ -1,5 +1,12 @@
 # Windows Excel acceptance: manual + script-assisted test matrix
 
+## W340 — current-package profile-driven mixed source import, 2026-10-28
+
+- Exact tested application source: `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`; package details in W337.
+- Ran `python tools/run_packaged_gui_import_smoke.py --exe app/vector-release/PowerQueryManager/PowerQueryManager.exe --mixed-import` on Windows build 26300 / Excel 16.0 build 20430.0, non-elevated. **PASS:** three generated `.m`/`.pq` source definitions imported through a versioned profile; numbered review order matched Excel query order, and each exact source formula was read back. Pre-import workbook backup was verified and read-only reopen passed.
+- Packaged manager exited 0. Manager-owned and verification Excel processes exited naturally with forced termination false; process set returned empty. Generated workbook and profile remained in the harness temporary directory.
+- This is synthetic definition-only import evidence; it does not test refresh or worksheet/Data Model load behavior. ACE DAO 16.0 and mapped SMB/UNC remain explicitly **WAIVED / NOT VERIFIED**.
+
 ## W339 — current-package disposable Excel replacement and backup check, 2026-10-28
 
 - Exact tested application source: `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`; GUI package and hashes are listed in W337.
