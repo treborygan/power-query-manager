@@ -23,6 +23,9 @@ PARSER.add_argument("--destination", type=Path, default=ROOT / "dist",
 PARSER.add_argument("--docs-only", action="store_true",
                     help="refresh the manual, summary, and SHA256SUMS without touching the packaged executables")
 ARGS = PARSER.parse_args()
+build_source_sha = os.environ.get("PQM_BUILD_SOURCE_SHA", "").strip().lower()
+if build_source_sha and not re.fullmatch(r"[0-9a-f]{40}", build_source_sha):
+    PARSER.error("PQM_BUILD_SOURCE_SHA must be a full 40-digit commit SHA.")
 FINAL_DIST = ARGS.destination.resolve()
 DIST = FINAL_DIST
 TARGET = (DIST / "PowerQueryManager").resolve()
@@ -786,10 +789,7 @@ with (DIST / "RELEASE_SUMMARY.txt").open("a", encoding="utf-8") as summary:
 # The GitHub Windows package workflow supplies the exact source SHA before
 # building. Put a verifiable provenance record INSIDE the package, rather than
 # shipping an unstamped binary that might be mistaken for current source.
-build_source_sha = os.environ.get("PQM_BUILD_SOURCE_SHA", "").strip().lower()
 if build_source_sha:
-    if not re.fullmatch(r"[0-9a-f]{40}", build_source_sha):
-        raise SystemExit("PQM_BUILD_SOURCE_SHA must be a full 40-digit commit SHA.")
     gui_binary = TARGET / "PowerQueryManager.exe"
     cli_binary = TARGET / "PowerQueryManagerCLI.exe"
     provenance = {
