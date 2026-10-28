@@ -28,7 +28,13 @@ if ($Version -notmatch 'Python 3\.(11|12|13)\.') { throw "Unsupported Python ver
 
 Invoke-Checked $Python @('-m', 'pip', 'install', '--disable-pip-version-check', '-r', 'requirements-win.txt')
 Invoke-Checked $Python @('-m', 'pip', 'install', '--no-deps', '-e', '.')
-Invoke-Checked $Python @('-m', 'pytest', '-q')
+# CI diagnostic mode provides a named, short first failure instead of hanging
+# for the entire job. Normal/release runs must execute the complete suite.
+if ($env:PQM_CI_DIAGNOSTICS -eq '1') {
+    Invoke-Checked $Python @('-m', 'pytest', '-vv', '-x', '--tb=short')
+} else {
+    Invoke-Checked $Python @('-m', 'pytest', '-q')
+}
 $PreviousPythonHashSeed = $env:PYTHONHASHSEED
 $PreviousSourceDateEpoch = $env:SOURCE_DATE_EPOCH
 try {
