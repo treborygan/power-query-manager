@@ -1297,3 +1297,9 @@
 
 - On the freshly rebuilt GUI (hash unchanged), the live main workspace remained 1182×732 after border-drag attempts toward 1000×650 and 960×600. The window closed and no manager process remained. Qt resize assertions in the passing full suite still cover 960×600, but physical layout at either target is **NOT VERIFIED**. See W315.
 - No fixed-size or maximized startup call was found; source declares a 960×600 minimum. Physical 150% DPI and remaining acceptance remain open; waivers and PR status are unchanged.
+
+## 2026-10-28 — compact Vector dialogs and live file graph
+
+- Committed responsive dialog sizing as `ecfa2b9b35ff79ff33e01e2d16db742ef267f01a`; it applies parent-bounded initial sizing to Finder, both dependency graphs and query inspector while preserving declared minimum sizes. The new 960×600 Qt regression test is included in the full **544-pass** Windows `app/build.ps1` run (41.80 s).
+- The rebuilt GUI was live-tested at a 960×600 client area: the main workspace, Dependency Finder and file dependency graph fit the workspace; a disposable Deep/general-map scan showed the expected exact Dashboard-to-Inventory edge, with matching visible and accessible graph descriptions. Package verification passed at 116 files / 76,331,125 bytes; GUI/CLI SHA-256 values are recorded in W316 of `docs/QA_WINDOWS_MATRIX.md`.
+- This does not close 1366×768, physical 125%/150% DPI, query graph/inspector live views, broad workflows, Excel/Access integration or screen-reader acceptance. ACE DAO 16.0 and mapped SMB/UNC remain waived. PR #2 stays open and unmerged.
