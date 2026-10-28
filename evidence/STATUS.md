@@ -1363,3 +1363,9 @@
 - Disposable DAO 12 scanner matrix passed (10 fixtures, Quick/Deep, filters, graph, exports, progress/cancel, immutable fixtures and cleanup); see W327 report. A graph arrowhead occlusion regression was fixed with a test that failed before and passed after. Full visual confirmation of the rebuilt graph is pending.
 - Exact app source commit used for this build: `5f118615f405a3e2ffcf46d70c1b8eee30d35db9`. ACE DAO 16.0 and mapped SMB/UNC are **WAIVED / NOT VERIFIED**. Remaining visual/workflow/accessibility/integration gates are open; PR #2 remains open and unmerged.
 
+
+## 2026-10-28 — W328 rebuilt query graph visual and keyboard replay
+
+- Rebuilt package from app source `5f118615f405a3e2ffcf46d70c1b8eee30d35db9` was visually inspected at a 960×600 client area using two synthetic M files. The query table, graph text summary, and rendered direction agreed (`Final` depends on `Source`); the lime arrowhead was visible at the Source card edge pointing to Final. Dialog close remained reachable within the app bounds.
+- Latest packaged keyboard smoke passed: 43 focusable main-window controls and history, inspector, query-graph, and source-mapping dialog cycles. No workbook/Excel opened during the replay; app/Excel/Access process inventory was empty after shutdown.
+- W321 contains earlier direct visual evidence of the file relationship graph; W327 scanner GUI matrix also verified its 12-edge graph, filters and JSON/CSV exports. Remaining display/DPI, broad manual workflow/accessibility and integration gates stay open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 remains open and unmerged.
