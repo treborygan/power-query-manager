@@ -52,6 +52,45 @@ def test_map_mode_discovers_all_edges_and_filters_without_rescan(tmp_path):
     dialog.close()
 
 
+def test_map_results_keep_long_paths_without_horizontal_table_overflow(tmp_path):
+    app = QApplication.instance() or QApplication([])
+    root = tmp_path
+    for index in range(4):
+        root = root / f"source-root-{index}-with-a-long-disambiguating-name"
+        root.mkdir()
+    target = root / "Inventory.xlsx"
+    consumer = root / "Dashboard.xlsx"
+    target.write_bytes(b"fixture")
+    consumer.write_bytes(b"fixture")
+    report = DependencyMapReport((str(target), str(consumer)), (str(target), str(consumer)), (
+        DependencyHit(str(target), str(consumer), "Excel connection", "Inventory", "exact_path", target.name),
+    ), (), (), "quick")
+
+    dialog = DependencyFinderDialog(map_runner=lambda *args, **kwargs: report)
+    dialog.add_scan_paths((target, consumer))
+    dialog.mode_combo.setCurrentIndex(dialog.mode_combo.findData("map"))
+    dialog.resize(960, 600)
+    dialog.show()
+    app.processEvents()
+    dialog.run_button.click()
+    deadline = time.monotonic() + 3
+    while dialog.latest_report is None and time.monotonic() < deadline:
+        app.processEvents()
+        time.sleep(.01)
+    app.processEvents()
+
+    target_item = dialog.results_table.item(0, 0)
+    consumer_item = dialog.results_table.item(0, 1)
+    assert target_item.text() == str(target)
+    assert consumer_item.text() == str(consumer)
+    assert target_item.toolTip() == str(target)
+    assert consumer_item.toolTip() == str(consumer)
+    assert dialog.results_table.horizontalScrollBar().maximum() == 0
+    assert dialog.minimumSizeHint().width() <= 960
+    assert dialog.minimumSizeHint().height() <= 600
+    dialog.close()
+
+
 def test_general_map_graph_has_accessible_visual_and_summary(tmp_path):
     app = QApplication.instance() or QApplication([])
     a = tmp_path / "Warehouse.accdb"
@@ -62,11 +101,59 @@ def test_general_map_graph_has_accessible_visual_and_summary(tmp_path):
 
     dialog = FileDependencyGraphDialog(report)
 
+    dialog.resize(960, 600)
+    dialog.show()
+    app.processEvents()
+    app.processEvents()
+    assert dialog.minimumSizeHint().width() <= 960
+    assert dialog.minimumSizeHint().height() <= 600
+    assert dialog.graph_view.width() > 0 and dialog.graph_view.height() > 0
+    mapped_scene = dialog.graph_view.mapFromScene(dialog.graph_view.scene().sceneRect()).boundingRect()
+    assert dialog.graph_view.viewport().rect().contains(mapped_scene)
+
     assert dialog.graph_view.scene().items()
     assert "Dashboard.xlsx" in dialog.summary.toPlainText()
     assert "Warehouse.accdb" in dialog.summary.toPlainText()
     assert "filename_only" in dialog.summary.toPlainText()
     assert any(isinstance(item, QGraphicsPolygonItem) for item in dialog.graph_view.scene().items())
+    dialog.close()
+
+
+def test_vector_graph_node_selection_and_zoom_keep_accessible_edge_index(tmp_path):
+    from PySide6.QtCore import Qt
+    from PySide6.QtTest import QTest
+    from PySide6.QtWidgets import QGraphicsItem
+    app = QApplication.instance() or QApplication([])
+    consumer = tmp_path / "Report.xlsx"
+    target = tmp_path / "Warehouse.accdb"
+    report = DependencyMapReport((str(consumer), str(target)),
+        (str(consumer), str(target)), (
+            DependencyHit(str(target), str(consumer), "Power Query", "Source",
+                          "exact_path", target.name),
+        ), (), (), "quick")
+    dialog = FileDependencyGraphDialog(report)
+    dialog.show()
+    app.processEvents()
+    dialog.graph_view.setFocus()
+    QTest.keyClick(dialog.graph_view, Qt.Key_Home)
+    assert len(dialog.graph_view.scene().selectedItems()) == 1
+    first = dialog.graph_view.scene().selectedItems()[0]
+    QTest.keyClick(dialog.graph_view, Qt.Key_Right)
+    assert len(dialog.graph_view.scene().selectedItems()) == 1
+    assert dialog.graph_view.scene().selectedItems()[0] is not first
+    nodes = [item for item in dialog.graph_view.scene().items()
+             if item.data(0) == str(consumer)]
+    assert len(nodes) == 1
+    assert nodes[0].flags() & QGraphicsItem.ItemIsSelectable
+    dialog.graph_view.scene().clearSelection()
+    nodes[0].setSelected(True)
+    app.processEvents()
+    assert "Report.xlsx" in dialog.selection_status.text()
+    assert "depends on" in dialog.summary.toPlainText()
+    dialog.graph_view.scale(1.2, 1.2)
+    assert dialog.graph_view.transform().m11() > 1
+    dialog._reset_zoom()
+    assert abs(dialog.graph_view.transform().m11() - 1) < 0.01
     dialog.close()
 
 

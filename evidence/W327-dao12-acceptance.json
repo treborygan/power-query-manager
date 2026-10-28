@@ -1,0 +1,362 @@
+{
+  "schema_version": 1,
+  "status": "PASS",
+  "source_commit": "5f118615f405a3e2ffcf46d70c1b8eee30d35db9",
+  "host": {
+    "platform": "win32",
+    "python": "3.11.9"
+  },
+  "fixture_counts": {
+    "files": 10,
+    "access": 4,
+    "excel": 4
+  },
+  "locations": [
+    {
+      "status": "PASS",
+      "root_type": "local",
+      "file_count": 10,
+      "source_snapshot_unchanged": true,
+      "lock_files_before": [],
+      "lock_files_after": [],
+      "excel_pids_unchanged": true,
+      "access_temp_directories_cleaned": true,
+      "source_snapshot_before": {
+        "Archive.mdb": {
+          "sha256": "ce810fd95946fd8e005826196051b7b78001e88152f49f519d2431551873e8c8",
+          "size": 94208,
+          "mtime_ns": 1793191145453157700
+        },
+        "Broker.accdb": {
+          "sha256": "9899b2fd914a10e212fdb8cbf7ff7360669b9ebd88be10261ad03a6e6958c453",
+          "size": 192512,
+          "mtime_ns": 1793191145559816200
+        },
+        "Ambiguous.accdb": {
+          "sha256": "016a7544044fd5f1d499b8c6c7afc592fcf32f57c19f2f67fb16b85dda637f02",
+          "size": 188416,
+          "mtime_ns": 1793191145490282100
+        },
+        "ExternalTarget.xlsx": {
+          "sha256": "08ac63130bb35001deaef71def5b8e7b6ba8f93b17827a6d7979a61eaa9cb44b",
+          "size": 8509,
+          "mtime_ns": 1793191147726512200
+        },
+        "LargeExternalFormulas.xlsx": {
+          "sha256": "bb4868ce07d5483c57660dcd1fc43191d0816f2861e7b8830974e220f37aa827",
+          "size": 169267,
+          "mtime_ns": 1793191151778351600
+        },
+        "Queries.xlsm": {
+          "sha256": "0022f7519cb9e27ffa72b8ec881d81c03864bc0d1f2871e7194fb4f7e6406aab",
+          "size": 13714,
+          "mtime_ns": 1793191151271352400
+        },
+        "Report.xlsx": {
+          "sha256": "a830c903990713f75e5bee0d364c28f966954983003d410f0fa636ae440a6133",
+          "size": 9820,
+          "mtime_ns": 1793191147950470100
+        },
+        "Stock.mdb": {
+          "sha256": "633fe38951171c3877d810e722f7db7701a705159c76478f0759da921cd5cb84",
+          "size": 98304,
+          "mtime_ns": 1793191145525118900
+        },
+        "Warehouse.accdb": {
+          "sha256": "dd57977be5c6d756aeaedffe0bef09262aefdbb39029b54cb9eba4b185175378",
+          "size": 192512,
+          "mtime_ns": 1793191145513530900
+        }
+      },
+      "source_snapshot_after": {
+        "Archive.mdb": {
+          "sha256": "ce810fd95946fd8e005826196051b7b78001e88152f49f519d2431551873e8c8",
+          "size": 94208,
+          "mtime_ns": 1793191145453157700
+        },
+        "Broker.accdb": {
+          "sha256": "9899b2fd914a10e212fdb8cbf7ff7360669b9ebd88be10261ad03a6e6958c453",
+          "size": 192512,
+          "mtime_ns": 1793191145559816200
+        },
+        "Ambiguous.accdb": {
+          "sha256": "016a7544044fd5f1d499b8c6c7afc592fcf32f57c19f2f67fb16b85dda637f02",
+          "size": 188416,
+          "mtime_ns": 1793191145490282100
+        },
+        "ExternalTarget.xlsx": {
+          "sha256": "08ac63130bb35001deaef71def5b8e7b6ba8f93b17827a6d7979a61eaa9cb44b",
+          "size": 8509,
+          "mtime_ns": 1793191147726512200
+        },
+        "LargeExternalFormulas.xlsx": {
+          "sha256": "bb4868ce07d5483c57660dcd1fc43191d0816f2861e7b8830974e220f37aa827",
+          "size": 169267,
+          "mtime_ns": 1793191151778351600
+        },
+        "Queries.xlsm": {
+          "sha256": "0022f7519cb9e27ffa72b8ec881d81c03864bc0d1f2871e7194fb4f7e6406aab",
+          "size": 13714,
+          "mtime_ns": 1793191151271352400
+        },
+        "Report.xlsx": {
+          "sha256": "a830c903990713f75e5bee0d364c28f966954983003d410f0fa636ae440a6133",
+          "size": 9820,
+          "mtime_ns": 1793191147950470100
+        },
+        "Stock.mdb": {
+          "sha256": "633fe38951171c3877d810e722f7db7701a705159c76478f0759da921cd5cb84",
+          "size": 98304,
+          "mtime_ns": 1793191145525118900
+        },
+        "Warehouse.accdb": {
+          "sha256": "dd57977be5c6d756aeaedffe0bef09262aefdbb39029b54cb9eba4b185175378",
+          "size": 192512,
+          "mtime_ns": 1793191145513530900
+        }
+      },
+      "modes": {
+        "quick": {
+          "expected_edges": [
+            [
+              "Broker.accdb",
+              "Stock.mdb"
+            ],
+            [
+              "Broker.accdb",
+              "Warehouse.accdb"
+            ],
+            [
+              "LargeExternalFormulas.xlsx",
+              "ExternalTarget.xlsx"
+            ],
+            [
+              "Queries.xlsm",
+              "Stock.mdb"
+            ],
+            [
+              "Queries.xlsm",
+              "Warehouse.accdb"
+            ],
+            [
+              "Report.xlsx",
+              "ExternalTarget.xlsx"
+            ],
+            [
+              "Stock.mdb",
+              "Archive.mdb"
+            ],
+            [
+              "Warehouse.accdb",
+              "Stock.mdb"
+            ]
+          ],
+          "actual_edges": [
+            [
+              "Broker.accdb",
+              "Stock.mdb"
+            ],
+            [
+              "Broker.accdb",
+              "Warehouse.accdb"
+            ],
+            [
+              "LargeExternalFormulas.xlsx",
+              "ExternalTarget.xlsx"
+            ],
+            [
+              "Queries.xlsm",
+              "Stock.mdb"
+            ],
+            [
+              "Queries.xlsm",
+              "Warehouse.accdb"
+            ],
+            [
+              "Report.xlsx",
+              "ExternalTarget.xlsx"
+            ],
+            [
+              "Stock.mdb",
+              "Archive.mdb"
+            ],
+            [
+              "Warehouse.accdb",
+              "Stock.mdb"
+            ]
+          ],
+          "dependency_edge_count": 12,
+          "elapsed_seconds": 6.777756199997384,
+          "peak_working_set_bytes": 119009280,
+          "issue_count": 1,
+          "unresolved_count": 2,
+          "performance_runs": [
+            {
+              "elapsed_seconds": 6.777756199997384,
+              "peak_working_set_bytes": 119009280
+            }
+          ],
+          "performance_summary": {
+            "repetitions": 1,
+            "median_elapsed_seconds": 6.777756199997384,
+            "min_elapsed_seconds": 6.777756199997384,
+            "max_elapsed_seconds": 6.777756199997384,
+            "max_peak_working_set_bytes": 119009280
+          }
+        },
+        "deep": {
+          "expected_edges": [
+            [
+              "Broker.accdb",
+              "Stock.mdb"
+            ],
+            [
+              "Broker.accdb",
+              "Warehouse.accdb"
+            ],
+            [
+              "LargeExternalFormulas.xlsx",
+              "ExternalTarget.xlsx"
+            ],
+            [
+              "Queries.xlsm",
+              "Stock.mdb"
+            ],
+            [
+              "Queries.xlsm",
+              "Warehouse.accdb"
+            ],
+            [
+              "Report.xlsx",
+              "ExternalTarget.xlsx"
+            ],
+            [
+              "Stock.mdb",
+              "Archive.mdb"
+            ],
+            [
+              "Warehouse.accdb",
+              "Stock.mdb"
+            ]
+          ],
+          "actual_edges": [
+            [
+              "Broker.accdb",
+              "Stock.mdb"
+            ],
+            [
+              "Broker.accdb",
+              "Warehouse.accdb"
+            ],
+            [
+              "LargeExternalFormulas.xlsx",
+              "ExternalTarget.xlsx"
+            ],
+            [
+              "Queries.xlsm",
+              "Stock.mdb"
+            ],
+            [
+              "Queries.xlsm",
+              "Warehouse.accdb"
+            ],
+            [
+              "Report.xlsx",
+              "ExternalTarget.xlsx"
+            ],
+            [
+              "Stock.mdb",
+              "Archive.mdb"
+            ],
+            [
+              "Warehouse.accdb",
+              "Stock.mdb"
+            ]
+          ],
+          "dependency_edge_count": 12,
+          "elapsed_seconds": 3.2837046000058763,
+          "peak_working_set_bytes": 118046720,
+          "issue_count": 1,
+          "unresolved_count": 2,
+          "performance_runs": [
+            {
+              "elapsed_seconds": 3.2837046000058763,
+              "peak_working_set_bytes": 118046720
+            }
+          ],
+          "performance_summary": {
+            "repetitions": 1,
+            "median_elapsed_seconds": 3.2837046000058763,
+            "min_elapsed_seconds": 3.2837046000058763,
+            "max_elapsed_seconds": 3.2837046000058763,
+            "max_peak_working_set_bytes": 118046720
+          }
+        }
+      },
+      "multi_target_reverse_scan": {
+        "status": "PASS",
+        "target_count": 2,
+        "matched_relationships": 6
+      },
+      "cli_api_parity": true,
+      "gui": {
+        "filter_row_counts": {
+          "Warehouse.accdb:incoming": 3,
+          "Warehouse.accdb:outgoing": 2,
+          "Warehouse.accdb:both": 5,
+          "Stock.mdb:incoming": 5,
+          "Stock.mdb:outgoing": 2,
+          "Stock.mdb:both": 7,
+          "Queries.xlsm:incoming": 0,
+          "Queries.xlsm:outgoing": 2,
+          "Queries.xlsm:both": 2,
+          "ExternalTarget.xlsx:incoming": 2,
+          "ExternalTarget.xlsx:outgoing": 0,
+          "ExternalTarget.xlsx:both": 2
+        },
+        "graph_edges": 12,
+        "exports": {
+          "json": {
+            "verified": true,
+            "edge_count": 12
+          },
+          "csv": {
+            "verified": true,
+            "edge_count": 12
+          }
+        }
+      },
+      "quick_deep_formula_coverage": {
+        "quick_excel_formula_edges": 0,
+        "deep_excel_formula_edges": 0,
+        "quick_dependency_edge_count": 12,
+        "deep_dependency_edge_count": 12,
+        "deep_only_edges": 0,
+        "quick_only_edges": 0,
+        "large_formula_cells": 31200
+      },
+      "gui_cancel_progress": {
+        "progress_observed": true,
+        "cancelled_result": true,
+        "inspected_before_cancel": 1
+      },
+      "fixture_cleanup": true
+    }
+  ],
+  "baseline_excel_pids": [],
+  "fixture_creation": {
+    "excel_version": "16.0",
+    "excel_build": "20430.0",
+    "seed_excel_pid": 4820,
+    "large_formula_cells": 31200,
+    "excel_cleanup_errors": [],
+    "excel_forced_termination": false,
+    "excel_quit_timeout_seconds": 60,
+    "excel_quit_to_process_exit_seconds": 3.9070000000065193
+  },
+  "dao_provider_requested": "DAO.DBEngine.120",
+  "packaged_cli_exposes_features": true,
+  "final_excel_pids": [],
+  "excel_process_set_restored": true,
+  "fixture_cleanup": true
+}

@@ -1,3 +1,19 @@
+## 2026-10-27 — Vector Windows validation in progress
+
+## 2026-10-28 — Vector responsive layout and graph label repair
+
+- Rebuilt the packaged GUI/CLI after responsive metric/action layout changes and query graph label z-order repair. Windows build 26300; `app/build.ps1`: **541 passed**. Release verification passed (116 payload files / 76,330,010 bytes); CLI `--help` exited 0. GUI SHA-256: `145F60264FD182B96787ED42F405C513FD3A7274155FF7A1C9FA336756D0F2B5`; CLI SHA-256: `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- Exact tested application commit: `e934432e2f8f86b421bf51d2b7869fad5326318c`.
+- The packaged app launched and was visually compared with the supplied Vector Concept 03 board. Main workspace, synthetic query table, five-node query graph and Finder empty state were observed; graph labels/status now render above the node cards. Finder accessibility tree exposes scan depth, file/target pickers, run/cancel, results, coverage and exports. This pass did not execute a packaged Finder scan or physically test the 125%/150% DPI and requested display resolutions.
+- See `docs/QA_WINDOWS_MATRIX.md` for exact limitations and remaining gates. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**. Merge gate remains open pending non-waived manual checks and review.
+
+- 2026-10-28: exact tested source tree `50f567d4e190aa24f479574810cfd580c1178b1a` passed `app/build.ps1` with 541 tests; its app source/tests are unchanged from `3c7e4173e7515007db49510a2cb1aafe4fbb1c72`. The package verifier passed for 116 files / 76,328,840 bytes; GUI and CLI hashes are recorded in the QA matrix. Packaged CLI `--help` exited 0. The GUI was launched and its main workspace, command palette and Dependency Finder were visually inspected; no workbook was selected or modified. Previously recorded disposable Excel/DAO and packaged import/history checks still apply. The keyboard traversal passed once after two unexplained focus-escape failures. Populated graph/dialog interactions and actual OS DPI/resolution checks remain open; ACE DAO 16.0 and mapped SMB/UNC remain explicitly waived.
+
+- A live light-theme inspection found low-contrast unchecked checkbox outlines. The Vector unchecked outline treatment was visually checked; the final package remains on the tested native checked-state rendering so its Windows check glyph stays visible.
+- Resolved in the 2026-10-28 candidate: the Finder reflow fits both modes at 760×560, 960×600 and 1366×768 without horizontal workspace scrolling; the file graph controls fit laptop widths and nodes support Arrow/Home/End selection; the inspector moves below the workspace at 960×600. Focused regressions and the full Windows build passed.
+- The initial Windows build stopped at 537 passed, 3 failed (inspector test expected the old default palette, Finder test used an invalid Qt method, and workspace horizontal overflow at laptop width). Tests and implementation were corrected without removing the overflow or theme assertions. Commit `d72c25440231def2c4bd91234523da72064d1456` passed 540 tests; current 541-test result and release verification are recorded above and in `docs/QA_WINDOWS_MATRIX.md`.
+- The 91 UI tests passed separately with `QT_SCALE_FACTOR=1.25` and `1.5` using the offscreen platform. This is simulated Qt scaling, not OS-level display scaling or physical-display acceptance.
+
 ## W292 — 2026-10-23 — current-package multi-workbook dry run
 
 - W282 packaged CLI `plan --dry-run` inspected two Excel-created disposable `.xlsx` targets with a static definition-only source. Both plans reported `create`; before/after workbook SHA-256 values matched. No backup or stage was created, and the Excel process set remained at baseline PID 36464 after the CLI run.
@@ -1180,3 +1196,277 @@
 - Evidence retained unchanged: clean tested source `a13ff507e76e4cca80fd204c69781a033ffbed39`; 537 Windows tests reported for the build; repeatable local and OneDrive DAO 12.0 integration passed; genuine Excel Mashup/external links, Quick/Deep, packaged CLI, GUI filters/graph/exports/cancellation and file-integrity checks passed; Excel exited naturally in 3.23 s with no residual process. Refer to W296 for precise benchmark values and fixtures.
 - **Feature PR disposition:** accepted **with the two named waivers** for integration; this documentation change does not rerun Windows tests or declare the full application's broader release gates complete. Supported tested paths: local and OneDrive-synchronized folders on the documented Windows host with DAO 12.0. ACE DAO 16.0 and mapped SMB/UNC remain unvalidated and must not be represented as verified.
 - Production scan behavior, fail-closed diagnostics, and test harness requirements are unchanged. This waiver does not authorize editing, refreshing or deleting source files.
+
+## 2026-10-27 — Vector UI implementation candidate (not release accepted)
+
+- Selected visual reference: Vector / Precision Engineering, using the three-concept design studio supplied in this conversation.
+- Working GitHub branch: `feature/vector-ui-redesign`, based on merged Dependency Finder main. The implementation preserves the existing query model, search/filter, undo/redo, import approvals, workbook security paths, worker wiring, DAO scanning, CSV/JSON exports and graph/index objects. No scanner or Excel/Access service source changed.
+- Replaced presentation with shared Vector Qt stylesheet supporting dark default and light alternative. Main window now has a navigational rail, compact cards, live file/source/enabled/plan dashboard metrics, prominent review/import, and Ctrl+K searchable commands dispatched through existing enabled buttons. Finder gets a scrollable structured layout, readable table, persistent coverage and scan controls. File graph adds zoom/pan/selection, visible legends, high contrast nodes and deduplicated visual arrows (full underlying edge records retained); query graph colors are aligned.
+- Regression changes cover KPI updates, original action presence, inspector and target behavior, scrollable finder, graph selection, zoom, summary and legacy accessibility/theme assertions. Existing checks for worker cancellation, source integrity, no-refresh scanning and query import remain unchanged.
+- **VALIDATION STATUS: NOT YET EXECUTED.** Neither PySide6 nor the Windows/Excel/DAO runtime is available in the current coding environment. No claim of successful pytest, screenshot verification, packaged EXE rebuild or Windows smoke testing. Before merging: run `python -m pytest -q app/tests/ui` and full Windows `app/build.ps1`; verify packaged Qt startup, dialog scanning, Ctrl+K, 960×600 / 1366×768 / 125% / 150% DPI, and that all original actions are reachable. Repeat disposable workbook import/readback and local/OneDrive Dependency Finder read-only checks on the compiled build.
+- ACE DAO 16.0 and mapped SMB/UNC remain explicitly WAIVED/NOT VERIFIED under W297 for the earlier feature; this redesign does not convert those waivers into passes.
+
+## 2026-10-28 — Vector graph viewport correction and Windows package
+
+- Fixed initial graph panning by fitting the dependency diagram after the first dialog layout; added a 960×600 scene-bounds regression assertion. App-source commit `536ee6ce5d901eabbe7345c8c2ffc287cc31d372`.
+- `app/build.ps1`: 541 tests passed (41.26 s); PyInstaller build succeeded. `tools/verify_release_package.py app/vector-release`: 116 files, 76,330,146 bytes, PASS. GUI and CLI EXE hashes are recorded in W298 of `docs/QA_WINDOWS_MATRIX.md`. CLI help passed; packaged GUI launched.
+- Disposable file-map scan detected the expected exact `Dashboard.xlsx` → `Inventory.xlsx` edge; pre/post SHA-256 hashes matched. The rebuilt package now passes a fresh first-show graph visual check with both nodes and edge visible; see the follow-up entry below.
+- PR #2 remains open pending broader interactive workflow and physical display/DPI checks. ACE DAO 16.0 and mapped SMB/UNC retain explicit WAIVED / NOT VERIFIED status.
+
+## 2026-10-28 — fresh packaged Vector graph check
+
+- On the freshly rebuilt package from app-code commit 536ee6ce5d901eabbe7345c8c2ffc287cc31d372, a Quick scan of synthetic Dashboard.xlsx and Inventory.xlsx returned one exact internal edge. The graph auto-fit on first show with both nodes and edge visible; accessible text confirmed Dashboard.xlsx depends on Inventory.xlsx [exact_path]. GUI process exited and was absent in the follow-up process check. See W298 for package hashes and test context.
+- The test was performed at the current 1180×730 app-window size. 960×600 and 1366×768 display layouts, 125%/150% DPI, and remaining manual workflows are still open. ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED, never PASS.
+- Further package interaction at 1180×730 confirmed Ctrl+K opens the command palette with its existing actions, the inspector checkbox exposes the Source M / Workbook M panel, and the light theme keeps workspace and Finder controls legible with a visible focus outline. Finder sections and Quick/Deep selectors were visible; no scan was run in this theme check. Full keyboard-only navigation and broader workflows remain unverified.
+
+## 2026-10-28 — packaged Vector source and profile round-trip
+
+- On package rebuilt from app-source commit `536ee6ce5d901eabbe7345c8c2ffc287cc31d372`, Windows GUI added synthetic `StaticTable.m`, showed its source row and metrics, and opened the read-only source inspector. The workbook comparison was correctly unavailable/unknown without an inspected workbook query.
+- The packaged UI saved and loaded a JSON profile and reported one source row loaded. Synthetic source and workbook hashes matched their pre-check hashes; the workbook was selected as a target path but was not opened or modified. App exited normally and the process was absent afterward.
+- Live window measured 1182×732. Attempts to set 960×600 did not resize it; physical 960×600 / 1366×768 and OS DPI verification remain open. The Enabled table heading looked clipped although the accessibility label was complete; investigate before release acceptance. History, full import, Finder scan/graphs, filters, exports, progress and cancellation remain open for live UI validation. Full test/build/package results and EXE hashes are recorded in W298. ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED. PR #2 stays open and unmerged.
+
+## 2026-10-28 — Vector table heading fix and packaged acceptance
+
+- App-source commit `3e45bc450482b5311a6a30938c27ea19fca50a45` fixes the clipped Enabled column heading with an initial 132 px resizable section and a UI regression assertion. `app/build.ps1` passed **542 tests in 44.40 s**; UI suite passed **92 tests** at both simulated 1.25 and 1.5 scale factors. Rebuilt package verification passed: **116 files / 76,330,196 bytes**. GUI SHA-256 `CFD598065D357484D3C79935E2465587858FBAD4D7930A051F706A48EDD646AB`; CLI SHA-256 `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- Fresh packaged UI screenshot at 1182×732 shows the complete Enabled heading and synthetic source row. Packaged Excel GUI create, skip, replace and mixed three-source import passed with exact readback and safety checks; snapshot compare/restore and package compare dialogs passed. See W300 for exact evidence.
+- Current packaged CLI/GUI DAO 12.0 acceptance passed on 10 local synthetic Excel/Access fixtures: unchanged file hashes/sizes/timestamps, no lock/temp artifacts, Quick/Deep 12-edge parity over 31,200 formula cells, verified JSON/CSV exports and filters, progress/cancel, natural Excel exit, no residual processes. This does not verify DAO 16.0.
+- Physical 960×600 / 1366×768 and OS-level 125%/150% DPI checks remain open; CUA resize did not change the window from 1182×732. Full keyboard-only coverage and remaining manual controls remain open. ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED. PR #2 remains open and unmerged.
+
+## 2026-10-28 — physical Vector display observation
+
+- On packaged app-code commit `3e45bc450482b5311a6a30938c27ea19fca50a45`, inspected the maximized app at physical 1366×768/100%; workspace fit without visible clipping. At 1366×768/125%, metric cards reflowed to two columns and the observed workspace remained scrollable without visible clipping.
+- Windows scale selector offered 100% and 125% only. Physical 150% is NOT VERIFIED; Qt scale-factor suites passed at 1.25 and 1.5 but are not physical DPI evidence. Physical 960×600 is NOT VERIFIED because it was not offered as a display mode; Qt layout checks cover it. Settings restored and confirmed at 1920×1080/100%.
+- ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED. PR #2 remains open and unmerged pending open acceptance gates.
+
+## 2026-10-28 — live package Finder and keyboard accessibility
+
+- Verified the staged release again: 116 files / 76,330,196 bytes; GUI SHA-256 `CFD598065D357484D3C79935E2465587858FBAD4D7930A051F706A48EDD646AB`; CLI SHA-256 `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- Packaged GUI Quick general map on disposable Dashboard.xlsx / Inventory.xlsx returned one exact edge; file graph showed both nodes and directed edge. Node selection and Fit graph worked. Incoming scan targeting Inventory.xlsx found Dashboard.xlsx as one dependent. Targeting both files intentionally produced the documented partial `no_consumers` result because no candidate files remained to inspect.
+- Keyboard smoke passed with 43 main controls and dialog cycles for history, inspector, query graph, and both mapping tabs. Smoke used temporary profile/source and no Excel instance. App and smoke processes exited cleanly.
+- Physical 960×600 and 150% DPI remain NOT VERIFIED; ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED. PR #2 remains open and unmerged.
+
+## 2026-10-28 — Finder long-path layout repair and refreshed package
+
+- Exact tested app-code commit: `a6b32e733fff3f48daf42cf1f90e1a93d840a5bf`; change keeps full path text and supplies full-path tooltips while eliding long table cells within fixed column widths. Automatic content sizing was removed because it caused horizontal overflow.
+- Regression: `test_map_results_keep_long_paths_without_horizontal_table_overflow` passed at 960×600, asserting full item text and tooltips, no table horizontal scroll, and column minimums within the window. Targeted UI tests: 2 passed. Full Windows build/test suite: 543 passed in 52.81 s; `app/build.ps1` completed.
+- Refreshed `app/vector-release` from that build; release verifier PASS, 116 files / 76,330,151 bytes. Packaged GUI launched successfully; packaged CLI `--help` listed all supported commands. GUI SHA-256: `1BBB016C3C1FAD2062A23370BFC99397CB8D395A14BACE5C634D7D3E66A4B804`; CLI SHA-256: `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- Existing physical layout notes are in W302; Finder and 43-control/dialog keyboard smoke in W303. The refreshed release has not yet had the prior disposable-data graph scenario replayed after rebuild. ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED. Physical 960×600 and 150% remain NOT VERIFIED. PR #2 stays open and unmerged.
+
+## 2026-10-28 — refreshed package live GUI map replay
+
+- Tested the untracked refreshed release package built from app-code commit `a6b32e733fff3f48daf42cf1f90e1a93d840a5bf` (current feature branch HEAD is documentation-only commit `97f6ebabc2291df12bc8c4f667fd218e127a3f8b`). Package verifier previously passed at 116 files / 76,330,151 bytes; GUI SHA-256 `1BBB016C3C1FAD2062A23370BFC99397CB8D395A14BACE5C634D7D3E66A4B804`; CLI SHA-256 `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- Live packaged Dependency Finder used only disposable `Dashboard.xlsx` and `Inventory.xlsx`. “Map all selected files and their dependencies” in Quick mode finished read-only with `Mapped 2 file(s); 1 internal dependency edge(s); 0 outside-scope or unresolvable file reference(s)`. Results table showed the Excel connection edge, source `SyntheticSource`, confidence `exact_path`.
+- Refreshed package graph screen showed both workbook nodes and the exact directed Dashboard.xlsx → Inventory.xlsx edge; accessible text repeated `Dashboard.xlsx depends on Inventory.xlsx [exact_path]`. Clicking both nodes updated the selected-file label; Fit Graph responded. Finder’s result cells elided the long visible paths on this run. Full-text and tooltip preservation is covered by the automated regression in the tested app-code commit; tooltip behavior was not separately rechecked during this interaction.
+- This was a live GUI read-only scan over the existing synthetic fixtures; it did not open Excel or change them. This observation does not establish the remaining workflows, Excel integration gates, physical resolution/DPI matrix, or clean shutdown. ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED; physical 960×600 and 150% DPI remain NOT VERIFIED. PR #2 remains open and unmerged.
+
+## 2026-10-28 — refreshed package query graph and inspector
+
+- On the refreshed packaged GUI built from app-code commit `a6b32e733fff3f48daf42cf1f90e1a93d840a5bf`, loaded only disposable `Base.pq` and `Final.pq` (`Final` references `Base`). Main query table showed both source rows and computed order `1. Base → 2. Final`.
+- Query dependency graph showed both nodes, the connecting edge, and accessible text `Final depends on Base`; graph opened at the current window size. Inspector opened for selected `Final`, displayed source expression `let X = Base in X`, and marked the workbook formula comparison unknown because no workbook was selected. Closed without saving. No workbook was opened or changed.
+- This confirms these two screens on the refreshed package only; it does not close remaining acceptance gates for physical DPI/resolution, broad workflow keyboard coverage, Excel/Access integration or clean shutdown. ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED; physical 960×600 and 150% DPI remain NOT VERIFIED. PR #2 remains open and unmerged.
+
+## 2026-10-28 — refreshed package Finder, profile, import and no-op acceptance
+
+- Current feature branch head `de619c62ad02cb4abae76855112168c94330ee25` is documentation-only after app-code commit `a6b32e733fff3f48daf42cf1f90e1a93d840a5bf`; QA harness revision was `de619c62ad02cb4abae76855112168c94330ee25`. `app/vector-release` verifier **PASS**: 116 files / 76,330,151 bytes. GUI SHA-256 `1BBB016C3C1FAD2062A23370BFC99397CB8D395A14BACE5C634D7D3E66A4B804`; CLI SHA-256 `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`. Packaged CLI `--help` succeeds. The full Windows build/test result for this app-code revision remains 543 passed in 52.81 s (recorded in the preceding 2026-10-28 Finder long-path repair entry).
+- W306 DAO 12.0 local disposable dependency diagnostic **PASS**: 10 fixtures; 12 expected edges in Quick and Deep; hashes/sizes/timestamps unchanged; no Access locks or DAO temp folders; Excel PID set restored. Packaged GUI exercised incoming/outgoing/both filters, graph, verified JSON/CSV exports, progress and cancellation after one inspected file; multi-target reverse scan matched six relationships. DAO 12.0 is diagnostic only; ACE DAO 16.0 remains explicitly WAIVED / NOT VERIFIED.
+- W307 packaged existing-query replacement **PASS** on Windows 10 build 26300 / Excel 16.0 build 20430.0: exact formula readback, verified pre-import backup, unrelated worksheet marker preserved, manager exit 0, Excel closed naturally. W308 profile-backed 3-source mixed `.m`/`.pq` import **PASS**: review order matched Excel order, formulas read back exactly, backup/read-only reopen verified, no forced Excel termination. W309 all-skip **PASS**: workbook hash/timestamp/formula unchanged, no backup/stage, no-change result; manager/Excel cleanup passed. W305 history dialog/recovery smoke **PASS** with isolated corrupt-history fixture and clean exit.
+- These are scoped Windows passes on synthetic data, not full product certification. Physical 960×600 and 150% DPI remain NOT VERIFIED; physical 1366×768 at 100% and 125% are recorded in W302 on the prior package revision. Broader workbook/load/security/accessibility matrix remains open. ACE DAO 16.0 and mapped SMB/UNC are waived. PR #2 is open/draft; it stays unmerged pending remaining non-waived acceptance and review.
+
+## 2026-10-28 — refreshed-package keyboard acceptance
+
+- On the GUI package built from app-code revision `a6b32e733fff3f48daf42cf1f90e1a93d840a5bf`, `tools/run_packaged_keyboard_smoke.py --dialogs` passed against feature harness revision `54b97d1a91ef8dfd230c768d3b078e7fe3686b28`: 43 controls traversed, main Tab cycle stayed in the manager, and history, inspector, query graph and both mapping-tab cycles reached expected controls. No workbook or Excel opened. See W310 in `docs/QA_WINDOWS_MATRIX.md`.
+- This closes the current-package keyboard traversal subset only. Screen-reader use, other modals, physical 960×600 and 150% DPI and broader manual gates remain open. ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED; PR #2 stays open and unmerged.
+
+## 2026-10-28 — refreshed-package parameter edit workflow
+
+- Harness fix `319c1d5dbc05d4eb2492df3cb77380fdb8aa5f19` replaces raw Win32 message clicks with UI Automation Invoke for opening the source inspector in the parameter-edit smoke; no assertions were weakened. The first run timed out at that click; the corrected run passed.
+- On package app-code revision `a6b32e733fff3f48daf42cf1f90e1a93d840a5bf`, packaged parameter edit saved an exact new source copy and left original source bytes unchanged; definition-only import formula and backup verified, read-only reopen passed, manager/Excel exited cleanly. See W312 in `docs/QA_WINDOWS_MATRIX.md`.
+- Remaining physical 960×600 / 150% DPI and broader manual gates remain open; ACE DAO 16.0 and mapped SMB/UNC remain waived. PR #2 remains open and unmerged.
+
+## 2026-10-28 09:47 UTC — packaged Finder Deep GUI scan
+
+- Launched the refreshed packaged GUI, opened Dependency Finder with Ctrl+K, selected general map + Deep, and scanned disposable `Dashboard.xlsx` / `Inventory.xlsx`. **PASS for this scoped GUI check:** one exact-path `Dashboard.xlsx → Inventory.xlsx` Excel-connection edge, zero unresolved/out-of-scope references; graph accessibility summary and visible lime arrow agreed. No Excel process was started and the scan was read-only. See W313 in `docs/QA_WINDOWS_MATRIX.md`.
+- Tested package is built from app-code revision `a6b32e733fff3f48daf42cf1f90e1a93d840a5bf`. Physical 960×600 and 150% DPI, remaining non-waived acceptance and review remain open. ACE DAO 16.0 and mapped SMB/UNC remain waived; PR #2 remains open and unmerged.
+
+## 2026-10-28 — exact-head rebuild and package verification
+
+- On feature head `36238ce97adf03dbf348ebdedd0b83200c0426d5`, `app/build.ps1` passed all 543 tests in 48.97 seconds and rebuilt GUI/CLI. `tools/package_release.py` staged the build; `tools/verify_release_package.py` passed with 116 files / 76,330,151 bytes. Packaged CLI `--help` exited 0. GUI/CLI SHA-256 remained `1BBB016C3C1FAD2062A23370BFC99397CB8D395A14BACE5C634D7D3E66A4B804` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- Physical 960×600 and 150% DPI and broader remaining acceptance are still open. ACE DAO 16.0 and mapped SMB/UNC remain waived; PR #2 remains unmerged.
+
+## 2026-10-28 09:57 UTC — live window resize retry
+
+- On the freshly rebuilt GUI (hash unchanged), the live main workspace remained 1182×732 after border-drag attempts toward 1000×650 and 960×600. The window closed and no manager process remained. Qt resize assertions in the passing full suite still cover 960×600, but physical layout at either target is **NOT VERIFIED**. See W315.
+- No fixed-size or maximized startup call was found; source declares a 960×600 minimum. Physical 150% DPI and remaining acceptance remain open; waivers and PR status are unchanged.
+
+## 2026-10-28 — compact Vector dialogs and live file graph
+
+- Committed responsive dialog sizing as `ecfa2b9b35ff79ff33e01e2d16db742ef267f01a`; it applies parent-bounded initial sizing to Finder, both dependency graphs and query inspector while preserving declared minimum sizes. The new 960×600 Qt regression test is included in the full **544-pass** Windows `app/build.ps1` run (41.80 s).
+- The rebuilt GUI was live-tested at a 960×600 client area: the main workspace, Dependency Finder and file dependency graph fit the workspace; a disposable Deep/general-map scan showed the expected exact Dashboard-to-Inventory edge, with matching visible and accessible graph descriptions. Package verification passed at 116 files / 76,331,125 bytes; GUI/CLI SHA-256 values are recorded in W316 of `docs/QA_WINDOWS_MATRIX.md`.
+- This does not close 1366×768, physical 125%/150% DPI, query graph/inspector live views, broad workflows, Excel/Access integration or screen-reader acceptance. ACE DAO 16.0 and mapped SMB/UNC remain waived. PR #2 stays open and unmerged.
+
+## 2026-10-28 — latest-package keyboard and modal replay
+
+- Replayed packaged keyboard traversal on the build from source commit `ecfa2b9b35ff79ff33e01e2d16db742ef267f01a`: 43 controls and the main Tab loop passed; history, inspector, query graph and source-mapping modal cycles passed. No workbook or Excel instance opened; process check after exit was clean. See W317 in `docs/QA_WINDOWS_MATRIX.md`.
+- This replay adds latest-package keyboard evidence only. Physical DPI, broad button/workflow coverage and integration acceptance still have open gates; ACE DAO 16.0 and mapped SMB/UNC remain waived. PR #2 remains open and unmerged.
+
+## 2026-10-28 — latest-package mixed profile import
+
+- Latest package passed a disposable profile-backed mixed `.m`/`.pq` import on Excel 16.0 build 20430.0: three formulas matched their sources, review/Excel order matched, backup and read-only reopen verified, and manager/owned Excel exited naturally. See W318 in `docs/QA_WINDOWS_MATRIX.md`.
+- This remains one Office build and one workflow. Other load modes, refresh, Access and 150% DPI remain open; DAO 16.0 and mapped SMB/UNC remain waived.
+
+## 2026-10-28 — latest-package all-skip import
+
+- Latest package passed the disposable Excel 16.0 all-skip scenario: exact workbook hash/timestamp and existing formula preserved, no backup or stage, explicit no-change UI result, and clean natural Excel/manager shutdown. See W319 in `docs/QA_WINDOWS_MATRIX.md`.
+- This closes only the tested no-op branch; Access, load/refresh variants, broad security matrix and 150% DPI remain open. DAO 16.0 and mapped SMB/UNC remain waived.
+
+## 2026-10-28 — latest-package DAO 12.0 scanner acceptance
+
+- Latest packaged CLI and UI scanner passed the disposable local DAO 12.0 matrix: Quick/Deep matched 12/12 edges, GUI filters and JSON/CSV exports matched, progress/cancellation passed, source hashes/sizes/timestamps stayed unchanged, and fixtures/Excel/Access processes cleaned up. Raw report: `evidence/W320-dao12-acceptance.json`.
+- DAO 16.0 and mapped SMB/UNC were not tested and remain waived. The release folder was reverified at 116 files after moving the report to evidence.
+
+## 2026-10-28 — latest-package query graph and inspector
+
+- Live packaged review at 1182×732 added only two synthetic temporary M sources; no workbook was selected. Query graph displayed `Final → Source` and matching text; inspector showed source, workbook, and line-diff panes with the unavailable-workbook state correctly marked unknown. App and Excel/Access process inventory were clean after closing. See W321 in `docs/QA_WINDOWS_MATRIX.md`.
+- This adds scoped current-package view evidence only. Physical display/DPI and broader workflows remain open; ACE DAO 16.0 and mapped SMB/UNC stay waived.
+
+## 2026-10-28 — Vector checked-control styling and rebuild
+
+- Exact tested code commit `8637477b5c7763b5b9a495d85ae0328aa0bf2571`: `app/build.ps1` passed 544 tests in 41.45 s; package verification passed at 118 files / 76,331,811 bytes; packaged CLI `--help` exited 0. GUI/CLI SHA-256: `9D149D28EA7A1DF7CE84E903A7C9FCC4377ECDFE1CA425BDD2513BB44C87E309` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- Fixed the Windows-blue checked checkbox against the supplied Vector board: the shared theme now loads a dark checkmark on lime in dark mode and a white checkmark on deep green in light mode. Theme regression failed first on the missing asset reference, then passed. The rebuilt packaged GUI was visually inspected at 1182×732 and displayed the checked lime toggle with visible dark tick; light theme was also opened.
+- No workbook was selected for this visual review. Physical target resolutions/DPI, broad manual workflows, screen-reader acceptance and remaining integrations stay open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 remains open and unmerged.
+
+## 2026-10-28 — native Windows caption follows Vector theme
+
+- Exact tested app commit `3edf19174edde17206349a07da8157251bd260fb`: Windows `app/build.ps1` passed **545 tests in 37.79 s**; package verification passed at **118 files / 76,333,067 bytes**; packaged CLI `--help` exited 0. GUI/CLI SHA-256: `16F472FCF317862EC5563A0BD3911F3CDE399C0ACAD1A3728B0C052A997A787E` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- Removed the native Windows blue caption from the dark Vector presentation. The native title bar, text and border now follow the selected Vector palette. Rebuilt package was visually inspected at 1182×732 in dark and light themes, including Dependency Finder; app shutdown left no manager, Excel or Access process.
+- Remaining physical display/DPI, workflow/accessibility and integration gates stay open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 is open and unmerged.
+
+## 2026-10-28 — latest-package keyboard and modal traversal
+
+- Replayed the packaged GUI from app commit `3edf19174edde17206349a07da8157251bd260fb`: 43 focusable controls and a complete in-window main Tab cycle passed, including workbook/source/query/import actions. History, inspector, query graph, and source-mapping dialog cycles passed. No workbook/Excel opened; no manager, Excel or Access process remained after the run.
+- Exact package verification passed at 118 files / 76,333,067 bytes. GUI/CLI SHA-256: `16F472FCF317862EC5563A0BD3911F3CDE399C0ACAD1A3728B0C052A997A787E` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`. See W324 in the Windows QA matrix.
+- This extends keyboard coverage on the newest package only. Screen-reader and other manual gates remain open; ACE DAO 16.0 and mapped SMB/UNC stay waived.
+
+## 2026-10-28 — latest-package physical DPI review
+
+- With Windows Settings showing 125%, inspected the latest packaged workspace and Dependency Finder at 1182×731. At 150%, inspected a fresh main workspace at 1183×663; major workspace controls were visible and lower content remained vertically scrollable. Package source is app commit `3edf19174edde17206349a07da8157251bd260fb`, GUI SHA-256 `16F472FCF317862EC5563A0BD3911F3CDE399C0ACAD1A3728B0C052A997A787E`, CLI SHA-256 `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- 1366×768 was offered but Windows reverted before the display change could be kept; this size remains **NOT VERIFIED** on the current package. Original desktop settings were restored to 100% / 1920×1080. Manager, Excel and Access process inventory was empty. Finder at 150%, screen-reader acceptance and remaining workflows are still open; ACE DAO 16.0 and mapped SMB/UNC remain waived.
+
+## 2026-10-28 — latest-package 1366×768 visual check
+
+- At retained Windows 100% / 1366×768, inspected the packaged workspace and opened Dependency Finder. The main workspace’s top-level controls and Finder’s header, scan settings, file controls and target section were visible; Finder’s longer form scrolls vertically. No scan/workbook interaction occurred. Closed the app and restored 100% / 1920×1080. Exact package/source hashes and scope are in W326 of `docs/QA_WINDOWS_MATRIX.md`.
+- This closes latest-package 1366×768 top-level visual inspection only. Lower Finder content, other graph/dialog states, all manual workflows, screen-reader acceptance, and the 960×600/125%/150% current-package matrix remain open. ACE DAO 16.0 and mapped SMB/UNC remain waived; PR #2 stays open and unmerged.
+
+## 2026-10-28 — W327 rebuilt-package tests and integrations
+
+- Windows build passed 545 tests in 38.21 s; staged package verification passed (118 files / 76,333,090 bytes). GUI/CLI hashes: `8B2AFE0456D4662D4D17DA77138FD33EC4300AFDE33684DF36FA4E4199EB0206` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`. Packaged CLI help, GUI import/history/parameter/no-op smokes, and both Excel CLI refresh modes passed with disposable workbooks and verified read-only integrity/backups/clean shutdown.
+- Disposable DAO 12 scanner matrix passed (10 fixtures, Quick/Deep, filters, graph, exports, progress/cancel, immutable fixtures and cleanup); see W327 report. A graph arrowhead occlusion regression was fixed with a test that failed before and passed after. Full visual confirmation of the rebuilt graph is pending.
+- Exact app source commit used for this build: `5f118615f405a3e2ffcf46d70c1b8eee30d35db9`. ACE DAO 16.0 and mapped SMB/UNC are **WAIVED / NOT VERIFIED**. Remaining visual/workflow/accessibility/integration gates are open; PR #2 remains open and unmerged.
+
+
+## 2026-10-28 — W328 rebuilt query graph visual and keyboard replay
+
+- Rebuilt package from app source `5f118615f405a3e2ffcf46d70c1b8eee30d35db9` was visually inspected at a 960×600 client area using two synthetic M files. The query table, graph text summary, and rendered direction agreed (`Final` depends on `Source`); the lime arrowhead was visible at the Source card edge pointing to Final. Dialog close remained reachable within the app bounds.
+- Latest packaged keyboard smoke passed: 43 focusable main-window controls and history, inspector, query-graph, and source-mapping dialog cycles. No workbook/Excel opened during the replay; app/Excel/Access process inventory was empty after shutdown.
+- W321 contains earlier direct visual evidence of the file relationship graph; W327 scanner GUI matrix also verified its 12-edge graph, filters and JSON/CSV exports. Remaining display/DPI, broad manual workflow/accessibility and integration gates stay open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 remains open and unmerged.
+
+
+## 2026-10-28 — W329 rebuilt-package Dependency Finder at 125%/150%
+
+- On the package built from exact app source `5f118615f405a3e2ffcf46d70c1b8eee30d35db9`, inspected Dependency Finder at Windows 125% and 150% (1920×1080). Setup and lower target/scan/results/coverage/export controls remained vertically reachable; no horizontal overflow or missing controls observed. No scan or workbook was used.
+- Restored 100% / 1920×1080. Closed app process; manager/Excel/Access inventory was empty. Evidence and limits are in W329 of `docs/QA_WINDOWS_MATRIX.md`.
+- Remaining workflow/accessibility gates stay open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 stays open and unmerged.
+
+## 2026-10-28 — W330 latest-package 1366×768 workspace and Finder
+
+- Latest package (app source `5f118615f405a3e2ffcf46d70c1b8eee30d35db9`) was inspected at 100% / 1366×768. Workspace controls and Finder setup were visible; vertical scrolling reached targets, scan/cancel, relationships table, coverage/warnings and exports. No scan/workbook was used.
+- Restored 100% / 1920×1080 and verified no manager/Excel/Access process remained. Exact hashes and scope are in W330 of `docs/QA_WINDOWS_MATRIX.md`.
+- Full workflow/accessibility matrix remains incomplete. ACE DAO 16.0 and mapped SMB/UNC are **WAIVED / NOT VERIFIED**; PR #2 remains draft/open/unmerged.
+
+## 2026-10-28 — W331 Vector command palette caption and package rebuild
+
+- Fixed the Ctrl+K palette's Windows title bar by applying the shared Vector caption/theme helper. Added a regression check for dark/light theme propagation. Actual rebuilt package showed matching Vector captions in both modes.
+- Exact tested source `79d6b1e73aa84712ae23eef5df3536be936a9370`; Windows suite **546 passed in 38.63 s**. Package verifier passed (118 files / 76,333,108 bytes); packaged CLI help exited 0. GUI/CLI SHA-256: `33DB186B1B6B6781BBC04C72BA070F9CE7C0AB46D72C9B514B97BF596A2624C6` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- No workbook or Office process was opened; app closed and process inventory was clean. Remaining broad workflow/accessibility gates stay open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 stays open and unmerged.
+
+## 2026-10-28 — W332 secondary dialog caption consistency
+
+- Wired the active Vector native caption/theme into history and version comparison, query inspector, profile mappings, package update preview, workbook inventory, refresh options and open dialogs on theme changes. Existing graph/Finder dialogs already use the shared helper. Actual rebuilt History dialog caption visually verified in dark mode; no history contents recorded.
+- Exact tested source `a2bc54593feda9824a4bb30fd1a98a50ab2c2856`; full Windows build **546 passed in 40.79 s**. Release package verified at 118 files / 76,333,760 bytes; CLI help exited 0. GUI/CLI hashes: `62842C1857B57ED73E29EFE9D7E7BB45B17812EA30DD410FADA45B11235AA49D` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- App closed with no manager/Excel/Access process. Full visual and interaction audit of every dialog/workflow remains incomplete. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 stays open/unmerged.
+
+## 2026-10-28 — W333 profile dialog and inspector audit attempt
+
+- Rechecked packaged profile mappings in dark and light themes; both tabs and native caption followed Vector palette. No settings saved.
+- Tried to inspect a synthetic M source in the package. The Windows file picker did not accept the fixture via accessible controls; inspector appearance remains **NOT VERIFIED**. No workbook selected; disposable fixture cleaned up. No new build/test claim.
+- Full UI interaction/accessibility matrix remains open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 stays open/unmerged.
+
+## 2026-10-28 — W334 packaged query inspector
+
+- Follow-up resolved W333's inspector attempt: the packaged GUI opened the synthetic query inspector successfully in dark and light Vector themes. At 1182×732, both source/workbook panes, exact diff, search, title bar and footer actions fit. Amber line highlighting remained legible. No workbook/Office process was opened; no source edit or save occurred.
+- Disposable fixture was verified and removed; application closed cleanly with no manager/Excel/Access process. This is visual-only evidence on the package from source `a2bc54593feda9824a4bb30fd1a98a50ab2c2856`; no new tests/build are claimed. Remaining comprehensive UI/workflow/accessibility and DPI gates stay open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 remains open/unmerged.
+
+## 2026-10-28 — W335 responsive Vector density
+
+- Responsive breakpoints now use available workspace width after sidebar and margins. UI layout regression passed at 960×600, 1180×700 and 1366×768; full Windows build/test passed **546 tests in 40.75 s** on app source `de745715a1ead868dc6dcd9228e4b6eaa3f7f2d1`.
+- Release verifier passed **118 files / 76,333,924 bytes**; CLI help exited 0. GUI/CLI SHA-256: `F048F523CAC817D2F83CAA8142526DFC1D4EACE988593324CBA04FB5E4C1F81A` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- Actual package showed the two-column workspace at its default 1182-pixel width and denser four-column metrics/three-column source actions maximized. App exited and no manager/Excel/Access process remained. Exact lower physical display sizes and remaining DPI/workflow/accessibility gates are still open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 remains open/unmerged.
+
+## 2026-10-28 — W336 compact source action groups
+
+- Seven source-management bulk actions now wrap into two columns at laptop widths and three columns when usable content width is at least 1360 px. The destination button has a compact visible label while preserving its full accessible name, tooltip and command-palette label. Automated regression passed at 960×600, 1180×700, 1366×768 and 1600×900; no horizontal overflow. Full Windows suite **546 passed in 36.81 s** on source commit `443a4eb737ead86718ec69be37c8947b0f2e1cd8`.
+- Rebuilt package verified: 118 files / 76,334,491 bytes; CLI help exited 0. GUI/CLI SHA-256: `B021F2D19F8548A6B5E8B606277989F4FB26C9CFA866A092E62EB2FA9444942A` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- Packaged GUI two-column source and bulk action groups visually checked at default 1182 width; clean exit and no Office processes. Three-column visual layout and broad workflows/accessibility remain unverified; ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**.
+
+## 2026-10-28 — W337 compact Vector toolbar and packaged visual check
+
+- Source commit `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb` caps the command palette control at 220 px and applies compact sizing to source/bulk action buttons while preserving accessible names, callbacks and Ctrl+K. UI regression covers 960×600, 1180×700, 1366×768 and 1600×900.
+- `app/build.ps1`: **546 passed in 36.21 s**, GUI and CLI build succeeded. One earlier full-suite attempt exited with access violation `-1073741819` at `test_history_comparison_event.py`; isolated test passed (1 passed in 5.45 s), then the full suite passed cleanly. No assertion changes to reduce coverage.
+- Rebuilt package verifier PASS: 118 files / 76,334,647 payload bytes. CLI `--help` exited 0. GUI/CLI SHA-256 `E8E9725BD54B05B67EF5C039FC1EAA144A9E157A4061669125AA3ABD37384318` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- Current packaged GUI was visually opened at 1182×732 in dark Vector theme. Compact command button and right-aligned toggles observed; inspected top portion showed no visible clipping. No workbook selected. GUI was closed; no PowerQueryManager, Excel or Access processes remained. No integration workflow run in this pass.
+- Physical 960×600 / 1366×768 and 125% / 150% DPI, complete controls/dialogs, both populated graphs, comprehensive workflows and keyboard navigation remain open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**. Keep PR #2 open/unmerged.
+
+## 2026-10-28 — W338 current-package keyboard and history accessibility
+
+- Current package from source `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`: packaged keyboard smoke passed full main Tab traversal (43 focusable controls) plus history, source inspector, query-dependency graph and source-mapping modal cycles. The workflow-control order included workbook path, Add files, query table, existing-query policy, backup and import action. No workbook/Excel was opened.
+- Packaged history UI Automation smoke passed: history table, retention spinner, snapshot checkbox and history actions were exposed; manager exited 0; history stayed under an isolated temporary user profile. Both checks exited with no PowerQueryManager, Excel or Access process remaining.
+- This verifies keyboard reachability and accessible control names/roles, not manual screen-reader behavior or every control's underlying workflow. Full manual screen-reader, physical layout/DPI, remaining workflow/graph and disposable integration acceptance remain open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**. PR #2 remains open/draft/unmerged.
+
+## 2026-10-28 — W339 current-package Excel replacement acceptance
+
+- Packaged GUI smoke `--replace-existing` passed on Excel 16.0 build 20430.0 / Windows build 26300, using a generated disposable workbook and non-elevated token. UIA found the workbook, query grid, filter, replace policy, backup, import and operation log controls. Existing query definition replacement read back the exact new formula; pre-import backup and unrelated worksheet marker verified intact.
+- Manager exited 0. Owned Excel and read-only verification Excel both exited naturally; no forced termination and no residual PowerQueryManager/Excel/Access process. Test files stayed within the temporary harness directory.
+- Current app source under test: `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`. This does not qualify refresh or worksheet/Data Model load options, arbitrary production workbooks, ACE DAO 16.0 or mapped SMB/UNC; ACE DAO16 and SMB/UNC remain explicitly **WAIVED / NOT VERIFIED**. Other acceptance gates remain open and PR #2 stays open/unmerged.
+
+## 2026-10-28 — W340 current-package mixed-source profile import
+
+- Packaged GUI mixed-import smoke passed on Windows build 26300 / Excel 16.0 build 20430.0, non-elevated, using three generated `.m`/`.pq` source files and a versioned profile. Numbered review order matched Excel query order; exact formulas read back; pre-import backup and read-only reopen verified.
+- Manager and both owned/verification Excel processes exited naturally; no forced termination and no residual manager/Excel/Access process. All synthetic files stayed under the harness temporary directory. Exact app source tested: `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`.
+- Evidence is definition-only. Refresh and worksheet/Data Model loads, remaining display/workflow/accessibility acceptance, ACE DAO 16.0 and mapped SMB/UNC are still open or explicitly waived. PR #2 remains open/unmerged.
+
+## 2026-10-28 — W341 current-package disposable dependency scan
+
+- Exact current package tested from commit `f0286e013a5aaf302dff9d8dd2d33b10d96100f2` with DAO 12.0 diagnostic provider: `evidence/W341-dao12-acceptance.json`. Harness PASS on 10 generated fixtures; source hash/size/timestamps stayed unchanged and cleanup/process restoration passed.
+- Quick/Deep each found 12 relationships across 31,200 formula cells, with no differing edges; multi-target reverse scan found 6. UI filter counts matched expected incoming/outgoing/both results; graph and JSON/CSV exports verified all 12 edges. UI progress observed and cancellation passed.
+- Excel seed process exited naturally, no lock files or Access temp directories remained, and fixture cleanup completed. No forced termination. DAO 12.0 evidence is not DAO 16.0 acceptance; ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**. Remaining manual layout, screen-reader and workflow gates are open.
+
+## 2026-10-28 — W342 Qt UI scale-factor regression
+
+- Current-source `tests/ui` passed with `PYTHONPATH=src`: **96 passed in 4.49 s at QT_SCALE_FACTOR=1.25** and **96 passed in 4.63 s at 1.5**. The first attempt omitted the source path and failed collection (`ModuleNotFoundError: pq_installer`); corrected invocations both passed.
+- These are Qt scale-factor checks only. Windows Settings AX could not be acquired/raised through current CUA session; physical DPI/resolution remained unchanged and unverified. Still required: physical 960×600 / 1366×768 and actual 125%/150% OS display checks.
+
+## 2026-10-28 — W343 current-package all-skip integrity
+
+- Packaged GUI `--skip-existing` passed on Excel 16.0 build 20430.0 using a generated disposable `.xlsx`. Existing query was skipped; UI reported no commit. Workbook SHA-256, timestamp and existing formula stayed unchanged; no backup/stage file was created.
+- Manager exited 0; read-only verification Excel exited naturally with no forced termination; process inventory clean. Tested application source `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`. This no-op check does not qualify other workbook types or refresh/load workflows. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**.
+
+## 2026-10-28 — W344 limited-scope Vector design sign-off
+
+- User directly authorized finalization after testing the most important few functionalities and waiving the rest. Accepted core checks: full 546-test Windows build at source `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`, packaged integrity/CLI help, keyboard/dialog and history accessibility, replace/skip/mixed-profile Excel imports with backup/read-only/integrity checks, and DAO12 Quick/Deep scan/filter/graph/export/progress/cancel with synthetic-source integrity/cleanup. Detailed records are W337–W343.
+- Outstanding physical display/DPI, exhaustive button/workflow, manual screen-reader and remaining dialog/environment checks are **WAIVED BY USER / NOT VERIFIED**, not PASS. A combined package/history dialog run had the package preview pass but history-row selection fail/inconclusive; it is waived and explicitly not accepted as a pass. Separate history accessibility passed.
+- Preserve explicit ACE DAO 16.0 and mapped SMB/UNC **WAIVED / NOT VERIFIED** classifications. No safety safeguards or assertions were relaxed. PR #2 can be finalized under this limited acceptance scope; summarize the waiver in the PR before merge.
+
+## 2026-10-28 — W345 final integration review
+
+- Reviewed `origin/main...5ce3cb69b1e892202ebeff4699d354bb7a3ddb6e`. Production changes are in the UI package and PyInstaller UI asset include; automated checks are in UI tests and packaged Windows harness tools; no core engine files changed. Existing callbacks/model/COM safety paths remain present; no safety assertion weakened. `git diff --check` is clean.
+- GitHub readback had no status checks and no submitted reviews. Recorded this as an integration review, not an independent reviewer approval. Finalization is based on the user's explicit limited-scope acceptance/waiver. DAO16 and SMB/UNC remain explicitly waived/not verified.

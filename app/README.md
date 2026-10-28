@@ -20,6 +20,20 @@ This source package includes v1.3.1 stability work, the v1.4 manager workflow, a
 
 Before a staged import opens Excel, the manager reads the workbook DataMashup permission metadata when present. It validates the workbook's DPAPI-bound permission binding and compares FirewallEnabled and WorkbookGroupType before commit; if the saved staged copy changes those settings or the binding cannot be validated for the current Windows user, the import fails closed and leaves the selected workbook unchanged. The check does not inspect or change source credentials or privacy-level assignments. Default FirewallEnabled=true / WorkbookGroupType=nil was preserved in one disposable Excel 16.0 build 20430.0 smoke. Non-default permission values and cross-user DPAPI-bound workbooks remain unverified.
 
+## Vector interface (design implementation candidate)
+
+The Vector design refreshes the **existing desktop PySide6 UI** with a graphite/lime/teal color system, a compact left navigation rail, dashboard counts derived from the query model, a high-priority review/import action and a searchable **Ctrl+K command palette**. The palette invokes the already-wired Qt buttons and respects disabled operations; it does not bypass review, approval, backup, source integrity or read-only safeguards. The original controls remain available in their sections.
+
+Dependency Finder uses separate files-to-inspect and targets panels, a scrollable laptop-sized layout, filter/graph controls, progress/cancel, coverage warning area and unchanged JSON/CSV exports. Both file and query dependency graphs use readable dark nodes, contrasting edges and accessible text summaries. The file graph also supports wheel zoom, pan, fit-to-view, reset and selection, while its render deduplicates repeated arrows without changing the full report.
+Finder stacks its mode selectors and file panels so the workspace fits narrow windows; result tables retain their own scrolling when columns need more room. The file graph also wraps its status and places zoom controls below its heading for laptop widths.
+When the file graph has focus, use the arrow keys to select files and Home or End to jump to the first or last file; Tab moves to the next control.
+
+The workspace arranges its action controls and status cards in narrower rows so the original controls remain reachable on laptop-sized windows without horizontal workspace scrolling. Vertical scrolling is used to reach the full workflow.
+When the right-hand query inspector would squeeze the workspace beyond its minimum width, it moves below the workspace; it remains a movable dock.
+Unchecked checkbox outlines use the theme's contrasting muted color, including in light mode.
+
+**Status:** feature candidate with Windows tests and a locally rebuilt package; full visual and workflow acceptance remains open. See the Vector entry in [Windows QA](../docs/QA_WINDOWS_MATRIX.md) for the exact tested commit, package hashes, results and limitations. Existing ACE DAO 16.0 and mapped SMB/UNC waivers are unchanged and are not PASS evidence. The repository's existing `dist` package has not been replaced by this candidate.
+
 ## Functions
 
 ### Dependency Finder (Windows local/OneDrive tested; two scoped waivers)

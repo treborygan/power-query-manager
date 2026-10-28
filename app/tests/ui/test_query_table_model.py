@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 from pq_installer.core.models import QuerySource
 from pq_installer.ui.query_table_model import QueryTableModel, QuerySortFilterProxyModel
 from pq_installer.ui.main_window import MainWindow
+from pq_installer.ui import _apply_windows_caption_theme
 from pq_installer.core.manager import QueryInfo
 
 app = QApplication.instance() or QApplication([])
@@ -275,15 +276,45 @@ def test_manager_has_undo_redo_actions_and_buttons(tmp_path):
 
 
 def test_light_dark_theme_toggle_applies_readable_theme_styles():
-    window=MainWindow()
-    light=window.styleSheet()
-    assert 'background: #f4f7fb' in light
-    window.theme_toggle.setChecked(True)
-    dark=window.styleSheet()
-    assert window.dark_theme_enabled and 'background: #1c232b' in dark
-    assert 'QLabel#secondaryText { color: #c2ccd8; }' in dark
+    window = MainWindow()
+    assert window.theme_toggle.isChecked() and window.dark_theme_enabled
+    assert "background-color: #080e12" in window.styleSheet()
+    assert "QCheckBox::indicator:checked" in window.styleSheet()
+    assert "background-color: #cff66d" in window.styleSheet()
+    assert "checkmark-dark.svg" in window.styleSheet()
+    assert "QLabel#secondaryText" in window.styleSheet()
+    assert "color: #adbec3" in window.styleSheet()
     window.theme_toggle.setChecked(False)
-    assert not window.dark_theme_enabled and 'background: #f4f7fb' in window.styleSheet()
+    assert not window.dark_theme_enabled
+    assert "background-color: #f1f6f5" in window.styleSheet()
+    assert "background-color: #3b6a21" in window.styleSheet()
+    assert "checkmark-light.svg" in window.styleSheet()
+    assert "color: #193037" in window.styleSheet()
+    window.theme_toggle.setChecked(True)
+    assert window.dark_theme_enabled
+    assert "QPushButton#primary" in window.styleSheet()
+    window.close()
+
+
+def test_windows_caption_theme_tracks_vector_palette():
+    import ctypes
+
+    window = MainWindow()
+    calls = []
+
+    def capture_attribute(handle, attribute, value, size):
+        actual = ctypes.cast(value, ctypes.POINTER(ctypes.c_int)).contents.value
+        calls.append((attribute, actual, size))
+        return 0
+
+    assert _apply_windows_caption_theme(window, True, capture_attribute)
+    assert [attribute for attribute, _, _ in calls] == [20, 35, 36, 34]
+    assert [value for _, value, _ in calls] == [1, 0x120E08, 0xF3F4EB, 0x4A4330]
+
+    calls.clear()
+    assert _apply_windows_caption_theme(window, False, capture_attribute)
+    assert [attribute for attribute, _, _ in calls] == [20, 35, 36, 34]
+    assert [value for _, value, _ in calls] == [0, 0xF5F6F1, 0x373019, 0xC8C8B4]
     window.close()
 
 
@@ -294,17 +325,37 @@ def test_manager_initial_size_and_accessible_names_fit_laptop_layout(tmp_path):
     window=MainWindow()
     workbook=tmp_path/'target.xlsx';workbook.write_bytes(b'disposable')
     window.workbook_edit.setText(str(workbook))
-    assert isinstance(window.centralWidget(),QScrollArea)
+    assert isinstance(window.workspace_scroll,QScrollArea)
+    assert window.centralWidget().objectName() == "vectorCanvas"
     assert window.workbook_edit.accessibleName()=='Target workbook path'
     assert window.table.accessibleName()=='Query source settings table'
     assert window.search_edit.accessibleName()=='Filter query source rows'
-    for size in ((960,600),(1366,768)):
+    for size in ((960,600),(1180,700),(1366,768),(1600,900)):
         window.resize(*size);window.show();app.processEvents()
-        assert window.width()<=1366 and window.height()<=768
+        assert window.width()<=1600 and window.height()<=900
         assert window.minimumWidth()<=window.width() and window.minimumHeight()<=window.height()
         assert window.table.height()>=140
-        assert window.centralWidget().horizontalScrollBar().maximum()==0
-    assert window.centralWidget().verticalScrollBar().maximum()>0
+        assert window.workspace_scroll.horizontalScrollBar().maximum()==0
+        assert window.vector_command_button.width() <= 220
+        card_rows = {card.y() for card in window._vector_metric_cards}
+        content_width = (
+            window.workspace_scroll.viewport().width()
+            - window.workspace_scroll.widget().layout().contentsMargins().left()
+            - window.workspace_scroll.widget().layout().contentsMargins().right()
+        )
+        expected_metric_columns = 4 if content_width >= 1120 else 2
+        assert len(card_rows) == (4 // expected_metric_columns)
+        assert window._vector_metric_columns == expected_metric_columns
+        assert window._vector_workbook_action_columns == (4 if content_width >= 1080 else 2)
+        assert window._vector_source_action_columns == (3 if content_width >= 1080 else 2)
+        expected_bulk_columns = 3 if content_width >= 1360 else 2
+        expected_bulk_rows = (len(window.vector_bulk_actions) + 2 + expected_bulk_columns - 1) // expected_bulk_columns
+        bulk_rows = {button.y() for button in window.vector_bulk_actions.values()}
+        bulk_rows.update((window.undo_button.y(), window.redo_button.y()))
+        assert len(bulk_rows) == expected_bulk_rows
+        action_buttons = (*window._vector_source_action_buttons, *window._vector_bulk_action_buttons)
+        assert max(button.height() for button in action_buttons) <= 34
+    assert window.workspace_scroll.verticalScrollBar().maximum()>0
     window.workbook_edit.setFocus();QTest.keyClick(window.workbook_edit,Qt.Key_Tab);app.processEvents()
     assert window.focusWidget().text()=='Browse…'
     expected=('Open selected workbook in Excel','Inspect selected workbook queries read-only','Probe Excel load capabilities')
@@ -315,6 +366,98 @@ def test_manager_initial_size_and_accessible_names_fit_laptop_layout(tmp_path):
     assert window.log.accessibleName()=='Operation log output'
     assert window.log.objectName()=='operationLogOutput'
     assert window.log.accessibleDescription()=='Live read-only progress and result details for the current operation.'
+    window.close()
+
+
+
+def test_inspector_moves_below_workspace_when_right_dock_would_overflow():
+    from PySide6.QtCore import Qt
+    window = MainWindow()
+    window.resize(1366, 768)
+    window.show()
+    window.inspector_toggle.setChecked(True)
+    app.processEvents()
+    assert window.inspector_dock.isVisible()
+    window.resize(960, 600)
+    app.processEvents()
+    assert window.dockWidgetArea(window.inspector_dock) == Qt.DockWidgetArea.BottomDockWidgetArea
+    assert window.workspace_scroll.horizontalScrollBar().maximum() == 0
+    assert window.inspector_source_text.isVisible()
+    window.close()
+
+
+def test_vector_workspace_preserves_commands_and_live_query_metrics(tmp_path):
+    from PySide6.QtWidgets import QScrollArea
+    window = MainWindow()
+    assert isinstance(window.workspace_scroll, QScrollArea)
+    assert window.vector_kpis["Sources"].text() == "00"
+    assert window.vector_kpis["Enabled"].text() == "00"
+    assert window.install_btn.accessibleName() == "Review and import selected queries"
+    assert window.dependency_finder_button.text() == "Dependency Finder…"
+    assert window.recover_stage_btn.accessibleName() == "Recover a verified staged workbook copy"
+    assert window.undo_button.accessibleName() == "Undo last table edit"
+    assert window.redo_button.accessibleName() == "Redo last table edit"
+    labels = [label for label, _button in window._vector_command_entries()]
+    assert len(labels) >= 25
+    assert "Open Dependency Finder" in labels
+    assert "Review and import queries" in labels
+    assert "Inspect / compare selected" in labels
+    assert "Compare package versions" in labels
+    assert window.vector_command_button.accessibleName() == "Open command palette"
+    path = tmp_path / "vector-test.pq"
+    path.write_text("1", encoding="utf-8")
+    window._merge_sources([QuerySource(path, "Vector")])
+    assert window.vector_kpis["Sources"].text() == "01"
+    assert window.vector_kpis["Enabled"].text() == "01"
+    window._set_selected_enabled(False)  # no selected rows: no state mutation
+    window.query_model.setData(window.query_model.index(0, QueryTableModel.ENABLED), Qt.Unchecked, Qt.CheckStateRole)
+    assert window.vector_kpis["Enabled"].text() == "00"
+    window.dry_run_check.setChecked(True)
+    assert window.vector_kpis["Mode"].text() == "PLAN"
+    window.query_model.clear()
+    assert window.vector_kpis["Sources"].text() == "00"
+    window.close()
+
+
+def test_command_palette_applies_vector_caption_theme(monkeypatch):
+    from PySide6.QtCore import QTimer
+    from PySide6.QtWidgets import QApplication, QDialog
+    import pq_installer.ui.main_window as main_window
+
+    window = MainWindow()
+    calls = []
+    monkeypatch.setattr(
+        main_window, "apply_vector_theme",
+        lambda widget, dark=True: calls.append((widget, dark)),
+    )
+
+    def close_palette():
+        palettes = [
+            widget for widget in QApplication.topLevelWidgets()
+            if isinstance(widget, QDialog)
+            and widget.windowTitle() == "Vector · Command palette"
+        ]
+        assert len(palettes) == 1
+        palettes[0].reject()
+
+    QTimer.singleShot(0, close_palette)
+    window._open_vector_command_palette()
+
+    assert len(calls) == 1
+    assert calls[0][0].windowTitle() == "Vector · Command palette"
+    assert calls[0][1] is True
+    window.close()
+
+
+def test_enabled_source_header_has_room_for_label_and_sort_indicator():
+    from PySide6.QtWidgets import QHeaderView
+    window = MainWindow()
+    window.resize(1182, 732)
+    window.show()
+    app.processEvents()
+    header = window.table.horizontalHeader()
+    assert header.sectionResizeMode(QueryTableModel.ENABLED) == QHeaderView.Interactive
+    assert header.sectionSize(QueryTableModel.ENABLED) >= 132
     window.close()
 
 

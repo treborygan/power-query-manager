@@ -4,13 +4,13 @@ import shutil
 import json
 
 from PySide6.QtCore import Qt, QThread, QObject, Slot
-from PySide6.QtGui import QFont, QKeySequence
+from PySide6.QtGui import QFont, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel,
     QLineEdit, QPushButton, QFileDialog, QTableView, QStyledItemDelegate,
     QHeaderView, QComboBox, QCheckBox, QPlainTextEdit, QMessageBox,
     QGroupBox, QSplitter, QAbstractItemView, QProgressBar, QDialog, QInputDialog, QSpinBox,
-    QTableWidget, QTableWidgetItem, QDockWidget, QTabWidget, QScrollArea, QFrame
+    QTableWidget, QTableWidgetItem, QDockWidget, QTabWidget, QScrollArea, QFrame, QListWidget
 )
 
 from pq_installer.core.models import ExistingQueryMode, LoadMode
@@ -42,6 +42,7 @@ from pq_installer.ui.dependency_finder_dialog import DependencyFinderDialog
 from pq_installer.ui.package_update_dialog import QueryPackageUpdateDialog
 from pq_installer.ui.profile_mappings_dialog import ProfileMappingsDialog
 from pq_installer.ui.recovery_worker import StagedRecoveryWorker
+from pq_installer.ui import apply_vector_theme
 
 
 class _HistoryWorkerUiBridge(QObject):
@@ -124,64 +125,291 @@ class MainWindow(QMainWindow):
         self._build_inspector_dock()
         self.table.selectionModel().selectionChanged.connect(self._update_docked_inspector)
         self.query_model.dataChanged.connect(self._update_docked_inspector)
-        self._apply_theme(False)
+        self._apply_theme(True)
+        self.vector_command_shortcut = QShortcut(QKeySequence("Ctrl+K"), self)
+        self.vector_command_shortcut.activated.connect(self._open_vector_command_palette)
 
-    def _apply_theme(self,dark=False):
-        self.dark_theme_enabled=bool(dark)
-        if dark:
-            colors={'window':'#1c232b','text':'#e7edf4','group':'#242d37','border':'#435262',
-                    'title':'#d5e2f0','input':'#151b21','selection':'#294e70','button':'#303c48',
-                    'hover':'#3b4c5d','focus':'#75b9ff','header':'#28333e','muted':'#c2ccd8',
-                    'primary':'#1769aa'}
-        else:
-            colors={'window':'#f4f7fb','text':'#172b4d','group':'#ffffff','border':'#d8e1ed',
-                    'title':'#27466d','input':'#ffffff','selection':'#d9eaff','button':'#eaf0f7',
-                    'hover':'#dce9f8','focus':'#2773c7','header':'#edf2f7','muted':'#52667e',
-                    'primary':'#1769aa'}
-        self.setStyleSheet(f'''
-            QMainWindow, QWidget {{ background: {colors['window']}; color: {colors['text']}; font-size: 10pt; }}
-            QLabel#secondaryText {{ color: {colors['muted']}; }}
-            QGroupBox {{ background: {colors['group']}; border: 1px solid {colors['border']}; border-radius: 10px; margin-top: 12px; padding: 14px 12px 12px; font-weight: 600; }}
-            QGroupBox::title {{ subcontrol-origin: margin; left: 12px; padding: 0 5px; color: {colors['title']}; }}
-            QLineEdit, QPlainTextEdit, QTableView, QComboBox {{ background: {colors['input']}; color: {colors['text']}; border: 1px solid {colors['border']}; border-radius: 5px; padding: 6px; selection-background-color: {colors['selection']}; }}
-            QPushButton {{ background: {colors['button']}; color: {colors['text']}; border: 1px solid {colors['border']}; border-radius: 6px; padding: 8px 12px; min-height: 18px; }}
-            QPushButton:hover {{ background: {colors['hover']}; }}
-            QPushButton:focus, QLineEdit:focus, QComboBox:focus, QTableView:focus, QPlainTextEdit:focus {{ border: 2px solid {colors['focus']}; }}
-            QPushButton#primary {{ background: {colors['primary']}; color: white; border: 0; font-weight: 700; padding: 11px; }}
-            QPushButton#primary:hover {{ background: #12558b; }}
-            QHeaderView::section {{ background: {colors['header']}; color: {colors['text']}; padding: 7px; border: 0; border-bottom: 1px solid {colors['border']}; font-weight: 600; }}
-            QProgressBar {{ border: 1px solid {colors['border']}; }}
-        ''')
+    def _apply_theme(self, dark=True):
+        """Change only presentation; the application's action state is retained."""
+        self.dark_theme_enabled = bool(dark)
+        apply_vector_theme(self, dark)
+        for dialog in self.findChildren(QDialog):
+            if dialog.isWindow():
+                apply_vector_theme(dialog, dark)
+
+    def _scroll_to_vector(self, section):
+        """Sidebar navigates to the original widgets and highlights the active area."""
+        self.workspace_scroll.ensureWidgetVisible(section, 16, 24)
+        area = None
+        if section is self.vector_workbook_panel:
+            area = "Workspace and workbook"
+        elif section is self.vector_sources_panel:
+            area = "Query sources"
+        elif section is self.vector_options_panel:
+            area = "Import settings"
+        for name, button in self.vector_nav_buttons.items():
+            button.setObjectName("vectorNavActive" if name == area else "vectorNav")
+            button.style().unpolish(button)
+            button.style().polish(button)
+
+    def _update_vector_metrics(self, *_):
+        """Derive dashboard metrics from the existing query model, never a duplicate."""
+        if not hasattr(self, "vector_kpis"):
+            return
+        count = self.query_model.rowCount()
+        enabled = sum(bool(self.query_model.source_at(i).enabled) for i in range(count))
+        self.vector_kpis["Sources"].setText(f"{count:02d}")
+        self.vector_kpis["Enabled"].setText(f"{enabled:02d}")
+        self.vector_kpis["Workbook"].setText("01" if getattr(self, "_vector_workbook_exists", False) else "00")
+        self.vector_kpis["Mode"].setText("PLAN" if self.dry_run_check.isChecked() else "STAGED")
+
+    def _vector_workbook_changed(self, text):
+        """Use the existing workbook preflight once, not on each query-row repaint."""
+        available = Path(text).is_file()
+        self._vector_workbook_exists = available
+        self.open_btn.setEnabled(available)
+        self.inspect_btn.setEnabled(available)
+        self._refresh_recovery_state()
+        self._update_vector_metrics()
+
+    def _vector_command_entries(self):
+        """Expose existing actions through a keyboard palette, preserving button enablement."""
+        entries = [
+            ("Browse for workbook", self.vector_workbook_actions["Browse…"]),
+            ("Open workbook in Excel", self.open_btn),
+            ("Inspect workbook queries", self.inspect_btn),
+            ("Probe Excel capabilities", self.probe_btn),
+            ("Recover staged copy", self.recover_stage_btn),
+            ("Open Dependency Finder", self.dependency_finder_button),
+            ("Review and import queries", self.install_btn),
+            ("Show operation history", self.history_button),
+            ("Undo query edit", self.undo_button),
+            ("Redo query edit", self.redo_button),
+            ("Select all query rows", self.select_all_button),
+            ("Save profile", self.vector_profile_buttons["Save profile…"]),
+            ("Load profile", self.vector_profile_buttons["Load profile…"]),
+            ("Edit source mappings", self.edit_mappings_btn),
+        ]
+        entries.extend((label.rstrip("…"), button)
+                       for label, button in self.vector_source_actions.items())
+        entries.extend((label.rstrip("…"), button)
+                       for label, button in self.vector_bulk_actions.items())
+        return entries
+
+    def _open_vector_command_palette(self):
+        if self._operation_busy:
+            return
+        palette = QDialog(self)
+        palette.setWindowTitle("Vector · Command palette")
+        apply_vector_theme(palette, self.dark_theme_enabled)
+        palette.setMinimumWidth(460)
+        panel = QVBoxLayout(palette)
+        panel.setContentsMargins(18, 17, 18, 17)
+        heading = QLabel("COMMAND   /   FIND AN ACTION")
+        heading.setObjectName("vectorEyebrow")
+        panel.addWidget(heading)
+        search = QLineEdit(palette)
+        search.setPlaceholderText("Type to filter commands…")
+        search.setAccessibleName("Search Power Query Manager commands")
+        panel.addWidget(search)
+        matches = QListWidget(palette)
+        matches.setAccessibleName("Available Power Query Manager commands")
+        entries = self._vector_command_entries()
+        panel.addWidget(matches)
+        controls = QHBoxLayout()
+        run = QPushButton("Run selected command")
+        run.setAccessibleName("Run selected command")
+        cancel = QPushButton("Close")
+        cancel.setAccessibleName("Close command palette")
+        controls.addStretch()
+        controls.addWidget(cancel)
+        controls.addWidget(run)
+        panel.addLayout(controls)
+
+        def filter_commands(query=""):
+            matches.clear()
+            needle = query.casefold().strip()
+            for index, (label, button) in enumerate(entries):
+                if needle not in label.casefold():
+                    continue
+                from PySide6.QtWidgets import QListWidgetItem
+                item = QListWidgetItem(label)
+                item.setData(Qt.UserRole, index)
+                if not button.isEnabled():
+                    item.setFlags(item.flags() & ~Qt.ItemIsEnabled)
+                matches.addItem(item)
+            if matches.count():
+                matches.setCurrentRow(0)
+
+        def execute():
+            item = matches.currentItem()
+            if item is None:
+                return
+            index = item.data(Qt.UserRole)
+            if index is None:
+                return
+            button = entries[int(index)][1]
+            if button.isEnabled():
+                palette.accept()
+                button.click()
+
+        search.textChanged.connect(filter_commands)
+        matches.itemActivated.connect(lambda *_: execute())
+        run.clicked.connect(execute)
+        cancel.clicked.connect(palette.reject)
+        filter_commands()
+        search.setFocus()
+        palette.exec()
 
     def _build_ui(self):
-        scroll=QScrollArea();scroll.setWidgetResizable(True);scroll.setFrameShape(QFrame.NoFrame)
+        shell = QWidget(self)
+        shell.setObjectName("vectorCanvas")
+        shell_layout = QHBoxLayout(shell)
+        shell_layout.setContentsMargins(0, 0, 0, 0)
+        shell_layout.setSpacing(0)
+        sidebar = QFrame(shell)
+        sidebar.setObjectName("vectorSidebar")
+        sidebar.setFixedWidth(70)
+        side = QVBoxLayout(sidebar)
+        side.setContentsMargins(9, 15, 9, 15)
+        side.setSpacing(11)
+        mark = QLabel("◈")
+        mark.setAlignment(Qt.AlignCenter)
+        mark.setObjectName("vectorEyebrow")
+        mark.setToolTip("Power Query Manager")
+        mark.setAccessibleName("Power Query Manager")
+        mark.setMinimumHeight(48)
+        side.addWidget(mark)
+        side.addSpacing(15)
+        navigation = (
+            ("⌂", "Workspace and workbook", lambda: self._scroll_to_vector(self.vector_workbook_panel)),
+            ("≡", "Query sources", lambda: self._scroll_to_vector(self.vector_sources_panel)),
+            ("◇", "Dependency Finder", self._open_dependency_finder),
+            ("◷", "Operation history", self._open_history),
+            ("⚙", "Import settings", lambda: self._scroll_to_vector(self.vector_options_panel)),
+        )
+        self.vector_nav_buttons = {}
+        for index, (glyph, name, callback) in enumerate(navigation):
+            nav_button = QPushButton(glyph)
+            nav_button.setObjectName("vectorNavActive" if index == 0 else "vectorNav")
+            nav_button.setAccessibleName(name)
+            nav_button.setToolTip(name)
+            nav_button.clicked.connect(callback)
+            self.vector_nav_buttons[name] = nav_button
+            side.addWidget(nav_button)
+        side.addStretch()
+        help_link = QPushButton("?")
+        help_link.setObjectName("vectorNav")
+        help_link.setAccessibleName("Workflow and safety instructions")
+        help_link.setToolTip("Workflow and safety instructions")
+        help_link.clicked.connect(lambda: self._scroll_to_vector(self.vector_notes))
+        side.addWidget(help_link)
+        shell_layout.addWidget(sidebar)
+        scroll = QScrollArea()
+        self.workspace_scroll = scroll
+        scroll.setObjectName("vectorScroll")
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
         scroll.setAccessibleName('Power Query Manager workspace')
-        root = QWidget();scroll.setWidget(root);self.setCentralWidget(scroll)
-        layout = QVBoxLayout(root); layout.setContentsMargins(20, 16, 20, 16); layout.setSpacing(10)
-        title = QLabel('Power Query Manager'); title.setFont(QFont('', 20, QFont.Bold))
-        title_row=QHBoxLayout();title_row.addWidget(title);title_row.addStretch()
-        self.theme_toggle=QCheckBox('Dark theme');self.theme_toggle.setAccessibleName('Toggle dark theme')
-        self.theme_toggle.toggled.connect(self._apply_theme);title_row.addWidget(self.theme_toggle)
-        self.inspector_toggle=QCheckBox('Query inspector');self.inspector_toggle.setAccessibleName('Show query inspector panel');title_row.addWidget(self.inspector_toggle)
-        subtitle = QLabel('Review source files, edit query settings and import them into a desktop Excel workbook.')
-        subtitle.setWordWrap(True);subtitle.setMinimumWidth(0);subtitle.setObjectName('secondaryText')
-        layout.addLayout(title_row); layout.addWidget(subtitle)
+        root = QWidget()
+        root.setObjectName("vectorRoot")
+        scroll.setWidget(root)
+        shell_layout.addWidget(scroll, 1)
+        self.setCentralWidget(shell)
+        layout = QVBoxLayout(root)
+        layout.setContentsMargins(28, 20, 28, 22)
+        layout.setSpacing(14)
 
-        workbook_box = QGroupBox('1  Workbook')
+        status_row = QHBoxLayout()
+        status_eyebrow = QLabel("●  PQM  /  LOCAL WORKSPACE   /   MODULE 01")
+        status_eyebrow.setObjectName("vectorEyebrow")
+        status_row.addWidget(status_eyebrow)
+        layout.addLayout(status_row)
+        status_row = QHBoxLayout()
+        self.vector_command_button = QPushButton("⌘  Command  Ctrl+K")
+        self.vector_command_button.setAccessibleName("Open command palette")
+        self.vector_command_button.setMaximumWidth(220)
+        self.vector_command_button.clicked.connect(self._open_vector_command_palette)
+        status_row.addWidget(self.vector_command_button)
+        status_row.addStretch(1)
+        self.theme_toggle = QCheckBox('Dark theme')
+        self.theme_toggle.setAccessibleName('Toggle dark theme')
+        self.theme_toggle.setChecked(True)
+        self.theme_toggle.toggled.connect(self._apply_theme)
+        status_row.addWidget(self.theme_toggle)
+        self.inspector_toggle = QCheckBox('Query inspector')
+        self.inspector_toggle.setAccessibleName('Show query inspector panel')
+        status_row.addWidget(self.inspector_toggle)
+        layout.addLayout(status_row)
+
+        eyebrow = QLabel("WORKSPACE   /   EXCEL AUTOMATION")
+        eyebrow.setObjectName("vectorEyebrow")
+        layout.addWidget(eyebrow)
+        hero = QHBoxLayout()
+        title = QLabel('QUERY OPERATIONS')
+        title.setObjectName("vectorHero")
+        title.setAccessibleName("Power Query Manager – query operations")
+        hero.addWidget(title)
+        hero.addStretch(1)
+        hero_actions = QHBoxLayout()
+        hero.addLayout(hero_actions)
+        layout.addLayout(hero)
+        subtitle = QLabel('Inspect, compare and safely import Power Query definitions into desktop Excel.')
+        subtitle.setWordWrap(True)
+        subtitle.setObjectName('secondaryText')
+        layout.addWidget(subtitle)
+
+        metrics = QGridLayout()
+        metrics.setSpacing(10)
+        self._vector_metric_layout = metrics
+        self._vector_metric_cards = []
+        self.vector_kpis = {}
+        for index, (label, value, hint) in enumerate((
+            ("Workbook", "00", "Active workbook"),
+            ("Sources", "00", "Source definitions"),
+            ("Enabled", "00", "Import queue"),
+            ("Mode", "STAGED", "No automatic refresh"),
+        )):
+            card = QFrame()
+            card.setObjectName("vectorMetric")
+            self._vector_metric_cards.append(card)
+            cell = QVBoxLayout(card)
+            cell.setContentsMargins(14, 12, 14, 12)
+            cell.setSpacing(5)
+            caption = QLabel(label.upper())
+            caption.setObjectName("vectorMetricLabel")
+            cell.addWidget(caption)
+            number = QLabel(value)
+            number.setObjectName("vectorMetricValue")
+            number.setAccessibleName(label + " status")
+            cell.addWidget(number)
+            hint_label = QLabel(hint)
+            hint_label.setObjectName("vectorMetricCaption")
+            cell.addWidget(hint_label)
+            self.vector_kpis[label] = number
+            metrics.addWidget(card, index // 2, index % 2)
+        layout.addLayout(metrics)
+
+        workbook_box = QGroupBox('01  /  WORKBOOK     Target workbook')
+        self.vector_workbook_panel = workbook_box
         wb_layout = QGridLayout(workbook_box)
         self.workbook_edit = QLineEdit(); self.workbook_edit.setPlaceholderText('Choose an .xlsx or .xlsm workbook')
         self.workbook_edit.setAccessibleName('Target workbook path')
         browse_wb = QPushButton('Browse…');browse_wb.setAccessibleName('Browse for target workbook'); browse_wb.clicked.connect(self._browse_workbook)
+        self.vector_workbook_actions = {"Browse…": browse_wb}
         self.open_btn = QPushButton('Open workbook');self.open_btn.setAccessibleName('Open selected workbook in Excel'); self.open_btn.setEnabled(False); self.open_btn.clicked.connect(self._open_workbook)
         self.inspect_btn = QPushButton('Inspect queries');self.inspect_btn.setAccessibleName('Inspect selected workbook queries read-only'); self.inspect_btn.setEnabled(False); self.inspect_btn.clicked.connect(self._inspect_workbook)
         self.probe_btn=QPushButton('Probe Excel capabilities');self.probe_btn.setAccessibleName('Probe Excel load capabilities');self.probe_btn.clicked.connect(self._probe_excel)
         self.capability_label=QLabel('Extra load modes stay disabled until an Excel capability probe passes.')
-        self.workbook_edit.textChanged.connect(lambda text: (self.open_btn.setEnabled(Path(text).is_file()),self.inspect_btn.setEnabled(Path(text).is_file()),self._refresh_recovery_state()))
+        self._vector_workbook_exists = False
+        self.workbook_edit.textChanged.connect(self._vector_workbook_changed)
         wb_layout.addWidget(QLabel('Target workbook'),0,0);wb_layout.addWidget(self.workbook_edit,0,1,1,2)
         workbook_actions=QGridLayout()
-        for index,button in enumerate((browse_wb,self.open_btn,self.inspect_btn,self.probe_btn)):
-            workbook_actions.addWidget(button,index//2,index%2)
-        workbook_actions.setColumnStretch(0,1);workbook_actions.setColumnStretch(1,1)
+        self._vector_workbook_action_layout = workbook_actions
+        self._vector_workbook_action_buttons = (browse_wb, self.open_btn, self.inspect_btn, self.probe_btn)
+        for index, button in enumerate(self._vector_workbook_action_buttons):
+            workbook_actions.addWidget(button, index // 2, index % 2)
+            workbook_actions.setColumnStretch(index % 2, 1)
         wb_layout.addLayout(workbook_actions,1,0,1,3)
         workbook_note=QLabel('Inspect opens read-only. Capability probes use temporary workbooks and never refresh data. Imports stage changes and do not refresh queries.')
         workbook_note.setWordWrap(True);workbook_note.setMinimumWidth(0);workbook_note.setObjectName('secondaryText')
@@ -200,6 +428,7 @@ class MainWindow(QMainWindow):
 
         finder_row = QHBoxLayout()
         self.dependency_finder_button = QPushButton('Dependency Finder…')
+        self.dependency_finder_button.setObjectName('vectorFinderButton')
         self.dependency_finder_button.setAccessibleName('Find files that depend on selected Excel or Access databases and workbooks')
         self.dependency_finder_button.clicked.connect(self._open_dependency_finder)
         finder_row.addWidget(self.dependency_finder_button)
@@ -207,9 +436,15 @@ class MainWindow(QMainWindow):
         finder_note.setObjectName('secondaryText')
         finder_note.setWordWrap(True)
         finder_row.addWidget(finder_note, 1)
-        layout.addLayout(finder_row)
+        finder_band = QFrame()
+        finder_band.setObjectName('vectorFinderBand')
+        finder_band_layout = QVBoxLayout(finder_band)
+        finder_band_layout.setContentsMargins(12, 9, 12, 9)
+        finder_band_layout.addLayout(finder_row)
+        layout.addWidget(finder_band)
 
-        query_box = QGroupBox('2  Sources and query settings')
+        query_box = QGroupBox('02  /  SOURCES     Queries & source files')
+        self.vector_sources_panel = query_box
         q_layout = QVBoxLayout(query_box)
         controls=QGridLayout()
         source_actions=[('Add files…',self._add_files),('Add folder…',self._add_folder),
@@ -217,31 +452,45 @@ class MainWindow(QMainWindow):
             ('Inspect / compare selected…',self._inspect_selected),('Dependency graph…',self._show_dependency_graph),
             ('Browse selected path…',self._browse_source),('Remove selected',self._remove_selected),
             ('Clear list',self._clear_sources)]
+        self.vector_source_actions = {}
+        self._vector_source_action_layout = controls
+        self._vector_source_action_buttons = []
         for index,(label,callback) in enumerate(source_actions):
-            button=QPushButton(label);button.setAccessibleName(label.rstrip('…'));button.clicked.connect(callback)
+            button=QPushButton(label);button.setObjectName("vectorActionButton");button.setAccessibleName(label.rstrip('…'));button.clicked.connect(callback)
+            self.vector_source_actions[label] = button
+            self._vector_source_action_buttons.append(button)
             controls.addWidget(button,index//2,index%2)
-        controls.setColumnStretch(0,1);controls.setColumnStretch(1,1);q_layout.addLayout(controls)
+        for column in range(2): controls.setColumnStretch(column,1)
+        q_layout.addLayout(controls)
         bulk=QGridLayout()
-        bulk_actions=[('Enable selected',lambda:self._set_selected_enabled(True)),
-            ('Disable selected',lambda:self._set_selected_enabled(False)),
-            ('Set selected order…',self._set_selected_order),
-            ('Configure selected destinations…',self._configure_destinations),
-            ('Compare package versions…',self._preview_query_package_update)]
-        for index,(label,callback) in enumerate(bulk_actions):
-            button=QPushButton(label);button.setAccessibleName(label.rstrip('…'));button.clicked.connect(callback)
+        self._vector_bulk_action_layout = bulk
+        self._vector_bulk_action_buttons = []
+        bulk_actions=[('Enable selected','Enable selected',lambda:self._set_selected_enabled(True)),
+            ('Disable selected','Disable selected',lambda:self._set_selected_enabled(False)),
+            ('Set selected order…','Set order…',self._set_selected_order),
+            ('Configure selected destinations…','Destinations…',self._configure_destinations),
+            ('Compare package versions…','Compare package versions…',self._preview_query_package_update)]
+        self.vector_bulk_actions = {}
+        for index,(label,display_label,callback) in enumerate(bulk_actions):
+            button=QPushButton(display_label);button.setObjectName("vectorActionButton");button.setAccessibleName(label.rstrip('…'));button.setToolTip(label);button.clicked.connect(callback)
+            self.vector_bulk_actions[label] = button
+            self._vector_bulk_action_buttons.append(button)
             bulk.addWidget(button,index//2,index%2)
         self.undo_action=self.query_model.undo_stack.createUndoAction(self,'Undo table edit')
         self.undo_action.setShortcut(QKeySequence.StandardKey.Undo);self.addAction(self.undo_action)
         self.redo_action=self.query_model.undo_stack.createRedoAction(self,'Redo table edit')
         self.redo_action.setShortcut(QKeySequence.StandardKey.Redo);self.addAction(self.redo_action)
-        self.undo_button=QPushButton('Undo');self.undo_button.setAccessibleName('Undo last table edit');self.undo_button.setToolTip('Undo the last table edit (Ctrl+Z)')
-        self.undo_button.clicked.connect(self.undo_action.trigger);bulk.addWidget(self.undo_button,3,0)
-        self.redo_button=QPushButton('Redo');self.redo_button.setAccessibleName('Redo last table edit');self.redo_button.setToolTip('Redo the last table edit (Ctrl+Y)')
-        self.redo_button.clicked.connect(self.redo_action.trigger);bulk.addWidget(self.redo_button,3,1)
+        self.undo_button=QPushButton('Undo');self.undo_button.setObjectName("vectorActionButton");self.undo_button.setAccessibleName('Undo last table edit');self.undo_button.setToolTip('Undo the last table edit (Ctrl+Z)')
+        self.undo_button.clicked.connect(self.undo_action.trigger);self._vector_bulk_action_buttons.append(self.undo_button)
+        bulk.addWidget(self.undo_button,(len(self._vector_bulk_action_buttons)-1)//2,(len(self._vector_bulk_action_buttons)-1)%2)
+        self.redo_button=QPushButton('Redo');self.redo_button.setObjectName("vectorActionButton");self.redo_button.setAccessibleName('Redo last table edit');self.redo_button.setToolTip('Redo the last table edit (Ctrl+Y)')
+        self.redo_button.clicked.connect(self.redo_action.trigger);self._vector_bulk_action_buttons.append(self.redo_button)
+        bulk.addWidget(self.redo_button,(len(self._vector_bulk_action_buttons)-1)//2,(len(self._vector_bulk_action_buttons)-1)%2)
         self.query_model.undo_stack.canUndoChanged.connect(self._update_undo_actions)
         self.query_model.undo_stack.canRedoChanged.connect(self._update_undo_actions)
         self._update_undo_actions()
-        bulk.setColumnStretch(0,1);bulk.setColumnStretch(1,1);q_layout.addLayout(bulk)
+        bulk.setColumnStretch(0,1);bulk.setColumnStretch(1,1)
+        q_layout.addLayout(bulk)
         self.search_edit=QLineEdit(); self.search_edit.setPlaceholderText('Filter queries by name, path, mode, or status…')
         self.search_edit.setAccessibleName('Filter query source rows')
         self.search_edit.textChanged.connect(self.query_proxy.setFilterFixedString)
@@ -252,7 +501,7 @@ class MainWindow(QMainWindow):
         self.table = SourceTableView()
         self.table.setAccessibleName('Query source settings table')
         self.table.setCornerButtonEnabled(False)
-        self.table.setMinimumHeight(160)
+        self.table.setMinimumHeight(260)
         self.table.filesDropped.connect(self._handle_dropped_paths)
         self.table.setModel(self.query_proxy)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -266,13 +515,17 @@ class MainWindow(QMainWindow):
         self.select_all_button.clicked.connect(self.table.selectAll)
         self.load_mode_delegate=LoadModeDelegate(self.table,self.query_model.supported_load_modes)
         self.table.setItemDelegateForColumn(QueryTableModel.LOAD,self.load_mode_delegate)
-        self.table.horizontalHeader().setSectionResizeMode(QueryTableModel.ENABLED,QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(QueryTableModel.ORDER,QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(QueryTableModel.NAME,QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(QueryTableModel.PATH,QHeaderView.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(QueryTableModel.LOAD,QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(QueryTableModel.STATUS,QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(QueryTableModel.DEPENDENCIES,QHeaderView.Stretch)
+        source_header=self.table.horizontalHeader()
+        # Keep the checkbox column wide enough for its sorted header label at
+        # Windows display scaling; the empty checkbox cells alone are narrow.
+        source_header.setSectionResizeMode(QueryTableModel.ENABLED,QHeaderView.Interactive)
+        source_header.resizeSection(QueryTableModel.ENABLED,132)
+        source_header.setSectionResizeMode(QueryTableModel.ORDER,QHeaderView.ResizeToContents)
+        source_header.setSectionResizeMode(QueryTableModel.NAME,QHeaderView.ResizeToContents)
+        source_header.setSectionResizeMode(QueryTableModel.PATH,QHeaderView.Stretch)
+        source_header.setSectionResizeMode(QueryTableModel.LOAD,QHeaderView.ResizeToContents)
+        source_header.setSectionResizeMode(QueryTableModel.STATUS,QHeaderView.ResizeToContents)
+        source_header.setSectionResizeMode(QueryTableModel.DEPENDENCIES,QHeaderView.Stretch)
         self.query_model.dataChanged.connect(self._model_changed)
         q_layout.addWidget(self.table)
         self.sequence_label = QLabel('Add .m or .pq files to see the import sequence.')
@@ -280,31 +533,49 @@ class MainWindow(QMainWindow):
         q_layout.addWidget(self.sequence_label)
         layout.addWidget(query_box, 3)
 
-        options = QGroupBox('3  Import options')
+        options = QGroupBox('03  /  IMPORT CONTROL     Options & safety')
+        self.vector_options_panel = options
         options_layout=QGridLayout(options)
         mode_row=QHBoxLayout();mode_row.addWidget(QLabel('If query exists:'))
         self.mode_combo=QComboBox();self.mode_combo.setAccessibleName('Existing query behavior'); self.mode_combo.addItem('Replace definition',ExistingQueryMode.REPLACE.value); self.mode_combo.addItem('Skip existing query',ExistingQueryMode.SKIP.value); mode_row.addWidget(self.mode_combo)
         options_layout.addLayout(mode_row,0,0,1,2)
         self.backup_check=QCheckBox('Create timestamped workbook backup before changes');self.backup_check.setAccessibleName('Create a timestamped workbook backup'); self.backup_check.setChecked(True); options_layout.addWidget(self.backup_check,1,0,1,2)
         self.dry_run_check=QCheckBox('Plan only (no Excel changes)');self.dry_run_check.setAccessibleName('Plan only without changing Excel');options_layout.addWidget(self.dry_run_check,2,0)
+        self.dry_run_check.toggled.connect(self._update_vector_metrics)
         save_profile_btn=QPushButton('Save profile…');save_profile_btn.setAccessibleName('Save import profile');save_profile_btn.clicked.connect(self._save_profile);options_layout.addWidget(save_profile_btn,2,1)
         load_profile_btn=QPushButton('Load profile…');load_profile_btn.setAccessibleName('Load import profile');load_profile_btn.clicked.connect(self._load_profile);options_layout.addWidget(load_profile_btn,3,0)
+        self.vector_profile_buttons = {"Save profile…": save_profile_btn, "Load profile…": load_profile_btn}
         self.edit_mappings_btn=QPushButton('Edit source mappings…');self.edit_mappings_btn.setAccessibleName('Edit source environment mappings');self.edit_mappings_btn.clicked.connect(self._edit_source_mappings);options_layout.addWidget(self.edit_mappings_btn,3,1)
         options_layout.setColumnStretch(0,1);options_layout.setColumnStretch(1,1)
         layout.addWidget(options)
         bottom=QHBoxLayout()
         self.progress=QProgressBar(); self.progress.setRange(0,0); self.progress.setVisible(False); self.progress.setTextVisible(False)
-        self.install_btn=QPushButton('Review and import queries');self.install_btn.setAccessibleName('Review and import selected queries'); self.install_btn.setObjectName('primary'); self.install_btn.clicked.connect(self._install)
-        bottom.addWidget(self.progress,1); bottom.addWidget(self.install_btn)
+        self.install_btn=QPushButton('Review and import queries')
+        self.install_btn.setAccessibleName('Review and import selected queries')
+        self.install_btn.setObjectName('primary')
+        self.install_btn.setMaximumWidth(280)
+        self.install_btn.setToolTip('Review before committing any staged Excel workbook changes')
+        self.install_btn.clicked.connect(self._install)
+        hero_actions.addWidget(self.install_btn)
+        bottom.addWidget(self.progress,1)
+        safety_status=QLabel('STAGED / REVIEW REQUIRED / NO AUTOMATIC REFRESH')
+        safety_status.setObjectName('vectorEyebrow')
+        bottom.addWidget(safety_status)
         layout.addLayout(bottom)
         splitter=QSplitter(Qt.Horizontal)
+        self.vector_notes = splitter
         instruction_box=QGroupBox('Workflow and limits'); il=QVBoxLayout(instruction_box); instructions=QPlainTextEdit(); instructions.setAccessibleName('Workflow and safety instructions');instructions.setReadOnly(True); instructions.setPlainText(INSTRUCTIONS); il.addWidget(instructions)
         log_box=QGroupBox('Operation log'); ll=QVBoxLayout(log_box)
         log_controls=QHBoxLayout();self.history_button=QPushButton('History…');self.history_button.setAccessibleName('Open operation history');self.history_button.clicked.connect(self._open_history);log_controls.addStretch();log_controls.addWidget(self.history_button);ll.addLayout(log_controls)
         self.log=QPlainTextEdit();self.log.setObjectName('operationLogOutput');self.log.setAccessibleName('Operation log output');self.log.setAccessibleDescription('Live read-only progress and result details for the current operation.');self.log.setReadOnly(True);self.log.setPlaceholderText('Validation and Excel progress will appear here.');ll.addWidget(self.log)
         splitter.addWidget(instruction_box); splitter.addWidget(log_box); splitter.setSizes([500,680]); layout.addWidget(splitter,2)
         splitter.setMinimumHeight(180)
-        self.statusBar().showMessage('Ready')
+        self.statusBar().showMessage('Ready · Local operations · Source files remain protected')
+        self.query_model.rowsInserted.connect(self._update_vector_metrics)
+        self.query_model.rowsRemoved.connect(self._update_vector_metrics)
+        self.query_model.modelReset.connect(self._update_vector_metrics)
+        self.query_model.dataChanged.connect(self._update_vector_metrics)
+        self._update_vector_metrics()
 
     def _build_inspector_dock(self):
         self._inspector_source_row=-1
@@ -334,10 +605,95 @@ class MainWindow(QMainWindow):
         self.inspector_dock.setWidget(panel)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea,self.inspector_dock)
         self.inspector_dock.hide()
-        self.inspector_toggle.toggled.connect(self.inspector_dock.setVisible)
+        self.inspector_toggle.toggled.connect(self._set_inspector_visible)
         self.inspector_dock.visibilityChanged.connect(self.inspector_toggle.setChecked)
         view_menu=self.menuBar().addMenu('&View');view_menu.addAction(self.inspector_dock.toggleViewAction())
         self._update_docked_inspector()
+
+    def _set_inspector_visible(self, visible):
+        if visible:
+            self._fit_inspector_dock()
+        self.inspector_dock.setVisible(visible)
+
+    def _fit_inspector_dock(self):
+        """Keep the workspace usable when a right dock cannot fit beside it."""
+        if not hasattr(self, 'inspector_dock') or self.inspector_dock.isFloating():
+            return
+        if self.dockWidgetArea(self.inspector_dock) != Qt.DockWidgetArea.RightDockWidgetArea:
+            return
+        required = (self.workspace_scroll.widget().minimumSizeHint().width()
+                    + self.inspector_dock.minimumSizeHint().width()
+                    + self.centralWidget().layout().contentsMargins().left()
+                    + self.centralWidget().layout().contentsMargins().right()
+                    + self.vector_nav_buttons['Workspace and workbook'].parentWidget().width() + 16)
+        if self.width() < required:
+            self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.inspector_dock)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        # The fixed navigation rail and workspace margins consume part of the
+        # top-level window width. Choose density from the space the cards and
+        # action grids can actually use, rather than the outer frame size.
+        content_width = max(
+            0,
+            self.workspace_scroll.viewport().width()
+            - self.workspace_scroll.widget().layout().contentsMargins().left()
+            - self.workspace_scroll.widget().layout().contentsMargins().right(),
+        )
+        metric_layout = getattr(self, "_vector_metric_layout", None)
+        metric_cards = getattr(self, "_vector_metric_cards", ())
+        if metric_layout is not None and metric_cards:
+            columns = 4 if content_width >= 1120 else 2
+            if columns != getattr(self, "_vector_metric_columns", None):
+                while metric_layout.count():
+                    metric_layout.takeAt(0)
+                for column in range(4):
+                    metric_layout.setColumnStretch(column, 1 if column < columns else 0)
+                    metric_layout.setColumnMinimumWidth(column, 0)
+                for index, card in enumerate(metric_cards):
+                    metric_layout.addWidget(card, index // columns, index % columns)
+                self._vector_metric_columns = columns
+        action_layout = getattr(self, "_vector_workbook_action_layout", None)
+        action_buttons = getattr(self, "_vector_workbook_action_buttons", ())
+        if action_layout is not None and action_buttons:
+            columns = 4 if content_width >= 1080 else 2
+            if columns != getattr(self, "_vector_workbook_action_columns", None):
+                while action_layout.count():
+                    action_layout.takeAt(0)
+                for column in range(4):
+                    action_layout.setColumnStretch(column, 1 if column < columns else 0)
+                    action_layout.setColumnMinimumWidth(column, 0)
+                for index, button in enumerate(action_buttons):
+                    action_layout.addWidget(button, index // columns, index % columns)
+                self._vector_workbook_action_columns = columns
+        source_layout = getattr(self, "_vector_source_action_layout", None)
+        source_buttons = getattr(self, "_vector_source_action_buttons", ())
+        if source_layout is not None and source_buttons:
+            columns = 3 if content_width >= 1080 else 2
+            if columns != getattr(self, "_vector_source_action_columns", None):
+                while source_layout.count():
+                    source_layout.takeAt(0)
+                for column in range(3):
+                    source_layout.setColumnStretch(column, 1 if column < columns else 0)
+                    source_layout.setColumnMinimumWidth(column, 0)
+                for index, button in enumerate(source_buttons):
+                    source_layout.addWidget(button, index // columns, index % columns)
+                self._vector_source_action_columns = columns
+        bulk_layout = getattr(self, "_vector_bulk_action_layout", None)
+        bulk_buttons = getattr(self, "_vector_bulk_action_buttons", ())
+        if bulk_layout is not None and bulk_buttons:
+            columns = 3 if content_width >= 1360 else 2
+            if columns != getattr(self, "_vector_bulk_action_columns", None):
+                while bulk_layout.count():
+                    bulk_layout.takeAt(0)
+                for column in range(3):
+                    bulk_layout.setColumnStretch(column, 1 if column < columns else 0)
+                    bulk_layout.setColumnMinimumWidth(column, 0)
+                for index, button in enumerate(bulk_buttons):
+                    bulk_layout.addWidget(button, index // columns, index % columns)
+                self._vector_bulk_action_columns = columns
+        if hasattr(self, 'inspector_dock') and self.inspector_dock.isVisible():
+            self._fit_inspector_dock()
 
     def _record_diagnostic(self,operation,error):
         path=record_failure(operation,error)
@@ -774,7 +1130,7 @@ class MainWindow(QMainWindow):
         self.inventory=tuple(inventory)
         self._record_history('workbook_inspected',{'query_count':len(self.inventory)})
         self.query_model.apply_inventory(self.inventory,skip_existing=self.mode_combo.currentData()==ExistingQueryMode.SKIP.value)
-        dialog=QDialog(self);dialog.setWindowTitle(f'Workbook query inventory ({len(self.inventory)})');dialog.resize(1000,600)
+        dialog=QDialog(self);dialog.setWindowTitle(f'Workbook query inventory ({len(self.inventory)})');apply_vector_theme(dialog,self.dark_theme_enabled);dialog.resize(1000,600)
         layout=QVBoxLayout(dialog);view=QTableView(dialog);view.setAccessibleName('Workbook query inventory');view.setModel(QueryInventoryModel(self.inventory,view));view.setAlternatingRowColors(True)
         view.setSelectionBehavior(QAbstractItemView.SelectRows);view.setWordWrap(False)
         view.horizontalHeader().setSectionResizeMode(0,QHeaderView.ResizeToContents);view.horizontalHeader().setSectionResizeMode(1,QHeaderView.Stretch)
@@ -805,7 +1161,7 @@ class MainWindow(QMainWindow):
         else:
             names=None
             scope=f'all {len(self.inventory)} workbook query(s)'
-        options=QDialog(dialog);options.setWindowTitle('Refresh options')
+        options=QDialog(dialog);options.setWindowTitle('Refresh options');apply_vector_theme(options,self.dark_theme_enabled)
         layout=QVBoxLayout(options)
         notice=QLabel('Refreshing may access external data sources and change query results. It runs only after you confirm. The workbook is refreshed in a staged copy and committed only if every selected refresh succeeds.')
         notice.setWordWrap(True);layout.addWidget(notice)
@@ -1035,7 +1391,7 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             QMessageBox.warning(self,'History unavailable',f'Local history could not be opened: {exc}')
             return
-        dialog=QDialog(self);dialog.setWindowTitle('Local operation history');dialog.resize(850,460)
+        dialog=QDialog(self);dialog.setWindowTitle('Local operation history');apply_vector_theme(dialog,self.dark_theme_enabled);dialog.resize(850,460)
         layout=QVBoxLayout(dialog)
         hint=QLabel('History metadata omits formulas and redacts recognized secrets. Optional workbook snapshots contain the full local workbook, may include sensitive data, and stay in this Windows user profile. Retention and deletion controls apply to snapshots too.')
         hint.setAccessibleName('History privacy and snapshot information')
@@ -1148,7 +1504,7 @@ class MainWindow(QMainWindow):
                         'comparison':'completed',
                     })
                     if dialog.isVisible():
-                        result=HistoryComparisonDialog(outcome['before'],outcome['after'],outcome['changes'],dialog)
+                        result=HistoryComparisonDialog(outcome['before'],outcome['after'],outcome['changes'],dialog,self.dark_theme_enabled)
                         result.exec()
                 def compare_failed(message):
                     if dialog.isVisible():QMessageBox.warning(dialog,'Version comparison stopped',message)

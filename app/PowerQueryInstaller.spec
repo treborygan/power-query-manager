@@ -7,7 +7,10 @@ a = Analysis(
     ['src/pq_installer/main.py'],
     pathex=['src'],
     binaries=[],
-    datas=[],
+    datas=[
+        ('src/pq_installer/ui/assets/checkmark-dark.svg', 'pq_installer/ui/assets'),
+        ('src/pq_installer/ui/assets/checkmark-light.svg', 'pq_installer/ui/assets'),
+    ],
     hiddenimports=['pythoncom', 'pywintypes', 'win32com.client'],
     hookspath=[],
     hooksconfig={},
