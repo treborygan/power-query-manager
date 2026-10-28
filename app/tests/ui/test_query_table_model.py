@@ -308,6 +308,8 @@ def test_manager_initial_size_and_accessible_names_fit_laptop_layout(tmp_path):
         assert window.minimumWidth()<=window.width() and window.minimumHeight()<=window.height()
         assert window.table.height()>=140
         assert window.workspace_scroll.horizontalScrollBar().maximum()==0
+        card_rows = {card.y() for card in window._vector_metric_cards}
+        assert len(card_rows) == (1 if size[0] >= 1120 else 2)
     assert window.workspace_scroll.verticalScrollBar().maximum()>0
     window.workbook_edit.setFocus();QTest.keyClick(window.workbook_edit,Qt.Key_Tab);app.processEvents()
     assert window.focusWidget().text()=='Browse…'

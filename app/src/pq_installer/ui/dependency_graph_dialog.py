@@ -239,11 +239,13 @@ class DependencyGraphDialog(QDialog):
             title = scene.addText(name, QFont('', 10, QFont.Weight.Bold))
             title.setDefaultTextColor(QColor('#f0f9f8' if self._vector_dark else '#152931'))
             title.setPos(x + 9, y + 5)
+            title.setZValue(2)
             title.setToolTip(f'{name}\n{node.status}')
             status = scene.addText(node.status, QFont('', 8))
             status.setTextWidth(width - 16)
             status.setPos(x + 8, y + 31)
             status.setDefaultTextColor(QColor('#b3c8c9' if self._vector_dark else '#30465b'))
+            status.setZValue(2)
             status.setToolTip(node.status)
         cols = max(columns, default=0) + 1
         rows = max((len(names) for names in columns.values()), default=1)

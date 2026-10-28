@@ -339,12 +339,12 @@ class MainWindow(QMainWindow):
         eyebrow = QLabel("WORKSPACE   /   EXCEL AUTOMATION")
         eyebrow.setObjectName("vectorEyebrow")
         layout.addWidget(eyebrow)
-        hero = QVBoxLayout()
+        hero = QHBoxLayout()
         title = QLabel('QUERY OPERATIONS')
         title.setObjectName("vectorHero")
         title.setAccessibleName("Power Query Manager – query operations")
         hero.addWidget(title)
-        hero.addStretch()
+        hero.addStretch(1)
         hero_actions = QHBoxLayout()
         hero.addLayout(hero_actions)
         layout.addLayout(hero)
@@ -355,6 +355,8 @@ class MainWindow(QMainWindow):
 
         metrics = QGridLayout()
         metrics.setSpacing(10)
+        self._vector_metric_layout = metrics
+        self._vector_metric_cards = []
         self.vector_kpis = {}
         for index, (label, value, hint) in enumerate((
             ("Workbook", "00", "Active workbook"),
@@ -364,6 +366,7 @@ class MainWindow(QMainWindow):
         )):
             card = QFrame()
             card.setObjectName("vectorMetric")
+            self._vector_metric_cards.append(card)
             cell = QVBoxLayout(card)
             cell.setContentsMargins(14, 12, 14, 12)
             cell.setSpacing(5)
@@ -396,7 +399,9 @@ class MainWindow(QMainWindow):
         self.workbook_edit.textChanged.connect(self._vector_workbook_changed)
         wb_layout.addWidget(QLabel('Target workbook'),0,0);wb_layout.addWidget(self.workbook_edit,0,1,1,2)
         workbook_actions=QGridLayout()
-        for index, button in enumerate((browse_wb, self.open_btn, self.inspect_btn, self.probe_btn)):
+        self._vector_workbook_action_layout = workbook_actions
+        self._vector_workbook_action_buttons = (browse_wb, self.open_btn, self.inspect_btn, self.probe_btn)
+        for index, button in enumerate(self._vector_workbook_action_buttons):
             workbook_actions.addWidget(button, index // 2, index % 2)
             workbook_actions.setColumnStretch(index % 2, 1)
         wb_layout.addLayout(workbook_actions,1,0,1,3)
@@ -442,9 +447,12 @@ class MainWindow(QMainWindow):
             ('Browse selected path…',self._browse_source),('Remove selected',self._remove_selected),
             ('Clear list',self._clear_sources)]
         self.vector_source_actions = {}
+        self._vector_source_action_layout = controls
+        self._vector_source_action_buttons = []
         for index,(label,callback) in enumerate(source_actions):
             button=QPushButton(label);button.setAccessibleName(label.rstrip('…'));button.clicked.connect(callback)
             self.vector_source_actions[label] = button
+            self._vector_source_action_buttons.append(button)
             controls.addWidget(button,index//2,index%2)
         for column in range(2): controls.setColumnStretch(column,1)
         q_layout.addLayout(controls)
@@ -530,6 +538,7 @@ class MainWindow(QMainWindow):
         self.install_btn=QPushButton('Review and import queries')
         self.install_btn.setAccessibleName('Review and import selected queries')
         self.install_btn.setObjectName('primary')
+        self.install_btn.setMaximumWidth(280)
         self.install_btn.setToolTip('Review before committing any staged Excel workbook changes')
         self.install_btn.clicked.connect(self._install)
         hero_actions.addWidget(self.install_btn)
@@ -607,6 +616,45 @@ class MainWindow(QMainWindow):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
+        metric_layout = getattr(self, "_vector_metric_layout", None)
+        metric_cards = getattr(self, "_vector_metric_cards", ())
+        if metric_layout is not None and metric_cards:
+            columns = 4 if event.size().width() >= 1120 else 2
+            if columns != getattr(self, "_vector_metric_columns", None):
+                while metric_layout.count():
+                    metric_layout.takeAt(0)
+                for column in range(4):
+                    metric_layout.setColumnStretch(column, 1 if column < columns else 0)
+                    metric_layout.setColumnMinimumWidth(column, 0)
+                for index, card in enumerate(metric_cards):
+                    metric_layout.addWidget(card, index // columns, index % columns)
+                self._vector_metric_columns = columns
+        action_layout = getattr(self, "_vector_workbook_action_layout", None)
+        action_buttons = getattr(self, "_vector_workbook_action_buttons", ())
+        if action_layout is not None and action_buttons:
+            columns = 4 if event.size().width() >= 1120 else 2
+            if columns != getattr(self, "_vector_workbook_action_columns", None):
+                while action_layout.count():
+                    action_layout.takeAt(0)
+                for column in range(4):
+                    action_layout.setColumnStretch(column, 1 if column < columns else 0)
+                    action_layout.setColumnMinimumWidth(column, 0)
+                for index, button in enumerate(action_buttons):
+                    action_layout.addWidget(button, index // columns, index % columns)
+                self._vector_workbook_action_columns = columns
+        source_layout = getattr(self, "_vector_source_action_layout", None)
+        source_buttons = getattr(self, "_vector_source_action_buttons", ())
+        if source_layout is not None and source_buttons:
+            columns = 3 if event.size().width() >= 1120 else 2
+            if columns != getattr(self, "_vector_source_action_columns", None):
+                while source_layout.count():
+                    source_layout.takeAt(0)
+                for column in range(3):
+                    source_layout.setColumnStretch(column, 1 if column < columns else 0)
+                    source_layout.setColumnMinimumWidth(column, 0)
+                for index, button in enumerate(source_buttons):
+                    source_layout.addWidget(button, index // columns, index % columns)
+                self._vector_source_action_columns = columns
         if hasattr(self, 'inspector_dock') and self.inspector_dock.isVisible():
             self._fit_inspector_dock()
 
