@@ -1210,5 +1210,10 @@
 
 - Fixed initial graph panning by fitting the dependency diagram after the first dialog layout; added a 960×600 scene-bounds regression assertion. App-source commit `536ee6ce5d901eabbe7345c8c2ffc287cc31d372`.
 - `app/build.ps1`: 541 tests passed (41.26 s); PyInstaller build succeeded. `tools/verify_release_package.py app/vector-release`: 116 files, 76,330,146 bytes, PASS. GUI and CLI EXE hashes are recorded in W298 of `docs/QA_WINDOWS_MATRIX.md`. CLI help passed; packaged GUI launched.
-- Disposable file-map scan detected the expected exact `Dashboard.xlsx` → `Inventory.xlsx` edge; pre/post SHA-256 hashes matched. Screenshot evidence from the earlier package identified the initial graph clipping, and manual Fit graph showed both nodes and edge. Corrected graph screenshot in rebuilt package remains unverified.
-- PR #2 remains open pending broader interactive workflow, physical display/DPI, and corrected-package graph checks. ACE DAO 16.0 and mapped SMB/UNC retain explicit WAIVED / NOT VERIFIED status.
+- Disposable file-map scan detected the expected exact `Dashboard.xlsx` → `Inventory.xlsx` edge; pre/post SHA-256 hashes matched. The rebuilt package now passes a fresh first-show graph visual check with both nodes and edge visible; see the follow-up entry below.
+- PR #2 remains open pending broader interactive workflow and physical display/DPI checks. ACE DAO 16.0 and mapped SMB/UNC retain explicit WAIVED / NOT VERIFIED status.
+
+## 2026-10-28 — fresh packaged Vector graph check
+
+- On the freshly rebuilt package from app-code commit 536ee6ce5d901eabbe7345c8c2ffc287cc31d372, a Quick scan of synthetic Dashboard.xlsx and Inventory.xlsx returned one exact internal edge. The graph auto-fit on first show with both nodes and edge visible; accessible text confirmed Dashboard.xlsx depends on Inventory.xlsx [exact_path]. GUI process exited and was absent in the follow-up process check. See W298 for package hashes and test context.
+- The test was performed at the current 1180×730 app-window size. 960×600 and 1366×768 display layouts, 125%/150% DPI, and remaining manual workflows are still open. ACE DAO 16.0 and mapped SMB/UNC remain WAIVED / NOT VERIFIED, never PASS.
