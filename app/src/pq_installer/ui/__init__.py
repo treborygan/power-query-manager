@@ -94,6 +94,9 @@ QPushButton {
     border: 1px solid $border; border-radius: 5px;
     padding: 8px 11px; min-height: 22px; font-weight: 600;
 }
+QPushButton#vectorActionButton {
+    padding: 4px 9px; min-height: 20px; font-size: 9pt;
+}
 QPushButton:hover { background-color: $hover; border-color: $teal; }
 QPushButton:pressed { background-color: $selection; }
 QPushButton:disabled { color: $muted2; background-color: $surface; border-color: $soft_border; }

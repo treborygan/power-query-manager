@@ -336,6 +336,7 @@ def test_manager_initial_size_and_accessible_names_fit_laptop_layout(tmp_path):
         assert window.minimumWidth()<=window.width() and window.minimumHeight()<=window.height()
         assert window.table.height()>=140
         assert window.workspace_scroll.horizontalScrollBar().maximum()==0
+        assert window.vector_command_button.width() <= 220
         card_rows = {card.y() for card in window._vector_metric_cards}
         content_width = (
             window.workspace_scroll.viewport().width()
@@ -352,6 +353,8 @@ def test_manager_initial_size_and_accessible_names_fit_laptop_layout(tmp_path):
         bulk_rows = {button.y() for button in window.vector_bulk_actions.values()}
         bulk_rows.update((window.undo_button.y(), window.redo_button.y()))
         assert len(bulk_rows) == expected_bulk_rows
+        action_buttons = (*window._vector_source_action_buttons, *window._vector_bulk_action_buttons)
+        assert max(button.height() for button in action_buttons) <= 34
     assert window.workspace_scroll.verticalScrollBar().maximum()>0
     window.workbook_edit.setFocus();QTest.keyClick(window.workbook_edit,Qt.Key_Tab);app.processEvents()
     assert window.focusWidget().text()=='Browse…'

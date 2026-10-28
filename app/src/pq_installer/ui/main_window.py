@@ -328,8 +328,10 @@ class MainWindow(QMainWindow):
         status_row = QHBoxLayout()
         self.vector_command_button = QPushButton("⌘  Command  Ctrl+K")
         self.vector_command_button.setAccessibleName("Open command palette")
+        self.vector_command_button.setMaximumWidth(220)
         self.vector_command_button.clicked.connect(self._open_vector_command_palette)
         status_row.addWidget(self.vector_command_button)
+        status_row.addStretch(1)
         self.theme_toggle = QCheckBox('Dark theme')
         self.theme_toggle.setAccessibleName('Toggle dark theme')
         self.theme_toggle.setChecked(True)
@@ -454,7 +456,7 @@ class MainWindow(QMainWindow):
         self._vector_source_action_layout = controls
         self._vector_source_action_buttons = []
         for index,(label,callback) in enumerate(source_actions):
-            button=QPushButton(label);button.setAccessibleName(label.rstrip('…'));button.clicked.connect(callback)
+            button=QPushButton(label);button.setObjectName("vectorActionButton");button.setAccessibleName(label.rstrip('…'));button.clicked.connect(callback)
             self.vector_source_actions[label] = button
             self._vector_source_action_buttons.append(button)
             controls.addWidget(button,index//2,index%2)
@@ -470,7 +472,7 @@ class MainWindow(QMainWindow):
             ('Compare package versions…','Compare package versions…',self._preview_query_package_update)]
         self.vector_bulk_actions = {}
         for index,(label,display_label,callback) in enumerate(bulk_actions):
-            button=QPushButton(display_label);button.setAccessibleName(label.rstrip('…'));button.setToolTip(label);button.clicked.connect(callback)
+            button=QPushButton(display_label);button.setObjectName("vectorActionButton");button.setAccessibleName(label.rstrip('…'));button.setToolTip(label);button.clicked.connect(callback)
             self.vector_bulk_actions[label] = button
             self._vector_bulk_action_buttons.append(button)
             bulk.addWidget(button,index//2,index%2)
@@ -478,10 +480,10 @@ class MainWindow(QMainWindow):
         self.undo_action.setShortcut(QKeySequence.StandardKey.Undo);self.addAction(self.undo_action)
         self.redo_action=self.query_model.undo_stack.createRedoAction(self,'Redo table edit')
         self.redo_action.setShortcut(QKeySequence.StandardKey.Redo);self.addAction(self.redo_action)
-        self.undo_button=QPushButton('Undo');self.undo_button.setAccessibleName('Undo last table edit');self.undo_button.setToolTip('Undo the last table edit (Ctrl+Z)')
+        self.undo_button=QPushButton('Undo');self.undo_button.setObjectName("vectorActionButton");self.undo_button.setAccessibleName('Undo last table edit');self.undo_button.setToolTip('Undo the last table edit (Ctrl+Z)')
         self.undo_button.clicked.connect(self.undo_action.trigger);self._vector_bulk_action_buttons.append(self.undo_button)
         bulk.addWidget(self.undo_button,(len(self._vector_bulk_action_buttons)-1)//2,(len(self._vector_bulk_action_buttons)-1)%2)
-        self.redo_button=QPushButton('Redo');self.redo_button.setAccessibleName('Redo last table edit');self.redo_button.setToolTip('Redo the last table edit (Ctrl+Y)')
+        self.redo_button=QPushButton('Redo');self.redo_button.setObjectName("vectorActionButton");self.redo_button.setAccessibleName('Redo last table edit');self.redo_button.setToolTip('Redo the last table edit (Ctrl+Y)')
         self.redo_button.clicked.connect(self.redo_action.trigger);self._vector_bulk_action_buttons.append(self.redo_button)
         bulk.addWidget(self.redo_button,(len(self._vector_bulk_action_buttons)-1)//2,(len(self._vector_bulk_action_buttons)-1)%2)
         self.query_model.undo_stack.canUndoChanged.connect(self._update_undo_actions)
