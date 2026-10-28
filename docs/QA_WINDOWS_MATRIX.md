@@ -1,5 +1,12 @@
 # Windows Excel acceptance: manual + script-assisted test matrix
 
+## W339 — current-package disposable Excel replacement and backup check, 2026-10-28
+
+- Exact tested application source: `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`; GUI package and hashes are listed in W337.
+- Ran `python tools/run_packaged_gui_import_smoke.py --exe app/vector-release/PowerQueryManager/PowerQueryManager.exe --replace-existing` on Windows 10 build 26300 with Excel 16.0 build 20430.0. **PASS:** non-elevated packaged UI exposed workbook, query grid, filter, replace policy, backup and import action. On a generated disposable workbook, the existing query definition was replaced in place; the exact new formula was read back, the pre-import backup was verified, and an unrelated worksheet marker remained intact.
+- Packaged manager exited 0. Manager-owned Excel and read-only verification Excel exited naturally; forced termination was false and process inventory returned empty. All generated workbook files remained in the harness temporary directory.
+- This validates definition replacement, backup and unrelated worksheet preservation for a synthetic disposable workbook. It does not qualify worksheet/Data Model load modes, refresh, arbitrary production workbooks, or ACE DAO 16.0/mapped SMB/UNC. Those ACE/SMB scenarios remain **WAIVED / NOT VERIFIED**.
+
 ## W338 — latest-package keyboard and history accessibility smoke, 2026-10-28
 
 - Exact packaged app source commit: `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb` (package hashes and full build record in W337).
