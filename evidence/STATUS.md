@@ -1382,3 +1382,9 @@
 - Latest package (app source `5f118615f405a3e2ffcf46d70c1b8eee30d35db9`) was inspected at 100% / 1366×768. Workspace controls and Finder setup were visible; vertical scrolling reached targets, scan/cancel, relationships table, coverage/warnings and exports. No scan/workbook was used.
 - Restored 100% / 1920×1080 and verified no manager/Excel/Access process remained. Exact hashes and scope are in W330 of `docs/QA_WINDOWS_MATRIX.md`.
 - Full workflow/accessibility matrix remains incomplete. ACE DAO 16.0 and mapped SMB/UNC are **WAIVED / NOT VERIFIED**; PR #2 remains draft/open/unmerged.
+
+## 2026-10-28 — W331 Vector command palette caption and package rebuild
+
+- Fixed the Ctrl+K palette's Windows title bar by applying the shared Vector caption/theme helper. Added a regression check for dark/light theme propagation. Actual rebuilt package showed matching Vector captions in both modes.
+- Exact tested source `79d6b1e73aa84712ae23eef5df3536be936a9370`; Windows suite **546 passed in 38.63 s**. Package verifier passed (118 files / 76,333,108 bytes); packaged CLI help exited 0. GUI/CLI SHA-256: `33DB186B1B6B6781BBC04C72BA070F9CE7C0AB46D72C9B514B97BF596A2624C6` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- No workbook or Office process was opened; app closed and process inventory was clean. Remaining broad workflow/accessibility gates stay open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 stays open and unmerged.
