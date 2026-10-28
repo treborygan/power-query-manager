@@ -231,7 +231,10 @@ def extract_query_zip(archive, *, staging_parent=None, max_files=256,
         raise
 
     try:
-        root = Path(tempfile.mkdtemp(prefix='pq-import-', dir=staging_parent))
+        # Windows may report a temporary directory using a short/aliased path,
+        # while Path.resolve() canonicalizes child paths to the long spelling.
+        # Compare canonical roots on both sides; do not relax traversal guards.
+        root = Path(tempfile.mkdtemp(prefix='pq-import-', dir=staging_parent)).resolve()
     except Exception:
         zf.close()
         archive_stream.close()
