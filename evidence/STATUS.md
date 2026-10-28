@@ -1394,3 +1394,9 @@
 - Wired the active Vector native caption/theme into history and version comparison, query inspector, profile mappings, package update preview, workbook inventory, refresh options and open dialogs on theme changes. Existing graph/Finder dialogs already use the shared helper. Actual rebuilt History dialog caption visually verified in dark mode; no history contents recorded.
 - Exact tested source `a2bc54593feda9824a4bb30fd1a98a50ab2c2856`; full Windows build **546 passed in 40.79 s**. Release package verified at 118 files / 76,333,760 bytes; CLI help exited 0. GUI/CLI hashes: `62842C1857B57ED73E29EFE9D7E7BB45B17812EA30DD410FADA45B11235AA49D` / `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
 - App closed with no manager/Excel/Access process. Full visual and interaction audit of every dialog/workflow remains incomplete. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 stays open/unmerged.
+
+## 2026-10-28 — W333 profile dialog and inspector audit attempt
+
+- Rechecked packaged profile mappings in dark and light themes; both tabs and native caption followed Vector palette. No settings saved.
+- Tried to inspect a synthetic M source in the package. The Windows file picker did not accept the fixture via accessible controls; inspector appearance remains **NOT VERIFIED**. No workbook selected; disposable fixture cleaned up. No new build/test claim.
+- Full UI interaction/accessibility matrix remains open. ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**; PR #2 stays open/unmerged.
