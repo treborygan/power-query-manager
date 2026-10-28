@@ -1443,3 +1443,9 @@
 - Packaged GUI mixed-import smoke passed on Windows build 26300 / Excel 16.0 build 20430.0, non-elevated, using three generated `.m`/`.pq` source files and a versioned profile. Numbered review order matched Excel query order; exact formulas read back; pre-import backup and read-only reopen verified.
 - Manager and both owned/verification Excel processes exited naturally; no forced termination and no residual manager/Excel/Access process. All synthetic files stayed under the harness temporary directory. Exact app source tested: `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`.
 - Evidence is definition-only. Refresh and worksheet/Data Model loads, remaining display/workflow/accessibility acceptance, ACE DAO 16.0 and mapped SMB/UNC are still open or explicitly waived. PR #2 remains open/unmerged.
+
+## 2026-10-28 — W341 current-package disposable dependency scan
+
+- Exact current package tested from commit `f0286e013a5aaf302dff9d8dd2d33b10d96100f2` with DAO 12.0 diagnostic provider: `evidence/W341-dao12-acceptance.json`. Harness PASS on 10 generated fixtures; source hash/size/timestamps stayed unchanged and cleanup/process restoration passed.
+- Quick/Deep each found 12 relationships across 31,200 formula cells, with no differing edges; multi-target reverse scan found 6. UI filter counts matched expected incoming/outgoing/both results; graph and JSON/CSV exports verified all 12 edges. UI progress observed and cancellation passed.
+- Excel seed process exited naturally, no lock files or Access temp directories remained, and fixture cleanup completed. No forced termination. DAO 12.0 evidence is not DAO 16.0 acceptance; ACE DAO 16.0 and mapped SMB/UNC remain **WAIVED / NOT VERIFIED**. Remaining manual layout, screen-reader and workflow gates are open.

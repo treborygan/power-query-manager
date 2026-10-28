@@ -1,5 +1,12 @@
 # Windows Excel acceptance: manual + script-assisted test matrix
 
+## W341 — current-package disposable dependency scanner acceptance, 2026-10-28
+
+- Exact packaged application commit: `f0286e013a5aaf302dff9d8dd2d33b10d96100f2`; package details in W337. Ran `python tools/run_dependency_windows_acceptance.py --dao-progid DAO.DBEngine.120 --cli-exe app/vector-release/PowerQueryManager/PowerQueryManagerCLI.exe --performance-repeats 1 --report evidence/W341-dao12-acceptance.json`. Result **PASS** on Windows / Excel 16.0 build 20430.0 with 10 generated fixtures (4 Access, 4 Excel, plus source/support).
+- Packaged CLI and UI agreed on 12 relationships; Quick and Deep returned the same 12 edges over 31,200 formula cells (zero quick-only/deep-only). Multi-target reverse scan found 6 relationships. UI incoming/outgoing/both filter counts matched the report; graph showed 12 edges; JSON and CSV exports each verified all 12.
+- UI progress was observed and cancellation returned the expected cancelled result after one inspected item. Fixture source hashes/sizes/timestamps were unchanged, no lock files or Access temp directories remained, seeded Excel exited naturally, and final Excel process set matched baseline. Fixture cleanup passed; no forced termination.
+- DAO 12.0 is diagnostic coverage only and does not qualify ACE DAO 16.0. This run did not exercise mapped SMB/UNC (explicitly waived), nor does it close remaining layout, accessibility and other workflow checks. Preserve the DAO16 and SMB/UNC waivers.
+
 ## W340 — current-package profile-driven mixed source import, 2026-10-28
 
 - Exact tested application source: `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`; package details in W337.
