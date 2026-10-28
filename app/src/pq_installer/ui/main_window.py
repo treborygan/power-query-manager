@@ -624,10 +624,19 @@ class MainWindow(QMainWindow):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
+        # The fixed navigation rail and workspace margins consume part of the
+        # top-level window width. Choose density from the space the cards and
+        # action grids can actually use, rather than the outer frame size.
+        content_width = max(
+            0,
+            self.workspace_scroll.viewport().width()
+            - self.workspace_scroll.widget().layout().contentsMargins().left()
+            - self.workspace_scroll.widget().layout().contentsMargins().right(),
+        )
         metric_layout = getattr(self, "_vector_metric_layout", None)
         metric_cards = getattr(self, "_vector_metric_cards", ())
         if metric_layout is not None and metric_cards:
-            columns = 4 if event.size().width() >= 1120 else 2
+            columns = 4 if content_width >= 1120 else 2
             if columns != getattr(self, "_vector_metric_columns", None):
                 while metric_layout.count():
                     metric_layout.takeAt(0)
@@ -640,7 +649,7 @@ class MainWindow(QMainWindow):
         action_layout = getattr(self, "_vector_workbook_action_layout", None)
         action_buttons = getattr(self, "_vector_workbook_action_buttons", ())
         if action_layout is not None and action_buttons:
-            columns = 4 if event.size().width() >= 1120 else 2
+            columns = 4 if content_width >= 1080 else 2
             if columns != getattr(self, "_vector_workbook_action_columns", None):
                 while action_layout.count():
                     action_layout.takeAt(0)
@@ -653,7 +662,7 @@ class MainWindow(QMainWindow):
         source_layout = getattr(self, "_vector_source_action_layout", None)
         source_buttons = getattr(self, "_vector_source_action_buttons", ())
         if source_layout is not None and source_buttons:
-            columns = 3 if event.size().width() >= 1120 else 2
+            columns = 3 if content_width >= 1080 else 2
             if columns != getattr(self, "_vector_source_action_columns", None):
                 while source_layout.count():
                     source_layout.takeAt(0)

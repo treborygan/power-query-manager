@@ -330,14 +330,23 @@ def test_manager_initial_size_and_accessible_names_fit_laptop_layout(tmp_path):
     assert window.workbook_edit.accessibleName()=='Target workbook path'
     assert window.table.accessibleName()=='Query source settings table'
     assert window.search_edit.accessibleName()=='Filter query source rows'
-    for size in ((960,600),(1366,768)):
+    for size in ((960,600),(1180,700),(1366,768)):
         window.resize(*size);window.show();app.processEvents()
         assert window.width()<=1366 and window.height()<=768
         assert window.minimumWidth()<=window.width() and window.minimumHeight()<=window.height()
         assert window.table.height()>=140
         assert window.workspace_scroll.horizontalScrollBar().maximum()==0
         card_rows = {card.y() for card in window._vector_metric_cards}
-        assert len(card_rows) == (1 if size[0] >= 1120 else 2)
+        content_width = (
+            window.workspace_scroll.viewport().width()
+            - window.workspace_scroll.widget().layout().contentsMargins().left()
+            - window.workspace_scroll.widget().layout().contentsMargins().right()
+        )
+        expected_metric_columns = 4 if content_width >= 1120 else 2
+        assert len(card_rows) == (4 // expected_metric_columns)
+        assert window._vector_metric_columns == expected_metric_columns
+        assert window._vector_workbook_action_columns == (4 if content_width >= 1080 else 2)
+        assert window._vector_source_action_columns == (3 if content_width >= 1080 else 2)
     assert window.workspace_scroll.verticalScrollBar().maximum()>0
     window.workbook_edit.setFocus();QTest.keyClick(window.workbook_edit,Qt.Key_Tab);app.processEvents()
     assert window.focusWidget().text()=='Browse…'
