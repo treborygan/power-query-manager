@@ -9,6 +9,12 @@
 - The combined `--package-dialog --history-dialog` run **did not pass as a whole**. Package-comparison dialog UIA checks passed; the history comparison harness then failed because it observed only one of the two seeded history rows selected. The result is inconclusive between the UIA selection driver and app behavior and is **WAIVED / NOT VERIFIED** under the user's limited-scope direction, not counted as a pass. The separate history accessibility smoke passed (W338).
 - No product security/integrity safeguard was waived. DAO 12.0 is diagnostic only; ACE DAO 16.0 and mapped SMB/UNC are **WAIVED / NOT VERIFIED**. Branch is eligible for finalization only on the user's expressly accepted limited scope; do not expand the above test claims.
 
+## W345 — final integration review before merge, 2026-10-28
+
+- Reviewed the feature diff from `origin/main` through branch head `5ce3cb69b1e892202ebeff4699d354bb7a3ddb6e`. Changed production code is confined to `app/src/pq_installer/ui/` plus the PyInstaller UI asset include; test changes are under `app/tests/ui/` and the packaged Windows harness updates are under `tools/`. No files under `app/src/pq_installer/core/` changed. Existing callbacks, source/query model and COM safety implementation remain in place. No security, workbook-write or safety assertion was removed or weakened in the reviewed diff.
+- `git diff --check origin/main...HEAD`: clean. Current build/test/package evidence is W337; focused accepted workflow checks and explicit waiver scope are W338–W344. Current package hashes: GUI `E8E9725BD54B05B67EF5C039FC1EAA144A9E157A4061669125AA3ABD37384318`; CLI `6B30D61A87A2A164949C35EFB8BEEE2226B40344741CD64BA974365F752F0382`.
+- No GitHub status checks or submitted reviews were present at review time. This integration review is not represented as an independent reviewer approval. PR is being finalized under the user's explicit limited-scope waiver; DAO 16.0 and SMB/UNC remain waived/not verified.
+
 ## W343 — current-package all-skip no-op integrity, 2026-10-28
 
 - Ran `python tools/run_packaged_gui_import_smoke.py --exe app/vector-release/PowerQueryManager/PowerQueryManager.exe --skip-existing` against app source `3a2b1dbf9ca9ddf28579aec350ffae98e77ecdbb`, on Windows build 26300 / Excel 16.0 build 20430.0, non-elevated. **PASS:** existing query was skipped; UI reported that no workbook changes were committed.
